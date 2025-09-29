@@ -128,7 +128,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
 
   void _navigateToNextScreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    print("Navigate to main app");
+    print("Navigate to main     app");
     // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage(title: 'title')));
   }
 
@@ -425,7 +425,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: 'Voclio  '.split('').asMap().entries.map((entry) {
+                  children: 'Voclio '.split('').asMap().entries.map((entry) {
                     return AnimatedBuilder(
                       animation: _waveController,
                       builder: (context, child) {
