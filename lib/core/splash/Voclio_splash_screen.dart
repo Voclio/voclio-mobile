@@ -421,7 +421,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Animated letters for "Voclio"
+                // Animated letter for "Voclio"
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
