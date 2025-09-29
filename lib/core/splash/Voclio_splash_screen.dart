@@ -425,7 +425,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: 'Voclio  '.split('').asMap().entries.map((entry) {
+                  children: 'Voclio   '.split('').asMap().entries.map((entry) {
                     return AnimatedBuilder(
                       animation: _waveController,
                       builder: (context, child) {
