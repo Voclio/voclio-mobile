@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import '../onboarding/onboarding_screen.dart';
+import '../constants/app_colors.dart';
 
 class VoclioSplashScreen extends StatefulWidget {
   const VoclioSplashScreen({Key? key}) : super(key: key);
@@ -25,8 +27,8 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
   late Animation<double> _waveAnimation;
   late Animation<double> _floatAnimation;
 
-  final Color primaryOrange = const Color(0xFFF98006);
-  final Color lightOrange = const Color(0xFFFFB347);
+  final Color primaryOrange = AppColors.primary;
+  final Color lightOrange = AppColors.accent;
 
   @override
   void initState() {
@@ -128,8 +130,10 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
 
   void _navigateToNextScreen() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    print("Navigate to main     app");
-    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage(title: 'title')));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+    );
   }
 
   @override
@@ -518,43 +522,46 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
             ),
             SizedBox(height: isSmallScreen ? 16 : 20),
 
-            // Loading text with animated dots
-            Row(
+            // Modern loading animation
+            Column(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Loading',
-                  style: TextStyle(
-                    color: primaryOrange,
-                    fontSize: isSmallScreen ? 15 : 17,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                  ),
+                // Circular progress indicator with custom styling
+                AnimatedBuilder(
+                  animation: _progressController,
+                  builder: (context, child) {
+                    return SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        value: _progressValue.value,
+                        strokeWidth: 3,
+                        backgroundColor: primaryOrange.withOpacity(0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(primaryOrange),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(width: 6),
-                ...List.generate(3, (index) {
-                  return AnimatedBuilder(
-                    animation: _progressController,
-                    builder: (context, child) {
-                      final delay = index * 0.3;
-                      final opacity = (((_progressController.value * 3) + delay) % 1.0);
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 3),
-                        child: Opacity(
-                          opacity: opacity,
-                          child: Text(
-                            '●',
-                            style: TextStyle(
-                              color: primaryOrange,
-                              fontSize: isSmallScreen ? 15 : 17,
-                            ),
-                          ),
+                const SizedBox(height: 16),
+                // Loading text with fade animation
+                AnimatedBuilder(
+                  animation: _progressController,
+                  builder: (context, child) {
+                    final opacity = 0.6 + (math.sin(_progressController.value * math.pi * 4) * 0.4).abs();
+                    return Opacity(
+                      opacity: opacity,
+                      child: Text(
+                        'Initializing Voclio...',
+                        style: TextStyle(
+                          color: primaryOrange,
+                          fontSize: isSmallScreen ? 14 : 16,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.2,
                         ),
-                      );
-                    },
-                  );
-                }),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ],
