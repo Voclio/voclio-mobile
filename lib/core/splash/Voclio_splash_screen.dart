@@ -486,9 +486,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
   }
 
   Widget _buildLoadingSection(Size size, bool isSmallScreen) {
-    final barWidth = size.width * 0.5;
-    final segmentCount = 20;
-    final segmentWidth = (barWidth - (segmentCount * 4)) / segmentCount;
+    final barWidth = size.width * 0.6;
 
     return AnimatedBuilder(
       animation: _progressController,
@@ -496,73 +494,47 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Progress bar with segments
-            SizedBox(
+            // Straight line progress bar
+            Container(
               width: barWidth,
-              height: 5,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(segmentCount, (index) {
-                  final segmentProgress = (_progressValue.value * segmentCount) - index;
-                  final opacity = segmentProgress.clamp(0.0, 1.0);
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    width: segmentWidth,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: index < (_progressValue.value * segmentCount).floor()
-                          ? primaryOrange.withOpacity(opacity)
-                          : primaryOrange.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  );
-                }),
+              height: 4,
+              decoration: BoxDecoration(
+                color: primaryOrange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: _progressValue.value.clamp(0.0, 1.0),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  decoration: BoxDecoration(
+                    color: primaryOrange,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
             ),
             SizedBox(height: isSmallScreen ? 16 : 20),
 
-            // Modern loading animation
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Circular progress indicator with custom styling
-                AnimatedBuilder(
-                  animation: _progressController,
-                  builder: (context, child) {
-                    return SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: CircularProgressIndicator(
-                        value: _progressValue.value,
-                        strokeWidth: 3,
-                        backgroundColor: primaryOrange.withOpacity(0.2),
-                        valueColor: AlwaysStoppedAnimation<Color>(primaryOrange),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                // Loading text with fade animation
-                AnimatedBuilder(
-                  animation: _progressController,
-                  builder: (context, child) {
-                    final opacity = 0.6 + (math.sin(_progressController.value * math.pi * 4) * 0.4).abs();
-                    return Opacity(
-                      opacity: opacity,
-                      child: Text(
-                        'Initializing Voclio...',
-                        style: TextStyle(
-                          color: primaryOrange,
-                          fontSize: isSmallScreen ? 14 : 16,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+            // Loading text with fade animation
+            AnimatedBuilder(
+              animation: _progressController,
+              builder: (context, child) {
+                final opacity = 0.6 + (math.sin(_progressController.value * math.pi * 4) * 0.4).abs();
+                return Opacity(
+                  opacity: opacity,
+                  child: Text(
+                    'Initializing Voclio...',
+                    style: TextStyle(
+                      color: primaryOrange,
+                      fontSize: isSmallScreen ? 14 : 16,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         );
