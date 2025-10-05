@@ -1,25 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:voclio_app/core/styles/theme/app_theme.dart';
+import 'package:voclio_app/voclio_app.dart';
+import 'core/app/connectivily_control.dart';
+import 'core/routes/App_routes.dart';
 import 'core/splash/Voclio_splash_screen.dart';
-import 'core/constants/app_colors.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ConnectivityControler.instance.init();
+  runApp(const VoclioApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Voclio',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        primaryColor: AppColors.primary,
-        scaffoldBackgroundColor: AppColors.background,
-      ),
-      home: const VoclioSplashScreen(),
-    );
-  }
-}
+
 

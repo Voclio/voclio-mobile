@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
 import 'dart:math' as math;
-import '../onboarding/onboarding_screen.dart';
-import '../constants/app_colors.dart';
+
+import '../styles/theme/color_extentions.dart';
 
 class VoclioSplashScreen extends StatefulWidget {
   const VoclioSplashScreen({Key? key}) : super(key: key);
@@ -26,9 +28,6 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
   late Animation<double> _progressValue;
   late Animation<double> _waveAnimation;
   late Animation<double> _floatAnimation;
-
-  final Color primaryOrange = AppColors.primary;
-  final Color lightOrange = AppColors.accent;
 
   @override
   void initState() {
@@ -102,10 +101,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
       ),
     );
 
-    _waveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      _waveController,
-    );
-
+    _waveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_waveController);
     _floatAnimation = Tween<double>(begin: -10.0, end: 10.0).animate(
       CurvedAnimation(
         parent: _floatController,
@@ -128,12 +124,18 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     if (mounted) _navigateToNextScreen();
   }
 
-  void _navigateToNextScreen() {
+  void _navigateToNextScreen() async {
+    _waveController.stop();
+    _floatController.stop();
+    _logoController.stop();
+    _textController.stop();
+    _progressController.stop();
+
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-    );
+    context.goRoute(AppRouter.onboarding);
   }
 
   @override
@@ -150,21 +152,17 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.height < 600;
+    final colors = context.colors;
 
     return Scaffold(
       body: Container(
         width: size.width,
         height: size.height,
-        color: Colors.white,
+        color: colors.background,
         child: Stack(
           children: [
-            // Animated sound waves
-            _buildSoundWaves(size),
-
-            // Floating geometric shapes
-            _buildFloatingShapes(size),
-
-            // Main content
+            _buildSoundWaves(size, colors),
+            _buildFloatingShapes(size, colors),
             SafeArea(
               child: SizedBox(
                 width: size.width,
@@ -172,26 +170,20 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top spacing
                     SizedBox(height: isSmallScreen ? size.height * 0.1 : size.height * 0.15),
-
-                    // Logo and text section
                     Flexible(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildAnimatedLogo(size, isSmallScreen),
+                          _buildAnimatedLogo(size, isSmallScreen, colors),
                           SizedBox(height: isSmallScreen ? 20 : 30),
-                          _buildAnimatedText(size, isSmallScreen),
+                          _buildAnimatedText(size, isSmallScreen, colors),
                         ],
                       ),
                     ),
-
-                    // Loading section
                     Padding(
                       padding: EdgeInsets.only(bottom: isSmallScreen ? 40 : 60),
-                      child: _buildLoadingSection(size, isSmallScreen),
+                      child: _buildLoadingSection(size, isSmallScreen, colors),
                     ),
                   ],
                 ),
@@ -203,13 +195,12 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     );
   }
 
-  Widget _buildSoundWaves(Size size) {
+  Widget _buildSoundWaves(Size size, MyColors colors) {
     return AnimatedBuilder(
       animation: _waveAnimation,
       builder: (context, child) {
         return Stack(
           children: [
-            // Top sound wave bars
             Positioned(
               left: 0,
               right: 0,
@@ -217,8 +208,6 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
               child: Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: List.generate(15, (index) {
                     final wave = math.sin((_waveAnimation.value * 2 * math.pi * 2) + (index * 0.5));
                     final height = 15.0 + (wave * 25).abs();
@@ -229,7 +218,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                       width: 3,
                       height: height,
                       decoration: BoxDecoration(
-                        color: primaryOrange.withOpacity(opacity),
+                        color: colors.primary!.withOpacity(opacity),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     );
@@ -237,8 +226,6 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 ),
               ),
             ),
-
-            // Bottom sound waves
             Positioned(
               left: 0,
               right: 0,
@@ -246,8 +233,6 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
               child: Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: List.generate(12, (index) {
                     final wave = math.sin((_waveAnimation.value * 2 * math.pi * 1.5) - (index * 0.6));
                     final height = 12.0 + (wave * 20).abs();
@@ -258,7 +243,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                       width: 4,
                       height: height,
                       decoration: BoxDecoration(
-                        color: lightOrange.withOpacity(opacity),
+                        color: colors.primary!.withOpacity(opacity),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     );
@@ -272,13 +257,13 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     );
   }
 
-  Widget _buildFloatingShapes(Size size) {
+  Widget _buildFloatingShapes(Size size, MyColors colors) {
     return AnimatedBuilder(
       animation: _waveAnimation,
       builder: (context, child) {
         return Stack(
           children: [
-            // Floating triangles
+            // 🔹 مثلث أعلى اليسار
             Positioned(
               top: size.height * 0.12 + (math.sin(_waveAnimation.value * 2 * math.pi) * 20),
               left: size.width * 0.1,
@@ -286,11 +271,12 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 angle: _waveAnimation.value * 2 * math.pi,
                 child: CustomPaint(
                   size: Size(size.width * 0.08, size.width * 0.08),
-                  painter: TrianglePainter(primaryOrange.withOpacity(0.15)),
+                  painter: TrianglePainter(colors.primary!.withOpacity(0.15)),
                 ),
               ),
             ),
 
+            // 🔹 مثلث أسفل اليمين
             Positioned(
               bottom: size.height * 0.2 + (math.sin(_waveAnimation.value * 2 * math.pi + 1) * 15),
               right: size.width * 0.12,
@@ -298,12 +284,12 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 angle: -_waveAnimation.value * 2 * math.pi,
                 child: CustomPaint(
                   size: Size(size.width * 0.07, size.width * 0.07),
-                  painter: TrianglePainter(lightOrange.withOpacity(0.2)),
+                  painter: TrianglePainter(colors.primary!.withOpacity(0.2)),
                 ),
               ),
             ),
 
-            // Floating squares
+            // 🟦 مكعب أعلى اليمين
             Positioned(
               top: size.height * 0.28 + (math.sin(_waveAnimation.value * 2 * math.pi + 2) * 25),
               right: size.width * 0.15,
@@ -313,13 +299,21 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                   width: size.width * 0.065,
                   height: size.width * 0.065,
                   decoration: BoxDecoration(
-                    color: primaryOrange.withOpacity(0.12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colors.primary!.withOpacity(0.25),
+                        colors.primary!.withOpacity(0.15),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
               ),
             ),
 
+            // 🟪 مكعب أسفل اليسار
             Positioned(
               bottom: size.height * 0.3 + (math.sin(_waveAnimation.value * 2 * math.pi + 3) * 20),
               left: size.width * 0.12,
@@ -329,7 +323,14 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                   width: size.width * 0.06,
                   height: size.width * 0.06,
                   decoration: BoxDecoration(
-                    color: lightOrange.withOpacity(0.18),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomRight,
+                      end: Alignment.topLeft,
+                      colors: [
+                        colors.accent!.withOpacity(0.2),
+                        colors.primary!.withOpacity(0.1),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(5),
                   ),
                 ),
@@ -341,9 +342,8 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     );
   }
 
-  Widget _buildAnimatedLogo(Size size, bool isSmallScreen) {
-    final logoSize = isSmallScreen ? size.width * 0.3 : size.width * 0.35;
-
+  Widget _buildAnimatedLogo(Size size, bool isSmall, MyColors colors) {
+    final logoSize = isSmall ? size.width * 0.3 : size.width * 0.35;
     return AnimatedBuilder(
       animation: Listenable.merge([_logoController, _floatController]),
       builder: (context, child) {
@@ -353,56 +353,11 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
             scale: _logoScale.value,
             child: Opacity(
               opacity: _logoOpacity.value,
-              child: SizedBox(
-                width: logoSize * 1.5,
-                height: logoSize * 1.5,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Outer hexagon
-                    AnimatedBuilder(
-                      animation: _waveController,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: _waveAnimation.value * 2 * math.pi,
-                          child: CustomPaint(
-                            size: Size(logoSize * 1.4, logoSize * 1.4),
-                            painter: HexagonPainter(lightOrange.withOpacity(0.3), 2.5),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // Inner hexagon
-                    AnimatedBuilder(
-                      animation: _waveController,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: -_waveAnimation.value * 2 * math.pi * 0.7,
-                          child: CustomPaint(
-                            size: Size(logoSize, logoSize),
-                            painter: HexagonPainter(primaryOrange.withOpacity(0.25), 2),
-                          ),
-                        );
-                      },
-                    ),
-
-                    // Logo
-                    Image.asset(
-                      'assets/images/Microphone Icon.png',
-                      width: logoSize,
-                      height: logoSize,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.mic_rounded,
-                          size: logoSize,
-                          color: primaryOrange,
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              child: Image.asset(
+                'assets/images/Microphone Icon.png',
+                width: logoSize,
+                height: logoSize,
+                color: colors.primary,
               ),
             ),
           ),
@@ -411,9 +366,9 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     );
   }
 
-  Widget _buildAnimatedText(Size size, bool isSmallScreen) {
-    final titleSize = isSmallScreen ? 40.0 : 48.0;
-    final subtitleSize = isSmallScreen ? 14.0 : 16.0;
+  Widget _buildAnimatedText(Size size, bool isSmall, MyColors colors) {
+    final titleSize = isSmall ? 40.0 : 48.0;
+    final subtitleSize = isSmall ? 14.0 : 16.0;
 
     return AnimatedBuilder(
       animation: _textController,
@@ -423,59 +378,26 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
           child: Opacity(
             opacity: _textOpacity.value,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                // Animated letter for "Voclio"
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: 'Voclio '.split('').asMap().entries.map((entry) {
-                    return AnimatedBuilder(
-                      animation: _waveController,
-                      builder: (context, child) {
-                        final offset = math.sin((_waveAnimation.value * 2 * math.pi) + (entry.key * 0.4)) * 3;
-                        return Transform.translate(
-                          offset: Offset(0, offset),
-                          child: Text(
-                            entry.value,
-                            style: TextStyle(
-                              fontSize: titleSize,
-                              fontWeight: FontWeight.w900,
-                              color: primaryOrange,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }).toList(),
+                Text(
+                  'Voclio',
+                  style: TextStyle(
+                    fontSize: titleSize,
+                    fontWeight: FontWeight.w900,
+                    color: colors.primary,
+                    letterSpacing: 2,
+                  ),
                 ),
-                SizedBox(height: isSmallScreen ? 8 : 12),
-
-                // Subtitle
-                AnimatedBuilder(
-                  animation: _floatController,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: 0.7 + (_floatAnimation.value.abs() / 10) * 0.3,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 150),
-                          child: Text(
-                            'Your Voice, Your Story',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: subtitleSize,
-                              fontWeight: FontWeight.w600,
-                              color: primaryOrange,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                const SizedBox(height: 12),
+                Text(
+                  'Your Voice, Your Story',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: subtitleSize,
+                    color: colors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                  ),
                 ),
               ],
             ),
@@ -485,21 +407,19 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     );
   }
 
-  Widget _buildLoadingSection(Size size, bool isSmallScreen) {
+  Widget _buildLoadingSection(Size size, bool isSmall, MyColors colors) {
     final barWidth = size.width * 0.6;
-
     return AnimatedBuilder(
       animation: _progressController,
       builder: (context, child) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Straight line progress bar
             Container(
               width: barWidth,
               height: 4,
               decoration: BoxDecoration(
-                color: primaryOrange.withOpacity(0.2),
+                color: colors.primary!.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
               child: FractionallySizedBox(
@@ -509,32 +429,21 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                   decoration: BoxDecoration(
-                    color: primaryOrange,
+                    color: colors.primary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: isSmallScreen ? 16 : 20),
-
-            // Loading text with fade animation
-            AnimatedBuilder(
-              animation: _progressController,
-              builder: (context, child) {
-                final opacity = 0.6 + (math.sin(_progressController.value * math.pi * 4) * 0.4).abs();
-                return Opacity(
-                  opacity: opacity,
-                  child: Text(
-                    'Initializing Voclio...',
-                    style: TextStyle(
-                      color: primaryOrange,
-                      fontSize: isSmallScreen ? 14 : 16,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                );
-              },
+            const SizedBox(height: 20),
+            Text(
+              'Initializing Voclio...',
+              style: TextStyle(
+                color: colors.primary,
+                fontSize: isSmall ? 14 : 16,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.2,
+              ),
             ),
           ],
         );
@@ -543,64 +452,18 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
   }
 }
 
-// Custom painter for hexagon
-class HexagonPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  HexagonPainter(this.color, this.strokeWidth);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    for (int i = 0; i < 6; i++) {
-      final angle = (math.pi / 3) * i - (math.pi / 6);
-      final x = center.dx + radius * math.cos(angle);
-      final y = center.dy + radius * math.sin(angle);
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Custom painter for triangle
 class TrianglePainter extends CustomPainter {
   final Color color;
-
   TrianglePainter(this.color);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
+    final paint = Paint()..color = color..style = PaintingStyle.fill;
     final path = Path();
     path.moveTo(size.width / 2, 0);
     path.lineTo(0, size.height);
     path.lineTo(size.width, size.height);
     path.close();
-
     canvas.drawPath(path, paint);
   }
 
