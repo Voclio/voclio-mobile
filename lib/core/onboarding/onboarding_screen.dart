@@ -1,40 +1,25 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
+import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/core/styles/fonts/font_family_helper.dart';
+import 'package:voclio_app/core/styles/theme/color_extentions.dart';
+import '../common/animation/animate_do.dart';
+import '../common/buttons/custom_linear_button.dart';
+import '../common/inputs/text_app.dart';
+import 'model/onboarding_model.dart'; // ✅ استيراد الموديل الجديد
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  State<OnboardingScreen> createState() =>
+      _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState
+    extends State<OnboardingScreen> {
   final _controller = PageController();
   int _current = 0;
-
-  final Color _primary = AppColors.primary;
-  final Color _accent = AppColors.accent;
-
-  final List<_OnboardData> _pages = const [
-    _OnboardData(
-      image: 'assets/images/raw.png',
-      title: 'Speak Your Tasks',
-      subtitle:
-          'Simply speak and watch your voice transform into organized tasks and notes instantly.',
-    ),
-    _OnboardData(
-      image: 'assets/images/hi.png',
-      title: 'Smart Organization',
-      subtitle:
-          'AI-powered categorization automatically sorts your voice notes into tasks, reminders, and ideas.',
-    ),
-    _OnboardData(
-      image: 'assets/images/hi1.png',
-      title: 'Stay Productive',
-      subtitle:
-          'Access your voice-converted tasks anywhere and boost your productivity with hands-free note-taking.',
-    ),
-  ];
 
   @override
   void dispose() {
@@ -42,28 +27,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _onSkip() {
-    Navigator.of(context).maybePop();
-  }
+  void _onSkip() => Navigator.of(context).maybePop();
 
   void _onNext() {
-    if (_current < _pages.length - 1) {
-      _controller.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
+    if (_current < onboardingData.length - 1) {
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOut,
+      );
     }
   }
 
-  void _onGetStarted() {
-    Navigator.of(context).maybePop();
-  }
+  void _onGetStarted() => context.goRoute(AppRouter.login);
 
-  bool _shouldShowSkipAndMaybeLater() {
-    return _current >= 2; // Show after user has swiped to the 3rd screen (index 2)
-  }
+  bool _shouldShowSkipAndMaybeLater() => _current >= 2;
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
+    final colors = context.colors;
 
     return Scaffold(
       body: Container(
@@ -72,9 +55,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _accent.withOpacity(0.15),
-              _primary.withOpacity(0.08),
-              Colors.white,
+              colors.accent!.withOpacity(0.15),
+              colors.primary!.withOpacity(0.08),
+              colors.background!,
             ],
           ),
         ),
@@ -83,16 +66,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               // Top bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildBrand(),
+                    _buildBrand(context),
                     _shouldShowSkipAndMaybeLater()
-                        ? TextButton(
+                        ? CustomFadeInRight(
+                      duration: 500,
+                          child: CustomLinearButton(
+                                                width: 80,
                             onPressed: _onSkip,
-                            child: Text('Skip', style: TextStyle(color: _primary, fontWeight: FontWeight.w700)),
-                          )
+                            child: TextApp(
+                              text: 'Skip',
+                              theme: TextStyle(
+                                fontFamily: FontFamilyHelper.poppinsEnglish,
+                                fontSize: 18,
+                                color: colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        )
                         : const SizedBox.shrink(),
                   ],
                 ),
@@ -102,50 +101,95 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
-                  itemCount: _pages.length,
-                  onPageChanged: (i) => setState(() => _current = i),
-                  itemBuilder: (context, index) => _OnboardPage(
-                    data: _pages[index],
-                    primary: _primary,
-                    accent: _accent,
-                    isSmall: isSmall,
-                  ),
+                  itemCount: onboardingData.length,
+                  onPageChanged:
+                      (i) => setState(() => _current = i),
+                  itemBuilder:
+                      (context, index) => _OnboardPage(
+                        data: onboardingData[index],
+                        isSmall: isSmall,
+                      ),
                 ),
               ),
 
               // Indicators
               Padding(
-                padding: const EdgeInsets.only(top: 4, bottom: 16),
+                padding: const EdgeInsets.only(
+                  top: 4,
+                  bottom: 16,
+                ),
                 child: _DotsIndicator(
-                  count: _pages.length,
+                  count: onboardingData.length,
                   current: _current,
-                  activeColor: _primary,
-                  inactiveColor: _accent.withOpacity(0.4),
+                  activeColor: colors.primary!,
+                  inactiveColor: colors.accent!.withOpacity(
+                    0.4,
+                  ),
                 ),
               ),
 
               // Bottom actions
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  0,
+                  16,
+                  20,
+                ),
                 child: Row(
                   children: [
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          backgroundColor: _primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding:
+                              const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                          backgroundColor: colors.primary!,
+                          foregroundColor:
+                              colors.textColor!,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(14),
+                          ),
                           elevation: 2,
                         ),
-                        onPressed: _current == _pages.length - 1 ? _onGetStarted : _onNext,
+                        onPressed:
+                            _current ==
+                                    onboardingData.length -
+                                        1
+                                ? _onGetStarted
+                                : _onNext,
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
                           children: [
-                            Text(_current == _pages.length - 1 ? 'Get Started' : 'Next',
-                                style: const TextStyle(fontWeight: FontWeight.w800)),
+                            TextApp(
+                              text:
+                                  _current ==
+                                          onboardingData
+                                                  .length -
+                                              1
+                                      ? 'Get Started'
+                                      : 'Next',
+                              theme: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 20,
+                                color: Colors.white,
+
+                              ),
+                            ),
                             const SizedBox(width: 8),
-                            Icon(_current == _pages.length - 1 ? Icons.check_rounded : Icons.arrow_forward_rounded, size: 20),
+                            Icon(
+                              _current ==
+                                      onboardingData
+                                              .length -
+                                          1
+                                  ? Icons.check_rounded
+                                  : Icons
+                                      .arrow_forward_rounded,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
@@ -160,36 +204,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildBrand() {
-    return Image.asset(
-      'assets/images/Microphone Icon.png',
-      width: 60,
-      height: 60,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => Icon(
-        Icons.mic_rounded,
-        size: 60,
-        color: AppColors.primary,
+  Widget _buildBrand(BuildContext context) {
+    final colors = context.colors;
+    return CustomFadeInRight(
+      duration: 600,
+      child: CustomLinearButton(
+        width: 50,
+        onPressed: () {},
+        child: Icon(
+          Icons.dark_mode_rounded,
+          color: Colors.white,
+        ),
       ),
     );
   }
 }
 
 class _OnboardPage extends StatelessWidget {
-  final _OnboardData data;
-  final Color primary;
-  final Color accent;
+  final OnboardingModel data; // ✅ النوع الجديد من الموديل
   final bool isSmall;
 
   const _OnboardPage({
     required this.data,
-    required this.primary,
-    required this.accent,
     required this.isSmall,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -197,30 +240,36 @@ class _OnboardPage extends StatelessWidget {
         children: [
           const SizedBox(height: 8),
 
-          // Hero image - natural display
+          // Hero image
           Expanded(
             flex: 6,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 20,
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: Image.asset(
                   data.image,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.greyLight,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.image_outlined,
-                        size: 80,
-                        color: AppColors.grey,
-                      ),
-                    ),
-                  ),
+                  errorBuilder:
+                      (context, error, stackTrace) =>
+                          Container(
+                            decoration: BoxDecoration(
+                              color: colors.textColor,
+                              borderRadius:
+                                  BorderRadius.circular(20),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.image_outlined,
+                                size: 80,
+                                color: colors.textColor,
+                              ),
+                            ),
+                          ),
                 ),
               ),
             ),
@@ -232,18 +281,30 @@ class _OnboardPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  data.title,
+                TextApp(
+                  text: data.title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: isSmall ? 26 : 30, fontWeight: FontWeight.w900, color: primary, letterSpacing: 0.5),
+                  theme: TextStyle(
+                    fontSize: isSmall ? 26 : 30,
+                    fontWeight: FontWeight.w900,
+                    color: colors.textColor,
+                    letterSpacing: 0.5,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    data.subtitle,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                  ),
+                  child: TextApp(
+                    text: data.subtitle,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: isSmall ? 14 : 16, color: Colors.black87, height: 1.5, fontWeight: FontWeight.w500),
+                    theme: TextStyle(
+                      fontSize: isSmall ? 14 : 16,
+                      color: colors.textSecondary,
+                      height: 1.5,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -288,11 +349,3 @@ class _DotsIndicator extends StatelessWidget {
     );
   }
 }
-
-class _OnboardData {
-  final String image;
-  final String title;
-  final String subtitle;
-  const _OnboardData({required this.image, required this.title, required this.subtitle});
-}
-
