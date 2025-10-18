@@ -36,7 +36,7 @@ class AppGradientBackground extends StatelessWidget {
         child: child,
       ),
     );
-
+//سس
     if (useSafeArea) content = SafeArea(child: content);
 
     return content;
