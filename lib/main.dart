@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:voclio_app/core/extentions/context_extentions.dart';
-import 'package:voclio_app/core/styles/theme/app_theme.dart';
 import 'package:voclio_app/voclio_app.dart';
 import 'core/app/connectivily_control.dart';
-import 'core/routes/App_routes.dart';
-import 'core/splash/Voclio_splash_screen.dart';
+import 'core/app/theme_controller.dart';
+import 'core/app/language_controller.dart';
+import 'core/di/injection_container.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize dependencies
+  await setupDependencies();
+  
+  // Initialize controllers
   await ConnectivityControler.instance.init();
+  await ThemeController.instance.init();
+  await LanguageController.instance.init();
+  
   runApp(const VoclioApp());
 }
 

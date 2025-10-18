@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
-import 'package:voclio_app/core/styles/fonts/font_family_helper.dart';
-import 'package:voclio_app/core/styles/theme/color_extentions.dart';
+import 'package:voclio_app/core/app/theme_controller.dart';
+import 'package:voclio_app/core/app/language_controller.dart';
 import '../common/animation/animate_do.dart';
-import '../common/buttons/custom_linear_button.dart';
+import '../common/animation/smooth_toggle_animation.dart';
 import '../common/inputs/text_app.dart';
 import 'model/onboarding_model.dart'; // ✅ استيراد الموديل الجديد
 
@@ -27,8 +27,6 @@ class _OnboardingScreenState
     super.dispose();
   }
 
-  void _onSkip() => Navigator.of(context).maybePop();
-
   void _onNext() {
     if (_current < onboardingData.length - 1) {
       _controller.nextPage(
@@ -40,10 +38,22 @@ class _OnboardingScreenState
 
   void _onGetStarted() => context.goRoute(AppRouter.login);
 
-  bool _shouldShowSkipAndMaybeLater() => _current >= 2;
-
   @override
   Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: ThemeController.instance.isDarkMode,
+      builder: (context, isDarkMode, child) {
+        return ValueListenableBuilder<Locale>(
+          valueListenable: LanguageController.instance.currentLocale,
+          builder: (context, locale, child) {
+            return _buildOnboardingContent(context);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildOnboardingContent(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
     final colors = context.colors;
@@ -72,27 +82,9 @@ class _OnboardingScreenState
                 ),
                 child: Row(
                   mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                      MainAxisAlignment.start,
                   children: [
-                    _buildBrand(context),
-                    _shouldShowSkipAndMaybeLater()
-                        ? CustomFadeInRight(
-                      duration: 500,
-                          child: CustomLinearButton(
-                                                width: 80,
-                            onPressed: _onSkip,
-                            child: TextApp(
-                              text: 'Skip',
-                              theme: TextStyle(
-                                fontFamily: FontFamilyHelper.poppinsEnglish,
-                                fontSize: 18,
-                                color: colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        )
-                        : const SizedBox.shrink(),
+                    _buildTopControls(context),
                   ],
                 ),
               ),
@@ -170,8 +162,8 @@ class _OnboardingScreenState
                                           onboardingData
                                                   .length -
                                               1
-                                      ? 'Get Started'
-                                      : 'Next',
+                                      ? context.translate('get_started')
+                                      : context.translate('next'),
                               theme: const TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 20,
@@ -204,18 +196,90 @@ class _OnboardingScreenState
     );
   }
 
-  Widget _buildBrand(BuildContext context) {
+  Widget _buildTopControls(BuildContext context) {
     final colors = context.colors;
-    return CustomFadeInRight(
-      duration: 600,
-      child: CustomLinearButton(
-        width: 50,
-        onPressed: () {},
-        child: Icon(
-          Icons.dark_mode_rounded,
-          color: Colors.white,
+    return Row(
+      children: [
+        // Language Toggle Button
+        CustomFadeInRight(
+          duration: 600,
+          child: GestureDetector(
+            onTap: () async {
+              await LanguageController.instance.toggleLanguage();
+            },
+            child: SmoothContainerTransition(
+              isActive: LanguageController.instance.isArabic,
+              activeColor: colors.primary!.withOpacity(0.2),
+              inactiveColor: colors.primary!.withOpacity(0.1),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              borderRadius: 20,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SmoothToggleAnimation(
+                      isActive: LanguageController.instance.isArabic,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.elasticOut,
+                      rotationAngle: 0.25,
+                      child: Icon(
+                        Icons.language_rounded,
+                        color: colors.primary,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    SmoothTextTransition(
+                      text: LanguageController.instance.isArabic ? 'EN' : 'AR',
+                      isActive: LanguageController.instance.isArabic,
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeInOut,
+                      textColor: colors.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: 12),
+        // Dark Mode Toggle Button
+        CustomFadeInRight(
+          duration: 700,
+          child: GestureDetector(
+            onTap: () async {
+              await ThemeController.instance.toggleTheme();
+            },
+            child: SmoothContainerTransition(
+              isActive: ThemeController.instance.isDarkMode.value,
+              activeColor: colors.primary!.withOpacity(0.2),
+              inactiveColor: colors.primary!.withOpacity(0.1),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              borderRadius: 20,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: SmoothToggleAnimation(
+                  isActive: ThemeController.instance.isDarkMode.value,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.elasticOut,
+                  rotationAngle: 0.5,
+                  scaleEffect: true,
+                  child: Icon(
+                    ThemeController.instance.isDarkMode.value
+                        ? Icons.light_mode_rounded
+                        : Icons.dark_mode_rounded,
+                    color: colors.primary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -282,7 +346,7 @@ class _OnboardPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextApp(
-                  text: data.title,
+                  text: context.translate(data.titleKey),
                   textAlign: TextAlign.center,
                   theme: TextStyle(
                     fontSize: isSmall ? 26 : 30,
@@ -297,7 +361,7 @@ class _OnboardPage extends StatelessWidget {
                     horizontal: 8,
                   ),
                   child: TextApp(
-                    text: data.subtitle,
+                    text: context.translate(data.subtitleKey),
                     textAlign: TextAlign.center,
                     theme: TextStyle(
                       fontSize: isSmall ? 14 : 16,

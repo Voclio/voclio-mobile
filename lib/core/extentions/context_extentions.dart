@@ -2,42 +2,53 @@
 import 'package:flutter/material.dart';
 import 'package:voclio_app/core/styles/theme/color_extentions.dart';
 import '../language/app_localizations.dart';
-import '../styles/color/app_colors.dart';
 import 'package:go_router/go_router.dart';
 
-
-
-
+/// BuildContext extensions for Voclio app
+/// Provides convenient access to colors, translations, text styles, and navigation
+/// Makes the code cleaner and more readable throughout the app
 extension AppExtensions on BuildContext {
-  // colors
+  /// Get custom colors from theme
+  /// Returns MyColors instance with all app-specific colors
   MyColors get colors => Theme.of(this).extension<MyColors>()!;
-// language
-  String translate (String langKey){
+
+  /// Translate a language key to current locale text
+  /// [langKey] - the key from language JSON files
+  /// Returns the translated string for current language
+  String translate(String langKey) {
     return AppLocalizations.of(this)!.translate(langKey)!;
   }
 
-  // text
+  /// Get default text style from theme
+  /// Returns the displaySmall text style from current theme
   TextStyle get textStyle => Theme.of(this).textTheme.displaySmall!;
-  // routers
-  /// - ينفع ترجع للصفحة اللي قبلها
+
+  // Navigation methods using GoRouter
+  
+  /// Navigate to a new route (push)
+  /// [route] - the route path to navigate to
+  /// Allows going back to previous screen
   void pushRoute(String route) {
     push(route);
   }
 
-  /// ✅ يبدل الصفحة الحالية باللي بعدها (زي pushReplacement في Navigator)
-  /// - ماينفعش ترجع لللي قبلها
+  /// Navigate to a new route (replace current)
+  /// [route] - the route path to navigate to
+  /// Cannot go back to previous screen
   void goRoute(String route) {
     go(route);
   }
 
-  /// ✅ يرجع صفحة واحدة للخلف (زي Navigator.pop)
+  /// Go back to previous screen
+  /// Equivalent to Navigator.pop()
   void popRoute() {
     pop();
   }
 
-  /// ✅ يروح لصفحة جديدة ويمسح كل اللي قبلها (زي pushAndRemoveUntil)
-  /// - مثالي لو عايز تبدأ من صفحة معينة وتمنع الرجوع
+  /// Navigate to new route and clear navigation stack
+  /// [route] - the route path to navigate to
+  /// Perfect for starting from a specific screen and preventing back navigation
   void pushAndRemoveUntilRoute(String route) {
-    go(route); // go في GoRouter بيمسح اللي قبله أوتوماتيك
+    go(route); // GoRouter automatically clears previous routes
   }
 }

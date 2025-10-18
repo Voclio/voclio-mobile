@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Custom color theme extension for Voclio app
+/// This class extends ThemeData to provide custom colors for both light and dark themes
+/// Used throughout the app for consistent color management
 class MyColors extends ThemeExtension<MyColors> {
   const MyColors({
     required this.textColor,
@@ -25,29 +28,42 @@ class MyColors extends ThemeExtension<MyColors> {
     required this.error,
     required this.info,
   });
+
+  // Core brand colors
   final Color? textColor;
   final Color? primary;
   final Color? primaryLight;
   final Color? primaryDark;
+  
+  // Accent colors for secondary elements
   final Color? accent;
   final Color? accentLight;
   final Color? accentDark;
+  
+  // Basic colors
   final Color? white;
   final Color? black;
   final Color? grey;
   final Color? greyLight;
   final Color? greyDark;
+  
+  // Text colors for different contexts
   final Color? textPrimary;
   final Color? textSecondary;
   final Color? textLight;
+  
+  // Background colors
   final Color? background;
   final Color? backgroundLight;
   final Color? backgroundDark;
+  
+  // Status colors for different states
   final Color? success;
   final Color? warning;
   final Color? error;
   final Color? info;
 
+  /// Creates a copy of this color theme with some properties overridden
   @override
   ThemeExtension<MyColors> copyWith({
     Color? textColor,
@@ -74,7 +90,7 @@ class MyColors extends ThemeExtension<MyColors> {
     Color? info,
   }) {
     return MyColors(
-      textColor: textColor ?? this.textColor ,
+      textColor: textColor ?? this.textColor,
       primary: primary ?? this.primary,
       primaryLight: primaryLight ?? this.primaryLight,
       primaryDark: primaryDark ?? this.primaryDark,
@@ -99,6 +115,7 @@ class MyColors extends ThemeExtension<MyColors> {
     );
   }
 
+  /// Interpolates between two color themes for smooth transitions
   @override
   ThemeExtension<MyColors> lerp(
       covariant ThemeExtension<MyColors>? other,
@@ -107,7 +124,6 @@ class MyColors extends ThemeExtension<MyColors> {
     if (other is! MyColors) return this;
 
     return MyColors(
-
       primary: Color.lerp(primary, other.primary, t),
       primaryLight: Color.lerp(primaryLight, other.primaryLight, t),
       primaryDark: Color.lerp(primaryDark, other.primaryDark, t),
@@ -133,15 +149,16 @@ class MyColors extends ThemeExtension<MyColors> {
     );
   }
 
-  //  Light Theme
+  /// Light theme configuration - Professional blue and green colors
+  /// Suitable for productivity and voice-to-text applications
   static const MyColors light = MyColors(
-    primary: Color(0xFFF98006),
-    primaryLight: Color(0xFFFFB347),
-    primaryDark: Color(0xFFE5720A),
-    textColor : Color(0xFFF98006),
-    accent: Color(0xFFFFB347),
-    accentLight: Color(0xFFFFD180),
-    accentDark: Color(0xFFFF9800),
+    primary: Color(0xFF2196F3), // Professional blue for productivity apps
+    primaryLight: Color(0xFF64B5F6), // Light blue, easy on the eyes
+    primaryDark: Color(0xFF1976D2), // Dark blue, professional
+    textColor: Color(0xFF2196F3), // Blue text color
+    accent: Color(0xFF4CAF50), // Green for success and productivity
+    accentLight: Color(0xFF81C784), // Light green, comfortable
+    accentDark: Color(0xFF388E3C), // Dark green, professional
     white: Color(0xFFFFFFFF),
     black: Color(0xFF000000),
     grey: Color(0xFF9E9E9E),
@@ -159,36 +176,30 @@ class MyColors extends ThemeExtension<MyColors> {
     info: Color(0xFF2196F3),
   );
 
-  //  Dark Theme
+  /// Dark theme configuration - Same professional colors with dark backgrounds
+  /// Maintains consistency with light theme while providing dark mode support
   static const MyColors dark = MyColors(
-    primary: Color(0xFF4B4CED), // blueDark → لون أساسي
-    primaryLight: Color(0xFF37B6E9), // blueLight → النسخة الفاتحة من الأساسي
-    primaryDark: Color(0xFF242C3B), // mainColor → الغامق الأساسي
-    textColor : Color(0xFFE0E0E0),
-    accent: Color(0xFF37B6E9), // نفس blueLight كمساعد للألوان الثانوية
-    accentLight: Color(0xFF4B4CED),
-    accentDark: Color(0xFF2B3361), // navBarDark → accent غامق
-
+    primary: Color(0xFF2196F3), // Same professional blue
+    primaryLight: Color(0xFF64B5F6), // Same light blue
+    primaryDark: Color(0xFF1976D2), // Same dark blue
+    textColor: Color(0xFF64B5F6), // Light blue text for visibility in dark mode
+    accent: Color(0xFF4CAF50), // Same green for success and productivity
+    accentLight: Color(0xFF81C784), // Same light green
+    accentDark: Color(0xFF388E3C), // Same dark green
     white: Color(0xFFFFFFFF),
     black: Color(0xFF000000),
-
-    grey: Color(0xFF353F54), // black1 → رمادي متوسط
-    greyLight: Color(0xFF4B4CED), // blueDark كظل فاتح
-    greyDark: Color(0xFF222834), // black2 → رمادي غامق
-
-    textPrimary: Color(0xFFFFFFFF), // أبيض واضح للنصوص
-    textSecondary: Color(0xFFB0B0B0), // رمادي للنصوص الثانوية
-    textLight: Color(0xFFE0E0E0),
-
-    background: Color(0xFF222834), // الخلفية الداكنة الأساسية
-    backgroundLight: Color(0xFF2B3361), // لمسة من لون الـ navBar
-    backgroundDark: Color(0xFF121212),
-
-    success: Color(0xFF37B6E9), // نفس الـ blueLight كرمز نجاح
-    warning: Color(0xFFE5720A), // لون تحذيري متناسق
-    error: Color(0xFFE57373), // لون الخطأ المعتاد
-    info: Color(0xFF4B4CED), // الأزرق الغامق للمعلومات
+    grey: Color(0xFF424242), // Medium grey for dark mode
+    greyLight: Color(0xFF616161), // Light grey for dark mode
+    greyDark: Color(0xFF212121), // Dark grey for dark mode
+    textPrimary: Color(0xFFFFFFFF), // White for primary text
+    textSecondary: Color(0xFFB0B0B0), // Grey for secondary text
+    textLight: Color(0xFFFFFFFF), // White for light text
+    background: Color(0xFF121212), // Dark background
+    backgroundLight: Color(0xFF1E1E1E), // Slightly lighter dark background
+    backgroundDark: Color(0xFF000000), // Very dark background
+    success: Color(0xFF4CAF50), // Green for success
+    warning: Color(0xFFFF9800), // Orange for warnings
+    error: Color(0xFFF44336), // Red for errors
+    info: Color(0xFF2196F3), // Blue for information
   );
-
-
 }

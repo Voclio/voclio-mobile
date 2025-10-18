@@ -5,6 +5,9 @@ import 'package:voclio_app/core/extentions/context_extentions.dart';
 
 import '../inputs/text_app.dart';
 
+/// Custom button widget for Voclio app
+/// Provides consistent button styling and behavior across the app
+/// Supports loading states and custom styling
 class CustomButton extends StatelessWidget {
   const CustomButton({
     required this.onPressed,
@@ -21,17 +24,41 @@ class CustomButton extends StatelessWidget {
     this.loadingWidth = 30,
     this.loadingHeight = 30,
   });
+
+  /// Callback function when button is pressed
   final VoidCallback onPressed;
+  
+  /// Text content of the button
   final String text;
+  
+  /// Width of the button
   final double width;
+  
+  /// Height of the button
   final double height;
+  
+  /// Radius for top-left, top-right, and bottom-right corners
   final double? threeRadius;
+  
+  /// Radius for bottom-left corner
   final double? lastRadius;
+  
+  /// Background color of the button
   final Color? backgroundColor;
+  
+  /// Text color of the button
   final Color? textColor;
+  
+  /// Whether the button is in loading state
   final bool isLoading;
+  
+  /// Text alignment within the button
   final TextAlign? textAlign;
+  
+  /// Width of loading indicator
   final double? loadingWidth;
+  
+  /// Height of loading indicator
   final double? loadingHeight;
 
   @override

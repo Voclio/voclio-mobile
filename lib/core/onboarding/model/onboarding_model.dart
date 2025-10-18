@@ -1,33 +1,29 @@
-import 'package:flutter/material.dart';
-
 class OnboardingModel {
   final String image;
-  final String title;
-  final String subtitle;
+  final String titleKey;
+  final String subtitleKey;
 
   const OnboardingModel({
     required this.image,
-    required this.title,
-    required this.subtitle,
+    required this.titleKey,
+    required this.subtitleKey,
   });
 }
+
 const List<OnboardingModel> onboardingData = [
   OnboardingModel(
     image: 'assets/images/raw.png',
-    title: 'Speak Your Tasks',
-    subtitle:
-    'Simply speak and watch your voice transform into organized tasks and notes instantly.',
+    titleKey: 'speak_tasks',
+    subtitleKey: 'speak_tasks_subtitle',
   ),
   OnboardingModel(
     image: 'assets/images/hi.png',
-    title: 'Smart Organization',
-    subtitle:
-    'AI-powered categorization automatically sorts your voice notes into tasks, reminders, and ideas.',
+    titleKey: 'smart_organization',
+    subtitleKey: 'smart_organization_subtitle',
   ),
   OnboardingModel(
     image: 'assets/images/hi1.png',
-    title: 'Stay Productive',
-    subtitle:
-    'Access your voice-converted tasks anywhere and boost your productivity with hands-free note-taking.',
+    titleKey: 'stay_productive',
+    subtitleKey: 'stay_productive_subtitle',
   ),
 ];

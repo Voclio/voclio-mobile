@@ -32,4 +32,27 @@ class LangKeys {
   static const String no = 'no';
   static const String darkMode = 'dark_mode';
   static const String langCode = 'lang_code';
+  static const String forgotPassword = 'forgot_password';
+  static const String forgotPasswordDescription = 'forgot_password_description';
+  static const String resetPassword = 'reset_password';
+  static const String resetPasswordDescription = 'reset_password_description';
+  static const String otpVerification = 'otp_verification';
+  static const String otpDescription = 'otp_description';
+  static const String enterOtp = 'enter_otp';
+  static const String verify = 'verify';
+  static const String resendCode = 'resend_code';
+  static const String otpSent = 'otp_sent';
+  static const String otpVerified = 'otp_verified';
+  static const String otpInvalid = 'otp_invalid';
+  static const String passwordResetSuccess = 'password_reset_success';
+  static const String passwordResetError = 'password_reset_error';
+  static const String registerSuccess = 'register_success';
+  static const String registerError = 'register_error';
+  static const String loginSuccess = 'login_success';
+  static const String loginError = 'login_error';
+  static const String invalidCredentials = 'invalid_credentials';
+  static const String emailAlreadyExists = 'email_already_exists';
+  static const String weakPassword = 'weak_password';
+  static const String networkError = 'network_error';
+  static const String unknownError = 'unknown_error';
 }

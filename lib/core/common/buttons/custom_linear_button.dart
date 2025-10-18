@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 
+/// Custom linear gradient button widget for Voclio app
+/// Provides consistent gradient button styling across the app
+/// Uses app colors for gradient effects
 class CustomLinearButton extends StatelessWidget {
   const CustomLinearButton({
     required this.onPressed,
@@ -10,9 +12,17 @@ class CustomLinearButton extends StatelessWidget {
     this.width,
     super.key,
   });
+
+  /// Callback function when button is pressed
   final VoidCallback onPressed;
+  
+  /// Child widget to display inside the button
   final Widget child;
+  
+  /// Height of the button
   final double? height;
+  
+  /// Width of the button
   final double? width;
 
   @override
