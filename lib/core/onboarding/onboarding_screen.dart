@@ -199,89 +199,77 @@ class _OnboardingScreenState
 
   Widget _buildTopControls(BuildContext context) {
     final colors = context.colors;
-    return Row(
+    final isArabic = LanguageController.instance.isArabic;
+    final isDark = ThemeController.instance.isDarkMode.value;
 
-      children: [
-        // Language Toggle Button
-        CustomFadeInRight(
-          duration: 600,
-          child: GestureDetector(
-            onTap: () async {
-              await LanguageController.instance.toggleLanguage();
-            },
-            child: SmoothContainerTransition(
-              isActive: LanguageController.instance.isArabic,
-              activeColor: colors.primary!.withOpacity(0.2),
-              inactiveColor: colors.primary!.withOpacity(0.1),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              borderRadius: 20,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SmoothToggleAnimation(
-                      isActive: LanguageController.instance.isArabic,
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.elasticOut,
-                      rotationAngle: 0.25,
-                      child: Icon(
-                        Icons.language_rounded,
-                        color: colors.primary,
-                        size: 18,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          _AnimatedDirectionButton(
+            direction: isArabic ? AnimationDirection.right : AnimationDirection.left,
+            duration: const Duration(milliseconds: 600),
+            child: GestureDetector(
+              onTap: () async {
+                await LanguageController.instance.toggleLanguage();
+              },
+              child: SmoothContainerTransition(
+                isActive: isArabic,
+                activeColor: colors.primary!.withOpacity(0.2),
+                inactiveColor: colors.primary!.withOpacity(0.1),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                borderRadius: 20,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.language_rounded, color: colors.primary, size: 20),
+                      const SizedBox(width: 6),
+                      Text(
+                        isArabic ? 'EN' : 'AR',
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    SmoothTextTransition(
-                      text: LanguageController.instance.isArabic ? 'EN' : 'AR',
-                      isActive: LanguageController.instance.isArabic,
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeInOut,
-                      textColor: colors.primary,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-         SizedBox(width:240.w ),
-        // Dark Mode Toggle Button
-        CustomFadeInRight(
-          duration: 700,
-          child: GestureDetector(
-            onTap: () async {
-              await ThemeController.instance.toggleTheme();
-            },
-            child: SmoothContainerTransition(
-              isActive: ThemeController.instance.isDarkMode.value,
-              activeColor: colors.primary!.withOpacity(0.2),
-              inactiveColor: colors.primary!.withOpacity(0.1),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              borderRadius: 20,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: SmoothToggleAnimation(
-                  isActive: ThemeController.instance.isDarkMode.value,
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.elasticOut,
-                  rotationAngle: 0.5,
-                  scaleEffect: true,
-                  child: Icon(
-                    ThemeController.instance.isDarkMode.value
-                        ? Icons.light_mode_rounded
-                        : Icons.dark_mode_rounded,
-                    color: colors.primary,
-                    size: 20,
+                    ],
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+            SizedBox(width: 200.w,),
+          // 🌗 Dark Mode Toggle Button
+          _AnimatedDirectionButton(
+            direction: isDark ? AnimationDirection.left : AnimationDirection.right,
+            duration: const Duration(milliseconds: 600),
+            child: GestureDetector(
+              onTap: () async {
+                await ThemeController.instance.toggleTheme();
+              },
+              child: SmoothContainerTransition(
+                isActive: isDark,
+                activeColor: colors.primary!.withOpacity(0.2),
+                inactiveColor: colors.primary!.withOpacity(0.1),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                borderRadius: 20,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(
+                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                    color: colors.primary,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -413,5 +401,83 @@ class _DotsIndicator extends StatelessWidget {
         );
       }),
     );
+  }
+}
+enum AnimationDirection { left, right }
+
+class _AnimatedDirectionButton extends StatefulWidget {
+  final Widget child;
+  final AnimationDirection direction;
+  final Duration duration;
+
+  const _AnimatedDirectionButton({
+    required this.child,
+    required this.direction,
+    required this.duration,
+  });
+
+  @override
+  State<_AnimatedDirectionButton> createState() => _AnimatedDirectionButtonState();
+}
+
+class _AnimatedDirectionButtonState extends State<_AnimatedDirectionButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _rotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    _setupAnimations();
+    _controller.forward();
+  }
+
+  void _setupAnimations() {
+    final beginOffset =
+    widget.direction == AnimationDirection.right ? const Offset(0.3, 0) : const Offset(-0.3, 0);
+
+    _slideAnimation = Tween<Offset>(
+      begin: beginOffset,
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+
+    _rotationAnimation = Tween<double>(
+      begin: widget.direction == AnimationDirection.right ? 0.04 : -0.04,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedDirectionButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.direction != widget.direction) {
+      _setupAnimations();
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: RotationTransition(
+          turns: _rotationAnimation,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }

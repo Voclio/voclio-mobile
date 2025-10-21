@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isSmall ? 20.w : 24.w,
+                  horizontal: isSmall ? 20.w : 16.w,
                   vertical: isSmall ? 16.h : 20.h,
                 ),
               child: ConstrainedBox(

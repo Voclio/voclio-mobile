@@ -28,82 +28,79 @@ class AuthTopControls extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          /// 🌍 Language Toggle
-          _AnimatedButtonWrapper(
-            isActive: LanguageController.instance.isArabic,
-            duration: const Duration(milliseconds: 600),
-            direction: LanguageController.instance.isArabic
-                ? AnimationDirection.right
-                : AnimationDirection.left,
-            child: GestureDetector(
-              onTap: () async {
-                await LanguageController.instance.toggleLanguage();
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmall ? 12.w : 14.w,
-                  vertical: isSmall ? 6.h : 8.h,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.primary!.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(30.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.language_rounded,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        /// 🌍 Language Toggle
+        _AnimatedButtonWrapper(
+          isActive: LanguageController.instance.isArabic,
+          duration: const Duration(milliseconds: 600),
+          direction: LanguageController.instance.isArabic
+              ? AnimationDirection.right
+              : AnimationDirection.left,
+          child: GestureDetector(
+            onTap: () async {
+              await LanguageController.instance.toggleLanguage();
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmall ? 12.w : 14.w,
+                vertical: isSmall ? 6.h : 8.h,
+              ),
+              decoration: BoxDecoration(
+                color: colors.primary!.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.language_rounded,
+                    color: colors.primary,
+                    size: isSmall ? 18.sp : 20.sp,
+                  ),
+                  SizedBox(width: 6.w),
+                  Text(
+                    LanguageController.instance.isArabic ? 'EN' : 'AR',
+                    style: TextStyle(
                       color: colors.primary,
-                      size: isSmall ? 18.sp : 20.sp,
+                      fontSize: isSmall ? 14.sp : 16.sp,
+                      fontWeight: FontWeight.w600,
                     ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      LanguageController.instance.isArabic ? 'EN' : 'AR',
-                      style: TextStyle(
-                        color: colors.primary,
-                        fontSize: isSmall ? 14.sp : 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
+        ),
 
-          /// 🌗 Theme Toggle
-          _AnimatedButtonWrapper(
-            isActive: ThemeController.instance.isDarkMode.value,
-            duration: const Duration(milliseconds: 600),
-            direction: ThemeController.instance.isDarkMode.value
-                ? AnimationDirection.left
-                : AnimationDirection.right,
-            child: GestureDetector(
-              onTap: () async {
-                await ThemeController.instance.toggleTheme();
-              },
-              child: Container(
-                padding: EdgeInsets.all(isSmall ? 8.w : 10.w),
-                decoration: BoxDecoration(
-                  color: colors.primary!.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(30.r),
-                ),
-                child: Icon(
-                  ThemeController.instance.isDarkMode.value
-                      ? Icons.light_mode_rounded
-                      : Icons.dark_mode_rounded,
-                  color: colors.primary,
-                  size: isSmall ? 20.sp : 22.sp,
-                ),
+        /// 🌗 Theme Toggle
+        _AnimatedButtonWrapper(
+          isActive: ThemeController.instance.isDarkMode.value,
+          duration: const Duration(milliseconds: 600),
+          direction: ThemeController.instance.isDarkMode.value
+              ? AnimationDirection.left
+              : AnimationDirection.right,
+          child: GestureDetector(
+            onTap: () async {
+              await ThemeController.instance.toggleTheme();
+            },
+            child: Container(
+              padding: EdgeInsets.all(isSmall ? 8.w : 10.w),
+              decoration: BoxDecoration(
+                color: colors.primary!.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(30.r),
+              ),
+              child: Icon(
+                ThemeController.instance.isDarkMode.value
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+                color: colors.primary,
+                size: isSmall ? 20.sp : 22.sp,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
