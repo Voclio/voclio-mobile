@@ -2,7 +2,6 @@ part of 'auth_bloc.dart';
 
 abstract class AuthEvent extends Equatable {
   const AuthEvent();
-
   @override
   List<Object?> get props => [];
 }
@@ -57,9 +56,7 @@ class ResetPasswordEvent extends AuthEvent {
   final String email;
   final String newPassword;
   final String otp;
-
   const ResetPasswordEvent(this.email, this.newPassword, this.otp);
-
   @override
   List<Object?> get props => [email, newPassword, otp];
 }

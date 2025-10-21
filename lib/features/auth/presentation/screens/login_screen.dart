@@ -33,21 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onLogin() {
-    if (_formKey.currentState!.validate()) {
-      final request = AuthRequest(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      context.read<AuthBloc>().add(LoginEvent(request));
-    }
-  }
-
-  Future<void> _onRefresh() async {
-    // Clear any previous errors and reset form
-    context.read<AuthBloc>().add(RefreshAuthEvent());
-    await Future.delayed(const Duration(milliseconds: 500));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -222,4 +207,20 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+  void _onLogin() {
+    if (_formKey.currentState!.validate()) {
+      final request = AuthRequest(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      context.read<AuthBloc>().add(LoginEvent(request));
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    // Clear any previous errors and reset form
+    context.read<AuthBloc>().add(RefreshAuthEvent());
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
 }

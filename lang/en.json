@@ -5,6 +5,7 @@
     "welcome": "Welcome! Please enter your email and password to get started.",
     "your_email": "Your Email",
     "password": "Password",
+    "passwordConfirmation": "Confirm Password",
     "valid_email": "Please enter a valid email",
     "valid_passwrod": "Please enter a valid password, not less than 6 characters",
     "logged_successfully": "You have been logged in successfully",

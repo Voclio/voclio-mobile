@@ -41,7 +41,7 @@ class AuthTitleInfo extends StatelessWidget {
                     colorBlendMode: BlendMode.srcIn,
                   ),
                 ),
-                SizedBox(width: isSmall ? 12.w : 16.w),
+
                 TextApp(
                   text: 'Voclio',
                   textAlign: TextAlign.center,
@@ -53,7 +53,6 @@ class AuthTitleInfo extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: isSmall ? 16.h : 20.h),
           ],
           // Title
           TextApp(

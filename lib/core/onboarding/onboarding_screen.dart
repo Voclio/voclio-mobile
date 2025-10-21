@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/language_controller.dart';
@@ -199,6 +200,7 @@ class _OnboardingScreenState
   Widget _buildTopControls(BuildContext context) {
     final colors = context.colors;
     return Row(
+
       children: [
         // Language Toggle Button
         CustomFadeInRight(
@@ -244,7 +246,7 @@ class _OnboardingScreenState
             ),
           ),
         ),
-        const SizedBox(width: 12),
+         SizedBox(width:240.w ),
         // Dark Mode Toggle Button
         CustomFadeInRight(
           duration: 700,
