@@ -37,7 +37,7 @@ class VoclioApp extends StatelessWidget {
                       create: (context) => getIt<AuthBloc>(),
                       child: MaterialApp.router(
                         debugShowCheckedModeBanner: false,
-                        theme: isDarkMode ? themeDark() : themeLight(),
+                        theme: isDarkMode ?themeDark(): themeLight(),
                         darkTheme: themeDark(),
                         locale: locale,
                         supportedLocales: AppLocalizationsSetup.supportedLocales,

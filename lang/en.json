@@ -2,6 +2,7 @@
     "language": "English",
     "app_name": "Voclio",
     "login": "Login",
+    "welcoming":"Good Morning .",
     "welcome": "Welcome! Please enter your email and password to get started.",
     "your_email": "Your Email",
     "password": "Password",
