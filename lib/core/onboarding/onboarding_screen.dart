@@ -37,7 +37,7 @@ class _OnboardingScreenState
     }
   }
 
-  void _onGetStarted() => context.goRoute(AppRouter.login);
+  void _onGetStarted() => context.goRoute(AppRouter.home);
 
   @override
   Widget build(BuildContext context) {
