@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// This class extends ThemeData to provide custom colors for both light and dark themes
 /// Used throughout the app for consistent color management
 class MyColors extends ThemeExtension<MyColors> {
-  const MyColors({
+  const MyColors( {
     required this.textColor,
     required this.primary,
     required this.primaryLight,
@@ -27,6 +27,7 @@ class MyColors extends ThemeExtension<MyColors> {
     required this.warning,
     required this.error,
     required this.info,
+    required this.primaryDarkmode,
   });
 
   // Core brand colors
@@ -34,7 +35,7 @@ class MyColors extends ThemeExtension<MyColors> {
   final Color? primary;
   final Color? primaryLight;
   final Color? primaryDark;
-  
+  final Color? primaryDarkmode;
   // Accent colors for secondary elements
   final Color? accent;
   final Color? accentLight;
@@ -111,7 +112,7 @@ class MyColors extends ThemeExtension<MyColors> {
       success: success ?? this.success,
       warning: warning ?? this.warning,
       error: error ?? this.error,
-      info: info ?? this.info,
+      info: info ?? this.info, primaryDarkmode: primaryDarkmode??this.primaryDarkmode,
     );
   }
 
@@ -146,12 +147,14 @@ class MyColors extends ThemeExtension<MyColors> {
       error: Color.lerp(error, other.error, t),
       info: Color.lerp(info, other.info, t),
       textColor: Color.lerp(textColor, other.textColor, t),
+      primaryDarkmode: Color.lerp(primaryDarkmode, other.primaryDarkmode, t),
     );
   }
 
   /// Light theme configuration - Professional blue and green colors
   /// Suitable for productivity and voice-to-text applications
   static const MyColors light = MyColors(
+    primaryDarkmode:Color(0xFF1976D2),
     primary: Color(0xFF2196F3), // Professional blue for productivity apps
     primaryLight: Color(0xFF64B5F6), // Light blue, easy on the eyes
     primaryDark: Color(0xFF1976D2), // Dark blue, professional
@@ -200,6 +203,7 @@ class MyColors extends ThemeExtension<MyColors> {
     success: Color(0xFF4CAF50), // Green for success
     warning: Color(0xFFFF9800), // Orange for warnings
     error: Color(0xFFF44336), // Red for errors
-    info: Color(0xFF2196F3), // Blue for information
+    info: Color(0xFF2196F3),
+    primaryDarkmode: Color(0xFF64B5F6), // Blue for information
   );
 }

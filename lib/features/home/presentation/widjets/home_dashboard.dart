@@ -24,10 +24,12 @@ class HomeDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(height: 5.h,),
               Text('DashBoard',style: context.textStyle.copyWith(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w500,
                 color: context.colors.white,
+                  fontFamily: 'poppins'
 
               ),),
               SizedBox(height: 10.h,),
@@ -43,54 +45,61 @@ class HomeDashboard extends StatelessWidget {
                           fontSize: 30.sp,
                           fontWeight: FontWeight.w500,
                           color: context.colors.white,
+                            fontFamily: 'poppins'
                         ),),
                         Text('\t\t\t\tTasks\nCompleted',style: context.textStyle.copyWith(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
                           color: context.colors.white,
+                            fontFamily: 'poppins'
                         ),),
                       ],
                     ),
-                    SizedBox(width: 18.w,),
+                    SizedBox(width: 5.w,),
                     Column(
                       children: [
                         Text('5',style: context.textStyle.copyWith(
                           fontSize: 30.sp,
                           fontWeight: FontWeight.w500,
                           color: context.colors.white,
+                            fontFamily: 'poppins'
                         ),),
                         Text('\t\t\tTasks\nremaining',style: context.textStyle.copyWith(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
                           color: context.colors.white,
+                            fontFamily: 'poppins'
                         ),),
                       ],
                     ),
-                    SizedBox(width: 18.w,),
+                    SizedBox(width: 5.w,),
                     VerticalDivider(
                       indent: 5,
                       endIndent: 20,
+
                       color: context.colors.white,
                       thickness: 1,
                     ),
-
+                    SizedBox(width: 5.w,),
                     Column(
                       children: [
                         Text('3h',style: context.textStyle.copyWith(
                           fontSize: 30.sp,
                           fontWeight: FontWeight.w500,
                           color: context.colors.white,
+                            fontFamily: 'poppins'
                         ),),
                         Text('Total\n\ttime',style: context.textStyle.copyWith(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
                           color: context.colors.white,
+                            fontFamily: 'poppins'
                         ),),
                       ],
                     ),
-
+                      SizedBox(width: 10.w,),
                     Padding(
-                      padding: const EdgeInsets.only(left: 20,bottom: 15),
+                      padding: const EdgeInsets.only(left: 10,bottom: 20),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -109,7 +118,8 @@ class HomeDashboard extends StatelessWidget {
                             style: context.textStyle.copyWith(
                               color: context.colors.white,
                               fontWeight: FontWeight.w900,
-                              fontSize: 18.sp,
+                              fontSize: 20.sp,
+                                fontFamily: 'poppins'
                             ),
                           ),
                         ],
