@@ -7,6 +7,7 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../../../core/styles/fonts/font_weight_helper.dart';
+import '../../../../core/common/animation/animate_do.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
@@ -62,20 +63,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
               AuthTopControls(),
               SizedBox(height: isSmall ? 20.h : 40.h),
 
-              TextApp(
-                text: context.translate(LangKeys.createAccount),
-                textAlign: TextAlign.center,
-                theme: context.textStyle.copyWith(
-                    fontSize: isSmall ? 24.sp : 30.sp,
-                    fontWeight: FontWeightHelper.bold,
-                    color: context.colors.primary
-                ),
-              ),
+              CustomFadeIn(
+                duration: 600,
+                child: Column(
+                  children: [
+                    TextApp(
+                      text: context.translate(LangKeys.createAccount),
+                      textAlign: TextAlign.center,
+                      theme: context.textStyle.copyWith(
+                          fontSize: isSmall ? 24.sp : 30.sp,
+                          fontWeight: FontWeightHelper.bold,
+                          color: context.colors.primary
+                      ),
+                    ),
 
+                    SizedBox(height: isSmall ? 15.h : 20.h),
 
-              SizedBox(height: isSmall ? 15.h : 20.h),
-
-              AuthTextField(
+                    Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    AuthTextField(
                 label: context.translate(LangKeys.fullName),
                 hint: context.translate(LangKeys.fullName),
                 controller: _nameController,
@@ -134,8 +142,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: isSmall ? 16.h : 20.h),
 
               AuthTextField(
-                label: context.translate(LangKeys.passwordConfirmation) ?? '',
-                hint: context.translate(LangKeys.passwordConfirmation) ?? '',
+                label: context.translate(LangKeys.passwordConfirmation),
+                hint: context.translate(LangKeys.passwordConfirmation),
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 suffixIcon: IconButton(
@@ -163,14 +171,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               SizedBox(height: isSmall ? 24.h : 32.h),
 
-              AuthButton(
-                    text: context.translate(LangKeys.signUp),
-                    onPressed: _onRegister,
-
-                  ),
+                    AuthButton(
+                      text: context.translate(LangKeys.signUp),
+                      onPressed: _onRegister,
+                    ),
+                  ],
+                ),
+                    ),
+                  ],
+                ),
+              ),
               SizedBox(height: isSmall ? 20.h : 24.h),
 
-              Row(
+              CustomFadeIn(
+                duration: 600,
+                child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
@@ -188,6 +203,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ],
               ),
+              ),
             ],
           ),
         ),
@@ -195,7 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
   void _onRegister() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() ?? false) {
       final request = AuthRequest(
         email: _emailController.text.trim(),
         password: _passwordController.text,

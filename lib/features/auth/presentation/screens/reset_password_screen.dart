@@ -7,6 +7,7 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../../../core/styles/fonts/font_weight_helper.dart';
+import '../../../../core/common/animation/animate_do.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
@@ -81,113 +82,121 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
                 SizedBox(height: isSmall ? 20.h : 40.h),
 
-                 // Title info
-                TextApp(
-                  text: context.translate(LangKeys.resetPassword),
-                  textAlign: TextAlign.center,
-                  theme: context.textStyle.copyWith(
-                      fontSize: isSmall ? 24.sp : 30.sp,
-                      fontWeight: FontWeightHelper.bold,
-                      color: context.colors.primary
+                // Content wrapped with CustomFadeIn
+                CustomFadeIn(
+                  duration: 600,
+                  child: Column(
+                    children: [
+                      // Title info
+                      TextApp(
+                        text: context.translate(LangKeys.resetPassword),
+                        textAlign: TextAlign.center,
+                        theme: context.textStyle.copyWith(
+                            fontSize: isSmall ? 24.sp : 30.sp,
+                            fontWeight: FontWeightHelper.bold,
+                            color: context.colors.primary
+                        ),
+                      ),
+
+                      SizedBox(height: isSmall ? 30.h : 40.h),
+
+                      // OTP field
+                      AuthTextField(
+                        label: context.translate(LangKeys.enterOtp),
+                        hint: '123456',
+                        controller: _otpController,
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the verification code';
+                          }
+                          if (value.length != 6) {
+                            return 'Please enter a valid 6-digit code';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: isSmall ? 16.h : 20.h),
+
+                      // New password field
+                      AuthTextField(
+                        label: 'New ${context.translate(LangKeys.password)}',
+                        hint: 'New ${context.translate(LangKeys.password)}',
+                        controller: _newPasswordController,
+                        obscureText: _obscureNewPassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                            color: context.colors.primary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureNewPassword = !_obscureNewPassword;
+                            });
+                          },
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return context.translate(LangKeys.validPasswrod);
+                          }
+                          if (value.length < 6) {
+                            return context.translate(LangKeys.validPasswrod);
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: isSmall ? 16.h : 20.h),
+
+                      // Confirm password field
+                      AuthTextField(
+                        label: 'Confirm New ${context.translate(LangKeys.password)}',
+                        hint: 'Confirm New ${context.translate(LangKeys.password)}',
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            color: context.colors.primary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your new password';
+                          }
+                          if (value != _newPasswordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: isSmall ? 24.h : 32.h),
+
+                      // Reset password button
+                      AuthButton(
+                            text: context.translate(LangKeys.resetPassword),
+                            onPressed: _onResetPassword,
+
+                          ),
+
+                      SizedBox(height: isSmall ? 20.h : 24.h),
+
+                      // Back to login
+                      AuthLinkButton(
+                        text: 'Back to ${context.translate(LangKeys.login)}',
+                        onPressed: () {
+                          context.goRoute(AppRouter.login);
+                        },
+                      ),
+                    ],
                   ),
-                ),
-
-                SizedBox(height: isSmall ? 30.h : 40.h),
-
-                // OTP field
-                AuthTextField(
-                  label: context.translate(LangKeys.enterOtp),
-                  hint: '123456',
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the verification code';
-                    }
-                    if (value.length != 6) {
-                      return 'Please enter a valid 6-digit code';
-                    }
-                    return null;
-                  },
-                ),
-
-                SizedBox(height: isSmall ? 16.h : 20.h),
-
-                // New password field
-                AuthTextField(
-                  label: 'New ${context.translate(LangKeys.password)}',
-                  hint: 'New ${context.translate(LangKeys.password)}',
-                  controller: _newPasswordController,
-                  obscureText: _obscureNewPassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
-                      color: context.colors.primary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureNewPassword = !_obscureNewPassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return context.translate(LangKeys.validPasswrod);
-                    }
-                    if (value.length < 6) {
-                      return context.translate(LangKeys.validPasswrod);
-                    }
-                    return null;
-                  },
-                ),
-
-                SizedBox(height: isSmall ? 16.h : 20.h),
-
-                // Confirm password field
-                AuthTextField(
-                  label: 'Confirm New ${context.translate(LangKeys.password)}',
-                  hint: 'Confirm New ${context.translate(LangKeys.password)}',
-                  controller: _confirmPasswordController,
-                  obscureText: _obscureConfirmPassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                      color: context.colors.primary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your new password';
-                    }
-                    if (value != _newPasswordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
-
-                SizedBox(height: isSmall ? 24.h : 32.h),
-
-                // Reset password button
-                AuthButton(
-                      text: context.translate(LangKeys.resetPassword),
-                      onPressed: _onResetPassword,
-
-                    ),
-
-                SizedBox(height: isSmall ? 20.h : 24.h),
-
-                // Back to login
-                AuthLinkButton(
-                  text: 'Back to ${context.translate(LangKeys.login)}',
-                  onPressed: () {
-                    context.goRoute(AppRouter.login);
-                  },
                 ),
               ],
             ),

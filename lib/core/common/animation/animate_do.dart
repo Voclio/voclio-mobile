@@ -1,5 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/app/app_cubit.dart';
 
 class CustomFadeInDown extends StatelessWidget {
   const CustomFadeInDown({
@@ -81,6 +83,63 @@ class CustomFadeInRight extends StatelessWidget {
       duration: Duration(milliseconds: duration),
       from: 40, // 👈 يبدأ من اليمين
       child: child,
+    );
+  }
+}
+
+/// CustomFadeIn widget that re-animates when language changes
+class CustomFadeIn extends StatefulWidget {
+  const CustomFadeIn({
+    required this.child,
+    this.duration = 600,
+    super.key,
+  });
+
+  final Widget child;
+  final int duration;
+
+  @override
+  State<CustomFadeIn> createState() => _CustomFadeInState();
+}
+
+class _CustomFadeInState extends State<CustomFadeIn>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: Duration(milliseconds: widget.duration),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AppCubit, AppState>(
+      listenWhen: (previous, current) => previous.locale != current.locale,
+      listener: (context, state) {
+        // Re-animate when language changes
+        _controller.reset();
+        _controller.forward();
+      },
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: widget.child,
+      ),
     );
   }
 }

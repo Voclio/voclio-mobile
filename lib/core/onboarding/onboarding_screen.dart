@@ -6,6 +6,7 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/app_cubit.dart';
 import '../common/animation/smooth_toggle_animation.dart';
+import '../common/animation/animate_do.dart';
 import '../common/inputs/text_app.dart';
 import '../styles/fonts/font_weight_helper.dart';
 import 'model/onboarding_model.dart'; // ✅ استيراد الموديل الجديد
@@ -80,16 +81,19 @@ class _OnboardingScreenState
 
             // Pages
             Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: onboardingData.length,
-                onPageChanged:
-                    (i) => setState(() => _current = i),
-                itemBuilder:
-                    (context, index) => _OnboardPage(
-                      data: onboardingData[index],
-                      isSmall: isSmall,
-                    ),
+              child: CustomFadeIn(
+                duration: 600,
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: onboardingData.length,
+                  onPageChanged:
+                      (i) => setState(() => _current = i),
+                  itemBuilder:
+                      (context, index) => _OnboardPage(
+                        data: onboardingData[index],
+                        isSmall: isSmall,
+                      ),
+                ),
               ),
             ),
 
@@ -117,65 +121,69 @@ class _OnboardingScreenState
                 16,
                 20,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(
-                              vertical: 16,
-                            ),
-                        backgroundColor: colors.primary!,
-                        foregroundColor:
-                            colors.primary!,
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(14),
+              child: CustomFadeIn(
+                duration: 600,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding:
+                              const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                          backgroundColor: colors.primary!,
+                          foregroundColor:
+                              colors.primary!,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(14),
+                          ),
+                          elevation: 2,
                         ),
-                        elevation: 2,
-                      ),
-                      onPressed:
-                          _current ==
-                                  onboardingData.length -
-                                      1
-                              ? _onGetStarted
-                              : _onNext,
-                      child: Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-                        children: [
-                          TextApp(
-                            text:
-                                _current ==
-                                        onboardingData
-                                                .length -
-                                            1
-                                    ? context.translate('get_started')
-                                    : context.translate('next'),
-                            theme: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 20,
-                              color: Colors.white,
-
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
+                        onPressed:
                             _current ==
-                                    onboardingData
-                                            .length -
+                                    onboardingData.length -
                                         1
-                                ? Icons.check_rounded
-                                : Icons
-                                    .arrow_forward_rounded,
-                            size: 20,
-                          ),
-                        ],
+                                ? _onGetStarted
+                                : _onNext,
+                        child: Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.center,
+                          children: [
+                            TextApp(
+                              text:
+                                  _current ==
+                                          onboardingData
+                                                  .length -
+                                              1
+                                      ? context.translate('get_started')
+                                      : context.translate('next'),
+                              theme: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 20,
+                                color: Colors.white,
+
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              _current ==
+                                      onboardingData
+                                              .length -
+                                          1
+                                  ? Icons.check_rounded
+                                  : Icons
+                                      .arrow_forward_rounded,
+                              color: context.colors.white,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -194,37 +202,40 @@ class _OnboardingScreenState
       child: Row(
         children: [
           _AnimatedDirectionButton(
-            direction: isArabic ? AnimationDirection.right : AnimationDirection.left,
             duration: const Duration(milliseconds: 600),
+            direction: isArabic
+                ? AnimationDirection.right
+                : AnimationDirection.left,
             child: GestureDetector(
               onTap: () async {
                 await appCubit.toggleLanguage();
               },
-              child: SmoothContainerTransition(
-                isActive: isArabic,
-                activeColor: colors.primary!.withOpacity(0.2),
-                inactiveColor: colors.primary!.withOpacity(0.1),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                borderRadius: 20,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(Icons.language_rounded, color: colors.primary, size: 20),
-                      const SizedBox(width: 6),
-                      Text(
-                        isArabic ? 'EN' : 'AR',
-                        style: TextStyle(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
-                        ),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal:  6.w,
+                  vertical:  8.h,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.primary!.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.language_rounded,
+                      color: colors.primary,
+                      size:  26.sp,
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      isArabic ? 'EN' : 'AR',
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

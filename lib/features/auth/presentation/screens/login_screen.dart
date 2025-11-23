@@ -7,6 +7,7 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
 import '../../../../core/styles/fonts/font_weight_helper.dart';
+import '../../../../core/common/animation/animate_do.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
@@ -65,8 +66,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     SizedBox(height: isSmall ? 20.h : 40.h),
 
-                    // Title info
-                    Column(
+                    // Title info wrapped with CustomFadeIn
+                    CustomFadeIn(
+                      duration: 600,
+                      child: Column(
                       children: [
                         TextApp(
                           text: context.translate(LangKeys.login),
@@ -89,6 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
+                    ),
                     ),
 
                     SizedBox(height: isSmall ? 30.h : 40.h),

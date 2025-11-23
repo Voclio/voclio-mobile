@@ -10,10 +10,10 @@ abstract class AppState extends Equatable {
 }
 
 class AppInitial extends AppState {
-  const AppInitial(Locale locale) : super(locale);
+  const AppInitial(super.locale);
 }
 
 class AppLanguageChanged extends AppState {
-  const AppLanguageChanged(Locale locale) : super(locale);
+  const AppLanguageChanged(super.locale);
 }
 
