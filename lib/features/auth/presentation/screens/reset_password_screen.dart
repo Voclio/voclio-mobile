@@ -98,24 +98,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         ),
                       ),
 
-                      SizedBox(height: isSmall ? 30.h : 40.h),
 
-                      // OTP field
-                      AuthTextField(
-                        label: context.translate(LangKeys.enterOtp),
-                        hint: '123456',
-                        controller: _otpController,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter the verification code';
-                          }
-                          if (value.length != 6) {
-                            return 'Please enter a valid 6-digit code';
-                          }
-                          return null;
-                        },
-                      ),
+
+
+
 
                       SizedBox(height: isSmall ? 16.h : 20.h),
 

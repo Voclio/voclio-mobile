@@ -32,11 +32,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _onSendResetCode() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final email = _emailController.text.trim();
-      context.read<AuthBloc>().add(ForgotPasswordEvent(email));
-      context.goRoute('${AppRouter.otp}?email=$email&type=forgotPassword');
-    }
+    context.goRoute(AppRouter.otp);
+    // if (_formKey.currentState?.validate() ?? false) {
+    //   final email = _emailController.text.trim();
+    //   context.read<AuthBloc>().add(ForgotPasswordEvent(email));
+    //   context.goRoute('${AppRouter.otp}?email=$email&type=forgotPassword');
+    // }
   }
 
   Future<void> _onRefresh() async {

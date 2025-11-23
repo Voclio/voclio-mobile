@@ -146,7 +146,6 @@ class MyColors extends ThemeExtension<MyColors> {
   /// Suitable for productivity and voice-to-text applications
   static const MyColors light = MyColors(
     primary: Color(0xFF9B87C8), // Professional blue for productivity apps
-
     accent: Color(0xFF4CAF50), // Green for success and productivity
     accentLight: Color(0xFF81C784), // Light green, comfortable
     accentDark: Color(0xFF388E3C), // Dark green, professional

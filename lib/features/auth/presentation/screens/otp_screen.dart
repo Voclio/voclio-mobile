@@ -72,17 +72,18 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   void _onVerifyOTP() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final request = OTPRequest(
-        email: widget.email,
-        otp: _otpController.text.trim(),
-        type: widget.type,
-      );
-      context.read<AuthBloc>().add(VerifyOTPEvent(request));
-      if (widget.type == OTPType.forgotPassword) {
-        context.pushRoute('${AppRouter.resetPassword}?email=${widget.email}');
-      }
-    }
+    context.goRoute(AppRouter.resetPassword);
+    // if (_formKey.currentState?.validate() ?? false) {
+    //   final request = OTPRequest(
+    //     email: widget.email,
+    //     otp: _otpController.text.trim(),
+    //     type: widget.type,
+    //   );
+    //   context.read<AuthBloc>().add(VerifyOTPEvent(request));
+    //   if (widget.type == OTPType.forgotPassword) {
+    //     context.pushRoute('${AppRouter.resetPassword}?email=${widget.email}');
+    //   }
+    // }
   }
 
   void _onResendOTP() {
