@@ -16,7 +16,7 @@ class HomeDashboard extends StatelessWidget {
         width: double.infinity,
         height: 150.h,
         decoration: BoxDecoration(
-            color: context.colors.primaryDark,
+            color: context.colors.primary,
             borderRadius: BorderRadius.circular(22.r)
         ),
         child: Padding(

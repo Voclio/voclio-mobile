@@ -45,11 +45,12 @@ class AuthTextField extends StatelessWidget {
             theme: context.textStyle.copyWith(
               fontSize: isSmall ? 14.sp : 16.sp,
               fontWeight: FontWeightHelper.medium,
-              color: colors.textColor,
+              color: colors.primary,
             ),
           ),
           SizedBox(height: isSmall ? 6.h : 8.h),
           TextFormField(
+
             controller: controller,
             keyboardType: keyboardType,
             obscureText: obscureText,
@@ -58,13 +59,13 @@ class AuthTextField extends StatelessWidget {
             enabled: enabled,
             style: context.textStyle.copyWith(
               fontSize: isSmall ? 14.sp : 16.sp,
-              color: colors.textColor,
+              color: colors.primary,
             ),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: context.textStyle.copyWith(
                 fontSize: isSmall ? 12.sp : 14.sp,
-                color: colors.textColor?.withOpacity(0.6),
+                color: colors.primary?.withOpacity(0.6),
               ),
               suffixIcon: suffixIcon,
               filled: true,

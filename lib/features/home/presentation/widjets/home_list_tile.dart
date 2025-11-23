@@ -16,7 +16,7 @@ class HomeListTile extends StatelessWidget {
         style: context.textStyle.copyWith(
           fontSize: 14.sp,
           fontWeight: FontWeight.w400,
-          color: context.colors.textColor,
+          color: context.colors.primary,
         ),
       ),
       subtitle: Padding(
@@ -26,7 +26,7 @@ class HomeListTile extends StatelessWidget {
           style: context.textStyle.copyWith(
             fontSize: 22.sp,
             fontWeight: FontWeight.bold,
-            color: context.colors.textColor,
+            color: context.colors.primary,
           ),
         ),
       ),
@@ -39,7 +39,7 @@ class HomeListTile extends StatelessWidget {
           onPressed: () {},
           icon: Icon(
             Icons.notifications,
-            color: context.colors.textColor,
+            color: context.colors.primary,
           ),
         ),
       ),

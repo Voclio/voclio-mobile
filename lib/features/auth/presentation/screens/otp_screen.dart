@@ -4,8 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 
+import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
-import '../widgets/auth_title_info.dart';
+import '../../../../core/styles/fonts/font_weight_helper.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
@@ -70,14 +71,15 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   void _onVerifyOTP() {
-    if (_formKey.currentState!.validate()) {
-      final request = OTPRequest(
-        email: widget.email,
-        otp: _otpController.text.trim(),
-        type: widget.type,
-      );
-      context.read<AuthBloc>().add(VerifyOTPEvent(request));
-    }
+    context.pushRoute(AppRouter.resetPassword);
+    // if (_formKey.currentState!.validate()) {
+    //   final request = OTPRequest(
+    //     email: widget.email,
+    //     otp: _otpController.text.trim(),
+    //     type: widget.type,
+    //   );
+    //   context.read<AuthBloc>().add(VerifyOTPEvent(request));
+    // }
   }
 
   void _onResendOTP() {
@@ -93,16 +95,7 @@ class _OTPScreenState extends State<OTPScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
-  String _getTitle() {
-    switch (widget.type) {
-      case OTPType.registration:
-        return context.translate(LangKeys.otpVerification);
-      case OTPType.forgotPassword:
-        return context.translate(LangKeys.otpVerification);
-      case OTPType.login:
-        return context.translate(LangKeys.otpVerification);
-    }
-  }
+
 
 
   @override
@@ -110,137 +103,117 @@ class _OTPScreenState extends State<OTPScreen> {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
     
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is OTPVerified) {
-          if (widget.type == OTPType.forgotPassword) {
-            context.goRoute('${AppRouter.resetPassword}?email=${widget.email}');
-          } else {
-            context.goRoute(AppRouter.home);
-          }
-        } else if (state is OTPSent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.translate(LangKeys.otpSent)),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                context.colors.accent!.withOpacity(0.15),
-                context.colors.primary!.withOpacity(0.08),
-                context.colors.background!,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _onRefresh,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmall ? 20.w : 24.w,
-                  vertical: isSmall ? 16.h : 20.h,
-                ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Top controls (theme and language toggles)
-                    AuthTopControls(),
+    return Scaffold(
+      body:
+         SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmall ? 20.w : 24.w,
+                vertical: isSmall ? 16.h : 20.h,
+              ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Top controls (theme and language toggles)
+                  AuthTopControls(),
 
-                    SizedBox(height: isSmall ? 20.h : 40.h),
+                  SizedBox(height: isSmall ? 20.h : 40.h),
 
-                     // Title info
-                     AuthTitleInfo(
-                        title: _getTitle(),
-                     ),
-
-                    SizedBox(height: isSmall ? 30.h : 40.h),
-
-                    // OTP field
-                    AuthTextField(
-                      label: context.translate(LangKeys.enterOtp),
-                      hint: '123456',
-                      controller: _otpController,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the verification code';
-                        }
-                        if (value.length != 6) {
-                          return 'Please enter a valid 6-digit code';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: isSmall ? 24.h : 32.h),
-
-                    // Verify button
-                    BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        return AuthButton(
-                          text: context.translate(LangKeys.verify),
-                          onPressed: _onVerifyOTP,
-                          isLoading: state is OTPLoading,
-                        );
-                      },
-                    ),
-
-                    SizedBox(height: isSmall ? 20.h : 24.h),
-
-                    // Resend code
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Didn't receive the code? ",
-                          style: context.textStyle.copyWith(
-                            fontSize: isSmall ? 12.sp : 14.sp,
-                            color: context.colors.textColor!.withOpacity(0.7),
-                          ),
+                   // Title info
+                  Column(
+                    children: [
+                      TextApp(
+                        text: context.translate(LangKeys.otpVerification),
+                        textAlign: TextAlign.center,
+                        theme: context.textStyle.copyWith(
+                            fontSize: isSmall ? 24.sp : 30.sp,
+                            fontWeight: FontWeightHelper.bold,
+                            color: context.colors.primary
                         ),
-                        AuthLinkButton(
-                          text: _canResend 
-                              ? context.translate(LangKeys.resendCode)
-                              : 'Resend in ${_resendCountdown}s',
-                          onPressed: _canResend ? _onResendOTP : null,
+                      ),
+                      SizedBox(height: 16.h,),
+                      TextApp(
+                        text: context.translate(LangKeys.otpDescription),
+                        textAlign: TextAlign.center,
+                        theme: context.textStyle.copyWith(
+                          fontSize: isSmall ? 15.sp : 15.sp,
+                          fontWeight:FontWeight.w400,
+                          color: context.colors.grey?.withOpacity(0.7),
+
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
 
-                    SizedBox(height: isSmall ? 12.h : 16.h),
+                  SizedBox(height: isSmall ? 30.h : 40.h),
 
-                    // Back to login
-                    AuthLinkButton(
-                      text: 'Back to ${context.translate(LangKeys.login)}',
-                      onPressed: () {
-                        context.goRoute(AppRouter.login);
-                      },
-                    ),
-                  ],
-                ),
+                  // OTP field
+                  AuthTextField(
+                    label: context.translate(LangKeys.enterOtp),
+                    hint: '123456',
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the verification code';
+                      }
+                      if (value.length != 6) {
+                        return 'Please enter a valid 6-digit code';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  SizedBox(height: isSmall ? 24.h : 32.h),
+
+                  // Verify button
+                  AuthButton(
+                        text: context.translate(LangKeys.verify),
+                        onPressed: _onVerifyOTP
+                      ),
+
+                  SizedBox(height: isSmall ? 20.h : 24.h),
+
+                  // Resend code
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Didn't receive the code? ",
+                        style: context.textStyle.copyWith(
+                          fontSize: isSmall ? 12.sp : 14.sp,
+                          color: context.colors.primary!.withOpacity(0.7),
+                        ),
+                      ),
+                      AuthLinkButton(
+                        text: _canResend
+                            ? context.translate(LangKeys.resendCode)
+                            : 'Resend in ${_resendCountdown}s',
+                        onPressed: _canResend ? _onResendOTP : null,
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: isSmall ? 12.h : 16.h),
+
+                  // Back to login
+                  AuthLinkButton(
+                    text: 'Back to ${context.translate(LangKeys.login)}',
+                    onPressed: () {
+                      context.goRoute(AppRouter.login);
+                    },
+                  ),
+                ],
               ),
             ),
-            ),
+          ),
           ),
         ),
-      ),
-    );
+      );
+
   }
 }

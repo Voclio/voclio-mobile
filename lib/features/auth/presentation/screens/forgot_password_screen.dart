@@ -4,8 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 
+import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
-import '../widgets/auth_title_info.dart';
+import '../../../../core/styles/fonts/font_weight_helper.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
@@ -30,9 +31,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   void _onSendResetCode() {
-    if (_formKey.currentState!.validate()) {
-      context.read<AuthBloc>().add(ForgotPasswordEvent(_emailController.text.trim()));
-    }
+   context.goRoute(AppRouter.otp);
   }
 
   Future<void> _onRefresh() async {
@@ -46,121 +45,102 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
     
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is ForgotPasswordSent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(context.translate(LangKeys.otpSent)),
-              backgroundColor: Colors.green,
+    return Scaffold(
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmall ? 20.w : 24.w,
+              vertical: isSmall ? 16.h : 20.h,
             ),
-          );
-          // Navigate to OTP screen
-          context.goRoute('${AppRouter.otp}?email=${_emailController.text.trim()}&type=forgotPassword');
-        } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                         MediaQuery.of(context).padding.top -
+                         MediaQuery.of(context).padding.bottom,
             ),
-          );
-        }
-      },
-      child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                context.colors.accent!.withOpacity(0.15),
-                context.colors.primary!.withOpacity(0.08),
-                context.colors.background!,
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: RefreshIndicator(
-              onRefresh: _onRefresh,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.symmetric(
-                  horizontal: isSmall ? 20.w : 24.w,
-                  vertical: isSmall ? 16.h : 20.h,
-                ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: MediaQuery.of(context).size.height - 
-                             MediaQuery.of(context).padding.top - 
-                             MediaQuery.of(context).padding.bottom,
-                ),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
+            child: IntrinsicHeight(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Top controls (theme and language toggles)
+                    AuthTopControls(),
+                    SizedBox(height: isSmall ? 16.h : 24.h),
+                    // Title info
+                    Column(
                       children: [
-                        // Top controls (theme and language toggles)
-                        AuthTopControls(),
-
-                        SizedBox(height: isSmall ? 16.h : 24.h),
-
-                        // Title info
-                        AuthTitleInfo(
-                          title: context.translate(LangKeys.forgotPassword),
+                        TextApp(
+                          text: context.translate(LangKeys.forgotPassword),
+                          textAlign: TextAlign.center,
+                          theme: context.textStyle.copyWith(
+                              fontSize: isSmall ? 24.sp : 30.sp,
+                              fontWeight: FontWeightHelper.bold,
+                              color: context.colors.primary
+                          ),
                         ),
+                        SizedBox(height: 16.h,),
+                        TextApp(
+                          text: context.translate(LangKeys.forgotPasswordDescription),
+                          textAlign: TextAlign.center,
+                          theme: context.textStyle.copyWith(
+                            fontSize: isSmall ? 15.sp : 15.sp,
+                            fontWeight:FontWeight.w400,
+                            color: context.colors.grey?.withOpacity(0.7),
 
-                        SizedBox(height: isSmall ? 20.h : 24.h),
-
-                        // Email field
-                        AuthTextField(
-                          label: context.translate(LangKeys.email),
-                          hint: context.translate(LangKeys.email),
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return context.translate(LangKeys.validEmail);
-                            }
-                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                              return context.translate(LangKeys.validEmail);
-                            }
-                            return null;
-                          },
+                          ),
                         ),
-
-                        SizedBox(height: isSmall ? 20.h : 24.h),
-
-                        // Send reset code button
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            return AuthButton(
-                              text: context.translate(LangKeys.resendCode),
-                              onPressed: _onSendResetCode,
-                              isLoading: state is AuthLoading,
-                            );
-                          },
-                        ),
-
-                        SizedBox(height: isSmall ? 16.h : 20.h),
-
-                        // Back to login
-                        AuthLinkButton(
-                          text: '${context.translate(LangKeys.login)}',
-                          onPressed: () {
-                            context.goRoute(AppRouter.login);
-                          },
-                        ),
-                        
-                        // Spacer to push content up and fill empty space
-                        const Spacer(),
                       ],
                     ),
-                  ),
+
+                    SizedBox(height: isSmall ? 20.h : 24.h),
+
+                    // Email field
+                    AuthTextField(
+                      label: context.translate(LangKeys.email),
+                      hint: context.translate(LangKeys.email),
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return context.translate(LangKeys.validEmail);
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          return context.translate(LangKeys.validEmail);
+                        }
+                        return null;
+                      },
+                    ),
+
+                    SizedBox(height: isSmall ? 20.h : 24.h),
+
+                    // Send reset code button
+                    AuthButton(
+                          text: context.translate(LangKeys.resendCode),
+                          onPressed: _onSendResetCode,
+
+                        ),
+
+                    SizedBox(height: isSmall ? 16.h : 20.h),
+
+                    // Back to login
+                    AuthLinkButton(
+                      text: '${context.translate(LangKeys.login)}',
+                      onPressed: () {
+                        context.goRoute(AppRouter.login);
+                      },
+                    ),
+
+                    // Spacer to push content up and fill empty space
+                    const Spacer(),
+                  ],
                 ),
               ),
             ),
-            ),
           ),
+        ),
         ),
       ),
     );

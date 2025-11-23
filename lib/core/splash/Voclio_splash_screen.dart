@@ -4,7 +4,7 @@ import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'dart:math' as math;
 
-import '../styles/theme/color_extentions.dart';
+import '../extentions/color_extentions.dart';
 
 class VoclioSplashScreen extends StatefulWidget {
   const VoclioSplashScreen({Key? key}) : super(key: key);

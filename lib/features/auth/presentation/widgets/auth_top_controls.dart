@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
-import 'package:voclio_app/core/app/language_controller.dart';
-import '../../../../core/common/animation/animate_do.dart';
+import 'package:voclio_app/core/app/app_cubit.dart';
+import '../../../../core/common/inputs/text_app.dart';
+import '../../../../core/styles/fonts/font_weight_helper.dart';
 
 class AuthTopControls extends StatelessWidget {
   const AuthTopControls({super.key});
@@ -13,34 +15,36 @@ class AuthTopControls extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: ThemeController.instance.isDarkMode,
       builder: (context, isDarkMode, child) {
-        return ValueListenableBuilder<Locale>(
-          valueListenable: LanguageController.instance.currentLocale,
-          builder: (context, locale, child) {
-            return _buildTopControls(context);
+        return BlocBuilder<AppCubit, AppState>(
+          buildWhen: (previous, current) => previous.locale != current.locale,
+          builder: (context, appState) {
+            return _buildTopControls(context, appState);
           },
         );
       },
     );
   }
 
-  Widget _buildTopControls(BuildContext context) {
+  Widget _buildTopControls(BuildContext context, AppState appState) {
     final colors = context.colors;
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
+    final appCubit = context.read<AppCubit>();
+    final isArabic = appState.locale.languageCode == 'ar';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         /// 🌍 Language Toggle
         _AnimatedButtonWrapper(
-          isActive: LanguageController.instance.isArabic,
+          isActive: isArabic,
           duration: const Duration(milliseconds: 600),
-          direction: LanguageController.instance.isArabic
+          direction: isArabic
               ? AnimationDirection.right
               : AnimationDirection.left,
           child: GestureDetector(
             onTap: () async {
-              await LanguageController.instance.toggleLanguage();
+              await appCubit.toggleLanguage();
             },
             child: Container(
               padding: EdgeInsets.symmetric(
@@ -56,14 +60,14 @@ class AuthTopControls extends StatelessWidget {
                   Icon(
                     Icons.language_rounded,
                     color: colors.primary,
-                    size: isSmall ? 18.sp : 20.sp,
+                    size: isSmall ? 18.sp : 26.sp,
                   ),
                   SizedBox(width: 6.w),
                   Text(
-                    LanguageController.instance.isArabic ? 'EN' : 'AR',
+                    isArabic ? 'EN' : 'AR',
                     style: TextStyle(
                       color: colors.primary,
-                      fontSize: isSmall ? 14.sp : 16.sp,
+                      fontSize: isSmall ? 14.sp : 20.sp,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -74,31 +78,57 @@ class AuthTopControls extends StatelessWidget {
         ),
 
         /// 🌗 Theme Toggle
-        _AnimatedButtonWrapper(
-          isActive: ThemeController.instance.isDarkMode.value,
-          duration: const Duration(milliseconds: 600),
-          direction: ThemeController.instance.isDarkMode.value
-              ? AnimationDirection.left
-              : AnimationDirection.right,
-          child: GestureDetector(
-            onTap: () async {
-              await ThemeController.instance.toggleTheme();
-            },
-            child: Container(
-              padding: EdgeInsets.all(isSmall ? 8.w : 10.w),
-              decoration: BoxDecoration(
-                color: colors.primary!.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30.r),
-              ),
-              child: Icon(
-                ThemeController.instance.isDarkMode.value
-                    ? Icons.light_mode_rounded
-                    : Icons.dark_mode_rounded,
-                color: colors.primary,
-                size: isSmall ? 20.sp : 22.sp,
+        // _AnimatedButtonWrapper(
+        //   isActive: ThemeController.instance.isDarkMode.value,
+        //   duration: const Duration(milliseconds: 600),
+        //   direction: ThemeController.instance.isDarkMode.value
+        //       ? AnimationDirection.left
+        //       : AnimationDirection.right,
+        //   child: GestureDetector(
+        //     onTap: () async {
+        //       await ThemeController.instance.toggleTheme();
+        //     },
+        //     child: Container(
+        //       padding: EdgeInsets.all(isSmall ? 8.w : 10.w),
+        //       decoration: BoxDecoration(
+        //         color: colors.primary!.withOpacity(0.1),
+        //         borderRadius: BorderRadius.circular(30.r),
+        //       ),
+        //       child: Icon(
+        //         ThemeController.instance.isDarkMode.value
+        //             ? Icons.light_mode_rounded
+        //             : Icons.dark_mode_rounded,
+        //         color: colors.primary,
+        //         size: isSmall ? 20.sp : 22.sp,
+        //       ),
+        //     ),
+        //   ),
+        // ),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: isSmall ? 30.w : 45.w,
+              height: isSmall ? 50.h :45.h,
+              child: Image.asset(
+                'assets/images/Microphone Icon.png',
+                fit: BoxFit.contain,
+                color: context.colors.primary,
+                colorBlendMode: BlendMode.srcIn,
               ),
             ),
-          ),
+
+            TextApp(
+              text: 'Voclio',
+              textAlign: TextAlign.center,
+              theme: context.textStyle.copyWith(
+                fontSize: isSmall ? 24.sp : 27.sp,
+                fontWeight: FontWeightHelper.bold,
+                color: context.colors.primary,
+              ),
+            ),
+          ],
         ),
       ],
     );

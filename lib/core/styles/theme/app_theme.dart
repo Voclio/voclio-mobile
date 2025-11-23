@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:voclio_app/core/styles/theme/color_extentions.dart';
+import 'package:voclio_app/core/extentions/color_extentions.dart';
 
 /// Light theme configuration for Voclio app
 /// Uses professional blue and green colors suitable for productivity applications
@@ -33,28 +33,28 @@ ThemeData themeLight() {
 /// Dark theme configuration for Voclio app
 /// Maintains the same professional color palette with dark backgrounds
 /// Provides excellent contrast and readability in low-light conditions
-ThemeData themeDark() {
-  return ThemeData(
-    // Custom color extensions for consistent theming
-    extensions: <ThemeExtension<dynamic>>[
-      MyColors.dark,
-    ],
-    
-    // Scaffold background color for dark mode
-    scaffoldBackgroundColor: MyColors.dark.background,
-    
-    // Color scheme generated from primary color
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: MyColors.dark.primary!,
-      brightness: Brightness.dark,
-    ),
-    
-    // Default text theme for dark mode
-    textTheme: const TextTheme(
-      displaySmall: TextStyle(
-        fontSize: 14,
-        color: Colors.white,
-      ),
-    ),
-  );
-}
+// ThemeData themeDark() {
+//   return ThemeData(
+//     // Custom color extensions for consistent theming
+//     extensions: <ThemeExtension<dynamic>>[
+//       MyColors.dark,
+//     ],
+//
+//     // Scaffold background color for dark mode
+//     scaffoldBackgroundColor: MyColors.dark.background,
+//
+//     // Color scheme generated from primary color
+//     colorScheme: ColorScheme.fromSeed(
+//       seedColor: MyColors.dark.primary!,
+//       brightness: Brightness.dark,
+//     ),
+//
+//     // Default text theme for dark mode
+//     textTheme: const TextTheme(
+//       displaySmall: TextStyle(
+//         fontSize: 14,
+//         color: Colors.white,
+//       ),
+//     ),
+//   );
+// }

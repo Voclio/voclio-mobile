@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
-import 'package:voclio_app/core/app/language_controller.dart';
-import '../common/animation/animate_do.dart';
+import 'package:voclio_app/core/app/app_cubit.dart';
 import '../common/animation/smooth_toggle_animation.dart';
 import '../common/inputs/text_app.dart';
+import '../styles/fonts/font_weight_helper.dart';
 import 'model/onboarding_model.dart'; // ✅ استيراد الموديل الجديد
 
 class OnboardingScreen extends StatefulWidget {
@@ -44,163 +45,149 @@ class _OnboardingScreenState
     return ValueListenableBuilder<bool>(
       valueListenable: ThemeController.instance.isDarkMode,
       builder: (context, isDarkMode, child) {
-        return ValueListenableBuilder<Locale>(
-          valueListenable: LanguageController.instance.currentLocale,
-          builder: (context, locale, child) {
-            return _buildOnboardingContent(context);
+        return BlocBuilder<AppCubit, AppState>(
+          buildWhen: (previous, current) => previous.locale != current.locale,
+          builder: (context, appState) {
+            return _buildOnboardingContent(context, appState);
           },
         );
       },
     );
   }
 
-  Widget _buildOnboardingContent(BuildContext context) {
+  Widget _buildOnboardingContent(BuildContext context, AppState appState) {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
     final colors = context.colors;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors.accent!.withOpacity(0.15),
-              colors.primary!.withOpacity(0.08),
-              colors.background!,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Top bar
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.start,
-                  children: [
-                    _buildTopControls(context),
-                  ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top bar
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 6,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  _buildTopControls(context, appState),
+                ],
+              ),
+            ),
+
+            // Pages
+            Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: onboardingData.length,
+                onPageChanged:
+                    (i) => setState(() => _current = i),
+                itemBuilder:
+                    (context, index) => _OnboardPage(
+                      data: onboardingData[index],
+                      isSmall: isSmall,
+                    ),
+              ),
+            ),
+
+            // Indicators
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 4,
+                bottom: 16,
+              ),
+              child: _DotsIndicator(
+                count: onboardingData.length,
+                current: _current,
+                activeColor: colors.primary!,
+                inactiveColor: colors.accent!.withOpacity(
+                  0.4,
                 ),
               ),
+            ),
 
-              // Pages
-              Expanded(
-                child: PageView.builder(
-                  controller: _controller,
-                  itemCount: onboardingData.length,
-                  onPageChanged:
-                      (i) => setState(() => _current = i),
-                  itemBuilder:
-                      (context, index) => _OnboardPage(
-                        data: onboardingData[index],
-                        isSmall: isSmall,
+            // Bottom actions
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                0,
+                16,
+                20,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(
+                              vertical: 16,
+                            ),
+                        backgroundColor: colors.primary!,
+                        foregroundColor:
+                            colors.primary!,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(14),
+                        ),
+                        elevation: 2,
                       ),
-                ),
-              ),
+                      onPressed:
+                          _current ==
+                                  onboardingData.length -
+                                      1
+                              ? _onGetStarted
+                              : _onNext,
+                      child: Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.center,
+                        children: [
+                          TextApp(
+                            text:
+                                _current ==
+                                        onboardingData
+                                                .length -
+                                            1
+                                    ? context.translate('get_started')
+                                    : context.translate('next'),
+                            theme: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                              color: Colors.white,
 
-              // Indicators
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 4,
-                  bottom: 16,
-                ),
-                child: _DotsIndicator(
-                  count: onboardingData.length,
-                  current: _current,
-                  activeColor: colors.primary!,
-                  inactiveColor: colors.accent!.withOpacity(
-                    0.4,
-                  ),
-                ),
-              ),
-
-              // Bottom actions
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  16,
-                  0,
-                  16,
-                  20,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(
-                                vertical: 16,
-                              ),
-                          backgroundColor: colors.primary!,
-                          foregroundColor:
-                              colors.textColor!,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(14),
+                            ),
                           ),
-                          elevation: 2,
-                        ),
-                        onPressed:
+                          const SizedBox(width: 8),
+                          Icon(
                             _current ==
-                                    onboardingData.length -
+                                    onboardingData
+                                            .length -
                                         1
-                                ? _onGetStarted
-                                : _onNext,
-                        child: Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
-                          children: [
-                            TextApp(
-                              text:
-                                  _current ==
-                                          onboardingData
-                                                  .length -
-                                              1
-                                      ? context.translate('get_started')
-                                      : context.translate('next'),
-                              theme: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 20,
-                                color: Colors.white,
-
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              _current ==
-                                      onboardingData
-                                              .length -
-                                          1
-                                  ? Icons.check_rounded
-                                  : Icons
-                                      .arrow_forward_rounded,
-                              size: 20,
-                            ),
-                          ],
-                        ),
+                                ? Icons.check_rounded
+                                : Icons
+                                    .arrow_forward_rounded,
+                            size: 20,
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTopControls(BuildContext context) {
+  Widget _buildTopControls(BuildContext context, AppState appState) {
     final colors = context.colors;
-    final isArabic = LanguageController.instance.isArabic;
-    final isDark = ThemeController.instance.isDarkMode.value;
+    final appCubit = context.read<AppCubit>();
+    final isArabic = appState.locale.languageCode == 'ar';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -211,7 +198,7 @@ class _OnboardingScreenState
             duration: const Duration(milliseconds: 600),
             child: GestureDetector(
               onTap: () async {
-                await LanguageController.instance.toggleLanguage();
+                await appCubit.toggleLanguage();
               },
               child: SmoothContainerTransition(
                 isActive: isArabic,
@@ -224,6 +211,7 @@ class _OnboardingScreenState
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Icon(Icons.language_rounded, color: colors.primary, size: 20),
                       const SizedBox(width: 6),
@@ -241,33 +229,60 @@ class _OnboardingScreenState
               ),
             ),
           ),
-            SizedBox(width: 200.w,),
-          // 🌗 Dark Mode Toggle Button
-          _AnimatedDirectionButton(
-            direction: isDark ? AnimationDirection.left : AnimationDirection.right,
-            duration: const Duration(milliseconds: 600),
-            child: GestureDetector(
-              onTap: () async {
-                await ThemeController.instance.toggleTheme();
-              },
-              child: SmoothContainerTransition(
-                isActive: isDark,
-                activeColor: colors.primary!.withOpacity(0.2),
-                inactiveColor: colors.primary!.withOpacity(0.1),
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                borderRadius: 20,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                    color: colors.primary,
-                    size: 22,
-                  ),
+          SizedBox(width: 120.w,),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width:  45.w,
+                height: 45.h,
+                child: Image.asset(
+                  'assets/images/Microphone Icon.png',
+                  fit: BoxFit.contain,
+                  color: context.colors.primary,
+                  colorBlendMode: BlendMode.srcIn,
                 ),
               ),
-            ),
+
+              TextApp(
+                text: 'Voclio',
+                textAlign: TextAlign.center,
+                theme: context.textStyle.copyWith(
+                  fontSize:  27.sp,
+                  fontWeight: FontWeightHelper.bold,
+                  color: context.colors.primary,
+                ),
+              ),
+            ],
           ),
+
+          // 🌗 Dark Mode Toggle Button
+          // _AnimatedDirectionButton(
+          //   direction: isDark ? AnimationDirection.left : AnimationDirection.right,
+          //   duration: const Duration(milliseconds: 600),
+          //   child: GestureDetector(
+          //     onTap: () async {
+          //       await ThemeController.instance.toggleTheme();
+          //     },
+          //     child: SmoothContainerTransition(
+          //       isActive: isDark,
+          //       activeColor: colors.primary!.withOpacity(0.2),
+          //       inactiveColor: colors.primary!.withOpacity(0.1),
+          //       duration: const Duration(milliseconds: 300),
+          //       curve: Curves.easeInOut,
+          //       borderRadius: 20,
+          //       child: Padding(
+          //         padding: const EdgeInsets.all(8),
+          //         child: Icon(
+          //           isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+          //           color: colors.primary,
+          //           size: 22,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
+
         ],
       ),
     );
@@ -312,7 +327,7 @@ class _OnboardPage extends StatelessWidget {
                       (context, error, stackTrace) =>
                           Container(
                             decoration: BoxDecoration(
-                              color: colors.textColor,
+                              color: colors.primary,
                               borderRadius:
                                   BorderRadius.circular(20),
                             ),
@@ -320,7 +335,7 @@ class _OnboardPage extends StatelessWidget {
                               child: Icon(
                                 Icons.image_outlined,
                                 size: 80,
-                                color: colors.textColor,
+                                color: colors.primary,
                               ),
                             ),
                           ),
@@ -341,7 +356,7 @@ class _OnboardPage extends StatelessWidget {
                   theme: TextStyle(
                     fontSize: isSmall ? 26 : 30,
                     fontWeight: FontWeight.w900,
-                    color: colors.textColor,
+                    color: colors.primary,
                     letterSpacing: 0.5,
                   ),
                 ),

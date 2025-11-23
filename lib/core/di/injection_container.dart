@@ -20,6 +20,9 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 // Presentation
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
+// App
+import '../app/app_cubit.dart';
+
 final GetIt getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
@@ -73,5 +76,10 @@ Future<void> setupDependencies() async {
       forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
       resetPasswordUseCase: getIt<ResetPasswordUseCase>(),
     ),
+  );
+
+  // App Cubit
+  getIt.registerLazySingleton<AppCubit>(
+    () => AppCubit(prefs: getIt<SharedPreferences>()),
   );
 }

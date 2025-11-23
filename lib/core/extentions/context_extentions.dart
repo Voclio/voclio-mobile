@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:voclio_app/core/styles/theme/color_extentions.dart';
+import 'package:voclio_app/core/extentions/color_extentions.dart';
 import '../language/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 

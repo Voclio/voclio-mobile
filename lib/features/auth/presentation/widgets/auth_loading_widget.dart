@@ -97,7 +97,7 @@ class _AuthLoadingWidgetState extends State<AuthLoadingWidget>
               style: context.textStyle.copyWith(
                 fontSize: isSmall ? 12.sp : 14.sp,
                 fontWeight: FontWeightHelper.medium,
-                color: colors.textColor!.withOpacity(0.7),
+                color: colors.primary!.withOpacity(0.7),
               ),
               textAlign: TextAlign.center,
             ),

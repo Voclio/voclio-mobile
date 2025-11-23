@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:voclio_app/core/app/connectivily_control.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
-import 'package:voclio_app/core/app/language_controller.dart';
+import 'package:voclio_app/core/app/app_cubit.dart';
 import 'package:voclio_app/core/language/app_localizations_setup.dart';
 import 'package:voclio_app/core/routes/app_routes.dart';
 import 'package:voclio_app/core/styles/theme/app_theme.dart';
@@ -19,46 +19,48 @@ class VoclioApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: ConnectivityControler.instance.isConected,
-      builder: (context, isConnected, _) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: ThemeController.instance.isDarkMode,
-          builder: (context, isDarkMode, _) {
-            return ValueListenableBuilder<Locale>(
-              valueListenable: LanguageController.instance.currentLocale,
-              builder: (context, locale, _) {
-                return ScreenUtilInit(
-                  designSize: const Size(375, 812),
-                  minTextAdapt: true,
-                  splitScreenMode: true,
-                  builder: (context, child) {
-                    return BlocProvider<AuthBloc>(
-                      create: (context) => getIt<AuthBloc>(),
-                      child: MaterialApp.router(
-                        debugShowCheckedModeBanner: false,
-                        theme: isDarkMode ?themeDark(): themeLight(),
-                        darkTheme: themeDark(),
-                        locale: locale,
-                        supportedLocales: AppLocalizationsSetup.supportedLocales,
-                        localizationsDelegates: AppLocalizationsSetup.localizationsDelegates,
-                        localeResolutionCallback: AppLocalizationsSetup.localeResolutionCallback,
-                        routerConfig: AppRouter.router,
-                        builder: (context, child) {
-                          if (!isConnected) {
-                            return const NoNetworkScreen();
-                          }
-                          return child!;
-                        },
-                      ),
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
+    return BlocProvider<AppCubit>(
+      create: (context) => getIt<AppCubit>(),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: ConnectivityControler.instance.isConected,
+        builder: (context, isConnected, _) {
+          return ValueListenableBuilder<bool>(
+            valueListenable: ThemeController.instance.isDarkMode,
+            builder: (context, isDarkMode, _) {
+              return BlocBuilder<AppCubit, AppState>(
+                buildWhen: (previous, current) => previous.locale != current.locale,
+                builder: (context, appState) {
+                  return ScreenUtilInit(
+                    designSize: const Size(375, 812),
+                    minTextAdapt: true,
+                    splitScreenMode: true,
+                    builder: (context, child) {
+                      return BlocProvider<AuthBloc>(
+                        create: (context) => getIt<AuthBloc>(),
+                        child: MaterialApp.router(
+                          debugShowCheckedModeBanner: false,
+                          theme: themeLight(),
+                          locale: appState.locale,
+                          supportedLocales: AppLocalizationsSetup.supportedLocales,
+                          localizationsDelegates: AppLocalizationsSetup.localizationsDelegates,
+                          localeResolutionCallback: AppLocalizationsSetup.localeResolutionCallback,
+                          routerConfig: AppRouter.router,
+                          builder: (context, child) {
+                            if (!isConnected) {
+                              return const NoNetworkScreen();
+                            }
+                            return child!;
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
