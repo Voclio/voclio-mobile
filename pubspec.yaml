@@ -39,6 +39,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_bloc: ^9.1.1
   fl_chart: ^1.1.0
+  video_player: ^2.5.1
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +82,9 @@ flutter:
    #To add assets to your application, add an assets section, like this:
   assets:
      - assets/images/
+     - assets/videos/welcome.mp4
+     - assets/videos/tasks.mp4
+     - assets/videos/calender.mp4
      - lang/ar.json
      - lang/en.json
 

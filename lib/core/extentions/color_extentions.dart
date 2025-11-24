@@ -154,7 +154,7 @@ class MyColors extends ThemeExtension<MyColors> {
     grey: Color(0xFF6B6B7E),
     greyLight: Color(0xFFF5F5F5),
     greyDark: Color(0xFF424242),
-    textPrimary: Color(0xFF212121),
+    textPrimary: Color(0xFF2A2A3E),
     textSecondary: Color(0xFF757575),
     textLight: Color(0xFFFFFFFF),
     background: Color(0xFFFFFFFF),
