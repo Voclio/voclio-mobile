@@ -40,9 +40,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-
-
-
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -61,7 +58,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
               AuthTopControls(),
-              SizedBox(height: isSmall ? 20.h : 40.h),
+              SizedBox(height: isSmall ? 30.h : 40.h),
 
               CustomFadeIn(
                 duration: 600,
@@ -71,112 +68,122 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       text: context.translate(LangKeys.createAccount),
                       textAlign: TextAlign.center,
                       theme: context.textStyle.copyWith(
-                          fontSize: isSmall ? 24.sp : 30.sp,
-                          fontWeight: FontWeightHelper.bold,
-                          color: context.colors.primary
+                        fontSize: isSmall ? 24.sp : 30.sp,
+                        fontWeight: FontWeightHelper.bold,
+                        color: context.colors.primary,
                       ),
                     ),
 
                     SizedBox(height: isSmall ? 15.h : 20.h),
 
                     Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    AuthTextField(
-                label: context.translate(LangKeys.fullName),
-                hint: context.translate(LangKeys.fullName),
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return context.translate(LangKeys.validName);
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: isSmall ? 16.h : 20.h),
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          AuthTextField(
+                            label: context.translate(LangKeys.fullName),
+                            hint: context.translate(LangKeys.fullName),
+                            controller: _nameController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return context.translate(LangKeys.validName);
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: isSmall ? 16.h : 20.h),
 
-              AuthTextField(
-                label: context.translate(LangKeys.email),
-                hint: context.translate(LangKeys.email),
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return context.translate(LangKeys.validEmail);
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                      .hasMatch(value)) {
-                    return context.translate(LangKeys.validEmail);
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: isSmall ? 16.h : 20.h),
+                          AuthTextField(
+                            label: context.translate(LangKeys.email),
+                            hint: context.translate(LangKeys.email),
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return context.translate(LangKeys.validEmail);
+                              }
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
+                                return context.translate(LangKeys.validEmail);
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: isSmall ? 16.h : 20.h),
 
-              AuthTextField(
-                label: context.translate(LangKeys.password),
-                hint: context.translate(LangKeys.password),
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: context.colors.primary,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscurePassword = !_obscurePassword;
-                    });
-                  },
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty || value.length < 6) {
-                    return context.translate(LangKeys.validPasswrod);
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: isSmall ? 16.h : 20.h),
+                          AuthTextField(
+                            label: context.translate(LangKeys.password),
+                            hint: context.translate(LangKeys.password),
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: context.colors.primary,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                            validator: (value) {
+                              if (value == null ||
+                                  value.isEmpty ||
+                                  value.length < 6) {
+                                return context.translate(
+                                  LangKeys.validPasswrod,
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: isSmall ? 16.h : 20.h),
 
-              AuthTextField(
-                label: context.translate(LangKeys.passwordConfirmation),
-                hint: context.translate(LangKeys.passwordConfirmation),
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirmPassword,
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirmPassword
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: context.colors.primary,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                    });
-                  },
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
-                  }
-                  if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: isSmall ? 24.h : 32.h),
+                          AuthTextField(
+                            label: context.translate(
+                              LangKeys.passwordConfirmation,
+                            ),
+                            hint: context.translate(
+                              LangKeys.passwordConfirmation,
+                            ),
+                            controller: _confirmPasswordController,
+                            obscureText: _obscureConfirmPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: context.colors.primary,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
+                                });
+                              },
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please confirm your password';
+                              }
+                              if (value != _passwordController.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: isSmall ? 24.h : 32.h),
 
-                    AuthButton(
-                      text: context.translate(LangKeys.signUp),
-                      onPressed: _onRegister,
-                    ),
-                  ],
-                ),
+                          AuthButton(
+                            text: context.translate(LangKeys.signUp),
+                            onPressed: _onRegister,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -186,23 +193,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
               CustomFadeIn(
                 duration: 600,
                 child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    context.translate(LangKeys.youHaveAccount),
-                    style: context.textStyle.copyWith(
-                      fontSize: isSmall ? 12.sp : 14.sp,
-                      color: context.colors.grey?.withOpacity(0.7),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      context.translate(LangKeys.youHaveAccount),
+                      style: context.textStyle.copyWith(
+                        fontSize: isSmall ? 12.sp : 14.sp,
+                        color: context.colors.grey?.withOpacity(0.7),
+                      ),
                     ),
-                  ),
-                  AuthLinkButton(
-                    text: context.translate(LangKeys.login),
-                    onPressed: () {
-                      context.goRoute(AppRouter.login);
-                    },
-                  ),
-                ],
-              ),
+                    AuthLinkButton(
+                      text: context.translate(LangKeys.login),
+                      onPressed: () {
+                        context.goRoute(AppRouter.login);
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -210,6 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
       final request = AuthRequest(

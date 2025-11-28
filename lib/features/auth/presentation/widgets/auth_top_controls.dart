@@ -29,108 +29,34 @@ class AuthTopControls extends StatelessWidget {
     final colors = context.colors;
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
-    final appCubit = context.read<AppCubit>();
-    final isArabic = appState.locale.languageCode == 'ar';
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        /// 🌍 Language Toggle
-        _AnimatedButtonWrapper(
-          isActive: isArabic,
-          duration: const Duration(milliseconds: 600),
-          direction: isArabic
-              ? AnimationDirection.right
-              : AnimationDirection.left,
-          child: GestureDetector(
-            onTap: () async {
-              await appCubit.toggleLanguage();
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isSmall ? 12.w : 14.w,
-                vertical: isSmall ? 6.h : 8.h,
-              ),
-              decoration: BoxDecoration(
-                color: colors.primary!.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30.r),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.language_rounded,
-                    color: colors.primary,
-                    size: isSmall ? 18.sp : 26.sp,
-                  ),
-                  SizedBox(width: 6.w),
-                  Text(
-                    isArabic ? 'EN' : 'AR',
-                    style: TextStyle(
-                      color: colors.primary,
-                      fontSize: isSmall ? 14.sp : 20.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: isSmall ? 40.w : 45.w,
+            height: isSmall ? 40.h : 45.h,
+            child: Image.asset(
+              'assets/images/Microphone Icon.png',
+              fit: BoxFit.contain,
+              color: context.colors.primary,
+              colorBlendMode: BlendMode.srcIn,
             ),
           ),
-        ),
-
-        /// 🌗 Theme Toggle
-        // _AnimatedButtonWrapper(
-        //   isActive: ThemeController.instance.isDarkMode.value,
-        //   duration: const Duration(milliseconds: 600),
-        //   direction: ThemeController.instance.isDarkMode.value
-        //       ? AnimationDirection.left
-        //       : AnimationDirection.right,
-        //   child: GestureDetector(
-        //     onTap: () async {
-        //       await ThemeController.instance.toggleTheme();
-        //     },
-        //     child: Container(
-        //       padding: EdgeInsets.all(isSmall ? 8.w : 10.w),
-        //       decoration: BoxDecoration(
-        //         color: colors.primary!.withOpacity(0.1),
-        //         borderRadius: BorderRadius.circular(30.r),
-        //       ),
-        //       child: Icon(
-        //         ThemeController.instance.isDarkMode.value
-        //             ? Icons.light_mode_rounded
-        //             : Icons.dark_mode_rounded,
-        //         color: colors.primary,
-        //         size: isSmall ? 20.sp : 22.sp,
-        //       ),
-        //     ),
-        //   ),
-        // ),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: isSmall ? 30.w : 45.w,
-              height: isSmall ? 50.h :45.h,
-              child: Image.asset(
-                'assets/images/Microphone Icon.png',
-                fit: BoxFit.contain,
-                color: context.colors.primary,
-                colorBlendMode: BlendMode.srcIn,
-              ),
+          SizedBox(width: 8.w),
+          TextApp(
+            text: 'Voclio',
+            textAlign: TextAlign.center,
+            theme: context.textStyle.copyWith(
+              fontSize: isSmall ? 24.sp : 27.sp,
+              fontWeight: FontWeightHelper.bold,
+              color: context.colors.primary,
             ),
-
-            TextApp(
-              text: 'Voclio',
-              textAlign: TextAlign.center,
-              theme: context.textStyle.copyWith(
-                fontSize: isSmall ? 24.sp : 27.sp,
-                fontWeight: FontWeightHelper.bold,
-                color: context.colors.primary,
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -173,9 +99,10 @@ class _AnimatedButtonWrapperState extends State<_AnimatedButtonWrapper>
   }
 
   void _setupAnimations() {
-    final beginOffset = widget.direction == AnimationDirection.right
-        ? const Offset(0.3, 0)
-        : const Offset(-0.3, 0);
+    final beginOffset =
+        widget.direction == AnimationDirection.right
+            ? const Offset(0.3, 0)
+            : const Offset(-0.3, 0);
 
     _slideAnimation = Tween<Offset>(
       begin: beginOffset,
@@ -207,10 +134,7 @@ class _AnimatedButtonWrapperState extends State<_AnimatedButtonWrapper>
       position: _slideAnimation,
       child: FadeTransition(
         opacity: _fadeAnimation,
-        child: RotationTransition(
-          turns: _rotateAnimation,
-          child: widget.child,
-        ),
+        child: RotationTransition(turns: _rotateAnimation, child: widget.child),
       ),
     );
   }

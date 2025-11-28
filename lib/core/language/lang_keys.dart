@@ -34,6 +34,7 @@ class LangKeys {
   static const String no = 'no';
   static const String darkMode = 'dark_mode';
   static const String langCode = 'lang_code';
+  static const String skip = 'skip';
   static const String forgotPassword = 'forgot_password';
   static const String forgotPasswordDescription = 'forgot_password_description';
   static const String resetPassword = 'reset_password';
