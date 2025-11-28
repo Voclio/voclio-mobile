@@ -5,7 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../features/home/presentation/refactor/home_screen_body.dart';
 import '../../features/tasks/presentation/screens/tasks_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
-import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/notes/presentation/screens/notes_screen.dart';
 import '../../features/voice/presentation/screens/voice_recording_screen.dart';
 
 class MainLayout extends StatefulWidget {
@@ -24,17 +24,17 @@ class _MainLayoutState extends State<MainLayout>
     HomeScreenBody(),
     TasksScreen(),
     CalendarScreen(),
-    ProfileScreen(),
+    NotesScreen(),
   ];
 
   final iconList = <IconData>[
     Icons.home_rounded,
     Icons.task_alt_rounded,
     Icons.calendar_month_rounded,
-    Icons.person_rounded,
+    Icons.note_alt_rounded,
   ];
 
-  final iconLabels = <String>['Home', 'Tasks', 'Calendar', 'Profile'];
+  final iconLabels = <String>['Home', 'Tasks', 'Calendar', 'Notes'];
 
   @override
   void initState() {

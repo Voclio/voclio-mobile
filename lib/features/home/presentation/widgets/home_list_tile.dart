@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/language/lang_keys.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/styles/fonts/font_weight_helper.dart';
@@ -16,37 +17,45 @@ class HomeListTile extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
       child: Row(
         children: [
-          Container(
-            width: 56.r,
-            height: 56.r,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: context.colors.primary!.withOpacity(0.2),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: context.colors.primary!.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+            child: Container(
+              width: 56.r,
+              height: 56.r,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: context.colors.primary!.withOpacity(0.2),
+                  width: 2,
                 ),
-              ],
-            ),
-            child: ClipOval(
-              child: Image.network(
-                'https://raw.githubusercontent.com/Voclio/voclio-mobile/main/assets/images/onboarding.png',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey.shade300,
-                    child: Icon(
-                      Icons.person,
-                      size: 30.sp,
-                      color: Colors.grey.shade600,
-                    ),
-                  );
-                },
+                boxShadow: [
+                  BoxShadow(
+                    color: context.colors.primary!.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.network(
+                  'https://raw.githubusercontent.com/Voclio/voclio-mobile/main/assets/images/onboarding.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey.shade300,
+                      child: Icon(
+                        Icons.person,
+                        size: 30.sp,
+                        color: Colors.grey.shade600,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
