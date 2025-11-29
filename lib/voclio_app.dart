@@ -6,13 +6,12 @@ import 'package:voclio_app/core/app/connectivily_control.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/app_cubit.dart';
 import 'package:voclio_app/core/language/app_localizations_setup.dart';
-import 'package:voclio_app/core/routes/app_routes.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/styles/theme/app_theme.dart';
 import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 
 import 'core/common/screens/no_network_screen.dart';
-
 
 class VoclioApp extends StatelessWidget {
   const VoclioApp({super.key});
@@ -28,7 +27,8 @@ class VoclioApp extends StatelessWidget {
             valueListenable: ThemeController.instance.isDarkMode,
             builder: (context, isDarkMode, _) {
               return BlocBuilder<AppCubit, AppState>(
-                buildWhen: (previous, current) => previous.locale != current.locale,
+                buildWhen:
+                    (previous, current) => previous.locale != current.locale,
                 builder: (context, appState) {
                   return ScreenUtilInit(
                     designSize: const Size(375, 812),
@@ -41,9 +41,12 @@ class VoclioApp extends StatelessWidget {
                           debugShowCheckedModeBanner: false,
                           theme: themeLight(),
                           locale: appState.locale,
-                          supportedLocales: AppLocalizationsSetup.supportedLocales,
-                          localizationsDelegates: AppLocalizationsSetup.localizationsDelegates,
-                          localeResolutionCallback: AppLocalizationsSetup.localeResolutionCallback,
+                          supportedLocales:
+                              AppLocalizationsSetup.supportedLocales,
+                          localizationsDelegates:
+                              AppLocalizationsSetup.localizationsDelegates,
+                          localeResolutionCallback:
+                              AppLocalizationsSetup.localeResolutionCallback,
                           routerConfig: AppRouter.router,
                           builder: (context, child) {
                             if (!isConnected) {
