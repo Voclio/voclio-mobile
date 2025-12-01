@@ -1,5 +1,5 @@
 import 'package:voclio_app/core/enums/enums.dart';
-import 'package:voclio_app/features/tasks/domain/entities/note_entity.dart';
+import 'package:voclio_app/features/notes/domain/entities/note_entity.dart';
 
 class NoteModel extends NoteEntity {
   const NoteModel({

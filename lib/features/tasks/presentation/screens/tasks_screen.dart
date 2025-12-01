@@ -42,6 +42,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
   @override
   Widget build(BuildContext context) {
+    final totalTasks = context.select(
+      (TasksCubit cubit) => cubit.state.tasks.length,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
@@ -55,7 +59,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
               children: [
                 Text('Tasks', style: TextStyle(color: Colors.black)),
                 Text(
-                  'You have 3 tasks today',
+                  'You have $totalTasks tasks',
                   style: TextStyle(color: Colors.black54, fontSize: 12.sp),
                 ),
               ],
@@ -63,6 +67,11 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
             IconButton(onPressed: () {}, icon: Icon(Icons.filter_list_rounded)),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add),
       ),
       body: SafeArea(
         child: Padding(
@@ -183,15 +192,6 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Add Task',
-
-        onPressed: () {
-          // Navigate to Add Task Screen (Todo later)
-        },
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }

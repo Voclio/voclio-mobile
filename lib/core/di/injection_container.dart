@@ -1,5 +1,13 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:voclio_app/features/notes/data/repositories/fake_note_repo.dart';
+import 'package:voclio_app/features/notes/domain/repositories/note_repository.dart';
+import 'package:voclio_app/features/notes/domain/usecases/add_note_use_case.dart';
+import 'package:voclio_app/features/notes/domain/usecases/delete_note_use_case.dart';
+import 'package:voclio_app/features/notes/domain/usecases/get_all_notes_use_case.dart';
+import 'package:voclio_app/features/notes/domain/usecases/get_note_use_case.dart';
+import 'package:voclio_app/features/notes/domain/usecases/update_note_use_case.dart';
+import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/tasks/data/datasources/task_remote_data_source.dart';
 import 'package:voclio_app/features/tasks/data/repositories/fake_repo.dart';
 import 'package:voclio_app/features/tasks/domain/repositories/task_repository.dart';
@@ -111,6 +119,21 @@ Future<void> setupDependencies() async {
       getAllTasksUseCase: getIt(),
       getTaskUseCase: getIt(),
       createTaskUseCase: getIt(),
+    ),
+  );
+  getIt.registerLazySingleton<NoteRepository>(() => FakeNoteRepository());
+  getIt.registerLazySingleton(() => GetAllNotesUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetNoteUseCase(getIt()));
+  getIt.registerLazySingleton(() => AddNoteUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateNoteUseCase(getIt()));
+  getIt.registerLazySingleton(() => DeleteNoteUseCase(getIt()));
+  getIt.registerFactory(
+    () => NotesCubit(
+      addNoteUseCase: getIt(),
+      getAllNotesUseCase: getIt(),
+      getNoteUseCase: getIt(),
+      updateNoteUseCase: getIt(),
+      deleteNoteUseCase: getIt(),
     ),
   );
 }

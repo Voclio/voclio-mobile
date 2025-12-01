@@ -1,4 +1,4 @@
-import 'package:voclio_app/features/tasks/data/models/note_model.dart';
+import 'package:voclio_app/features/notes/data/models/note_model.dart';
 import 'package:dio/dio.dart';
 
 abstract class NoteRemoteDataSource {
