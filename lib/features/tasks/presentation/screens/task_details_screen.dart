@@ -24,7 +24,7 @@ class TaskDetailScreen extends StatelessWidget {
         );
 
         final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
+        // final isDark = theme.brightness == Brightness.dark;
 
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -92,13 +92,13 @@ class TaskDetailScreen extends StatelessWidget {
                   SizedBox(height: 24.h),
                   Text("Related Note", style: theme.textTheme.bodyMedium),
                   SizedBox(height: 8.h),
-                  _buildRelatedNoteCard(context),
+                  RelatedNoteWIdget(context: context),
                 ],
 
                 SizedBox(height: 40.h),
 
                 // 6. Action Buttons
-                actionButtonsTaskDetails(task: currentTask),
+                ActionButtonsTaskDetails(task: currentTask),
 
                 SizedBox(height: 40.h),
               ],
@@ -366,6 +366,7 @@ class TaskDetailScreen extends StatelessWidget {
               InkWell(
                 onTap: () {
                   // Logic to show dialog to add subtask
+                  _showAddSubtaskDialog(context, task);
                 },
                 child: Padding(
                   padding: EdgeInsets.all(16.r),
@@ -389,7 +390,48 @@ class TaskDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRelatedNoteCard(BuildContext context) {
+  // Generic container for cards
+  Widget _buildContainer(
+    BuildContext context, {
+    required Widget child,
+    EdgeInsetsGeometry? padding,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: padding ?? EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16.r),
+        border:
+            isDark
+                ? Border.all(color: Colors.white.withOpacity(0.05))
+                : Border.all(color: Colors.grey.shade200),
+        boxShadow:
+            isDark
+                ? []
+                : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class RelatedNoteWIdget extends StatelessWidget {
+  const RelatedNoteWIdget({super.key, required this.context});
+
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -459,50 +501,16 @@ class TaskDetailScreen extends StatelessWidget {
       ),
     );
   }
-
-  // Generic container for cards
-  Widget _buildContainer(
-    BuildContext context, {
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      width: double.infinity,
-      padding: padding ?? EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16.r),
-        border:
-            isDark
-                ? Border.all(color: Colors.white.withOpacity(0.05))
-                : Border.all(color: Colors.grey.shade200),
-        boxShadow:
-            isDark
-                ? []
-                : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-      ),
-      child: child,
-    );
-  }
 }
 
-class actionButtonsTaskDetails extends StatelessWidget {
-  const actionButtonsTaskDetails({super.key, required this.task});
+class ActionButtonsTaskDetails extends StatelessWidget {
+  const ActionButtonsTaskDetails({super.key, required this.task});
 
   final TaskEntity task;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
     return Column(
       children: [
         SizedBox(
@@ -557,4 +565,91 @@ class actionButtonsTaskDetails extends StatelessWidget {
       ],
     );
   }
+}
+
+void _showAddSubtaskDialog(BuildContext context, TaskEntity currentTask) {
+  final theme = Theme.of(context);
+  final controller = TextEditingController();
+  // Capture the cubit to ensure we can use it inside the dialog logic
+  final cubit = context.read<TasksCubit>();
+
+  showDialog(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: theme.colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        title: Text(
+          "New Subtask",
+          style: theme.textTheme.headlineSmall?.copyWith(fontSize: 18.sp),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: theme.textTheme.bodyLarge,
+          decoration: InputDecoration(
+            hintText: "What needs to be done?",
+            hintStyle: TextStyle(
+              color: theme.colorScheme.secondary.withOpacity(0.5),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary.withOpacity(0.5),
+              ),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: theme.colorScheme.primary),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              "Cancel",
+              style: TextStyle(color: theme.colorScheme.secondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                // 1. Create new Subtask object
+                final newSubTask = SubTask(
+                  id:
+                      DateTime.now().millisecondsSinceEpoch
+                          .toString(), // Simple Unique ID
+                  title: text,
+                  isDone: false,
+                );
+
+                // 2. Create a NEW list with the added item (Immutability is key!)
+                final updatedSubtaskList = List<SubTask>.from(
+                  currentTask.subtasks,
+                )..add(newSubTask);
+
+                // 3. Update the Task via Cubit
+                cubit.updateTask(
+                  currentTask.copyWith(subtasks: updatedSubtaskList),
+                );
+
+                // 4. Close dialog
+                Navigator.pop(dialogContext);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: const Text("Add"),
+          ),
+        ],
+      );
+    },
+  );
 }
