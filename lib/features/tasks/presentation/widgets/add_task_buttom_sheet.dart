@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,6 +22,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
   DateTime _selectedDate = DateTime.now().add(const Duration(hours: 1));
   TaskPriority _selectedPriority = TaskPriority.medium;
   AppTag _selectedTag = AppTag.personal;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,14 +31,20 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
     super.dispose();
   }
 
-  void _createTask() {
+  void _createTask() async {
     if (_titleController.text.trim().isEmpty) return;
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     // 1. Unfocus the keyboard immediately
     FocusManager.instance.primaryFocus?.unfocus();
-
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
+    final uniqueId =
+        '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(10000)}';
     final newTask = TaskEntity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: uniqueId,
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
       date: _selectedDate,
@@ -47,21 +56,20 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
     );
 
     // 2. Capture the Cubit reference before any async gaps
-    final cubit = context.read<TasksCubit>();
+    // final cubit = context.read<TasksCubit>();
 
-    // 3. SAFER POP LOGIC:
-    // We wait for the "unfocus" layout rebuilding to finish before popping.
-    // This prevents the 'Scaffold.geometryOf' crash by ensuring the
-    // parent Scaffold is stable before the exit animation starts.
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // Small buffer to let the keyboard animation actually start/settle
-      await Future.delayed(const Duration(milliseconds: 150));
-
-      if (mounted) {
-        cubit.addTask(newTask);
-        Navigator.pop(context);
-      }
-    });
+    // // 3. SAFER POP LOGIC:
+    // // We wait for the "unfocus" layout rebuilding to finish before popping.
+    // // This prevents the 'Scaffold.geometryOf' crash by ensuring the
+    // // parent Scaffold is stable before the exit animation starts.
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (mounted) {
+    //     cubit.addTask(newTask);
+    //     Navigator.pop(context);
+    //   }
+    // });
+    context.read<TasksCubit>().addTask(newTask);
+    Navigator.pop(context);
   }
 
   Future<void> _pickDateTime() async {
@@ -136,7 +144,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                 ),
                 IconButton(
                   icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -373,7 +381,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                     width: double.infinity,
                     height: 50.h,
                     child: ElevatedButton(
-                      onPressed: _createTask,
+                      onPressed: _isLoading ? null : _createTask,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: Colors.white,
@@ -382,13 +390,23 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                         ),
                         elevation: 0,
                       ),
-                      child: Text(
-                        "Create Task",
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child:
+                          _isLoading
+                              ? SizedBox(
+                                width: 20.w,
+                                height: 20.h,
+                                child: const CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                              : Text(
+                                "Create Task",
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                     ),
                   ),
                 ],

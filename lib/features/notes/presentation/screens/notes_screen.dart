@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:voclio_app/core/enums/enums.dart'; // Adjust path
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
 import 'package:voclio_app/features/notes/presentation/screens/note_details_screen.dart';
+import 'package:voclio_app/features/notes/presentation/widgets/add_note_bottom_sheet.dart';
 import '../bloc/notes_cubit.dart';
 import '../widgets/note_card.dart';
 
@@ -238,11 +239,26 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: theme.colorScheme.primary,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60),
+        child: FloatingActionButton(
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true, // Required for full height
+              backgroundColor:
+                  Colors.transparent, // Required for rounded corners
+              builder:
+                  (_) => BlocProvider.value(
+                    value: context.read<NotesCubit>(), // Pass the Cubit
+                    child: const AddNoteBottomSheet(),
+                  ),
+            );
+          },
+          backgroundColor: theme.colorScheme.primary,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }

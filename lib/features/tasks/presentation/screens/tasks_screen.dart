@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get_it/get_it.dart'; // Import GetIt
+import 'package:get_it/get_it.dart';
 
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
-import 'package:voclio_app/features/tasks/presentation/screens/add_task_buttom_sheet.dart';
+import 'package:voclio_app/features/tasks/presentation/widgets/add_task_buttom_sheet.dart';
 import 'package:voclio_app/features/tasks/presentation/screens/task_details_screen.dart';
 
 import '../bloc/tasks_cubit.dart';
@@ -16,7 +16,6 @@ class TasksScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inject the Cubit here
     return BlocProvider(
       create: (_) => GetIt.I<TasksCubit>()..getTasks(),
       child: const _TasksDashboardView(),
@@ -32,9 +31,7 @@ class _TasksDashboardView extends StatefulWidget {
 }
 
 class _TasksDashboardViewState extends State<_TasksDashboardView> {
-  int _selectedTagIndex = 0; // 0 = All
-
-  // Make sure these match your AppTag.label getter exactly
+  int _selectedTagIndex = 0;
   final List<String> _filterTags = [
     'All',
     'Study',
@@ -45,71 +42,84 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
   @override
   Widget build(BuildContext context) {
-    // We can access total count for AppBar directly from BlocBuilder to keep it in sync
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return BlocBuilder<TasksCubit, TasksState>(
       builder: (context, state) {
-        // --- 1. CALCULATE PROGRESS (Based on ALL tasks, not just filtered) ---
+        // --- CALCULATIONS ---
         final totalTasks = state.tasks.length;
         final completedTasks = state.tasks.where((t) => t.isDone).length;
         final double progressValue =
             totalTasks == 0 ? 0 : completedTasks / totalTasks;
         final int progressPercent = (progressValue * 100).toInt();
 
-        // --- 2. FILTER LOGIC ---
+        // --- FILTERING ---
         List<TaskEntity> visibleTasks = state.tasks;
-
-        // If not "All" (index 0), filter by tag
         if (_selectedTagIndex != 0) {
           final selectedTagLabel = _filterTags[_selectedTagIndex];
           visibleTasks =
               visibleTasks.where((task) {
-                // Check if task has a tag that matches the selected label
                 return task.tags.any((tag) => tag.label == selectedTagLabel);
               }).toList();
         }
 
-        // --- 3. SPLIT BY DATE (Using the filtered list) ---
         final todayTasks = _filterTasksByDate(visibleTasks, 0);
         final tomorrowTasks = _filterTasksByDate(visibleTasks, 1);
         final laterTasks = _filterTasksByDate(visibleTasks, 2);
 
         return Scaffold(
-          backgroundColor:
-              AppColors.lightBackground, // Or use Theme.of(context)
+          // 1. Use Theme Background
+          backgroundColor: theme.scaffoldBackgroundColor,
+
           appBar: AppBar(
-            backgroundColor: AppColors.lightBackground,
+            // 2. Make AppBar Transparent
+            backgroundColor: Colors.transparent,
             elevation: 0,
+            // 3. Center the title layout or keep spacing
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Tasks', style: TextStyle(color: Colors.black)),
+                    Text(
+                      'Tasks',
+                      // 4. Use Theme Typography
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                     Text(
                       'You have $totalTasks tasks',
-                      style: TextStyle(color: Colors.black54, fontSize: 12.sp),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        fontSize: 12.sp,
+                      ),
                     ),
                   ],
                 ),
                 IconButton(
                   onPressed: () {},
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.filter_list_rounded,
-                    color: Colors.black,
+                    // 5. Use Theme Icon Color
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],
             ),
           ),
+
           floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 70),
+            padding: const EdgeInsets.only(bottom: 60),
             child: FloatingActionButton(
               onPressed: () {
-                // In TasksScreen.dart
                 showModalBottomSheet(
                   context: context,
-                  isScrollControlled: true, // REQUIRED
+                  isScrollControlled: true,
                   backgroundColor: Colors.transparent,
                   builder:
                       (_) => BlocProvider.value(
@@ -118,25 +128,26 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                       ),
                 );
               },
-              backgroundColor: AppColors.primary,
+              backgroundColor: theme.colorScheme.primary,
               elevation: 5,
+              shape: const CircleBorder(),
               child: const Icon(Icons.add, color: Colors.white),
             ),
           ),
+
           body: SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 20.h),
-
-                  // 1. Progress Card (Dynamic Data passed)
-                  _buildProgressCard(progressValue, progressPercent),
+                  SizedBox(height: 10.h), // Reduced top spacing slightly
+                  // Progress Card
+                  _buildProgressCard(context, progressValue, progressPercent),
 
                   SizedBox(height: 24.h),
 
-                  // 2. Filter Chips
+                  // Filter Chips
                   SizedBox(
                     height: 40.h,
                     child: ListView.separated(
@@ -156,14 +167,16 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                             decoration: BoxDecoration(
                               color:
                                   isSelected
-                                      ? AppColors.primary
+                                      ? theme.colorScheme.primary
                                       : Colors.transparent,
                               borderRadius: BorderRadius.circular(20.r),
                               border: Border.all(
                                 color:
                                     isSelected
-                                        ? AppColors.primary
-                                        : Colors.black12,
+                                        ? theme.colorScheme.primary
+                                        : (isDark
+                                            ? Colors.white24
+                                            : Colors.black12),
                               ),
                             ),
                             child: Center(
@@ -171,7 +184,9 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                 _filterTags[index],
                                 style: TextStyle(
                                   color:
-                                      isSelected ? Colors.white : Colors.black,
+                                      isSelected
+                                          ? Colors.white
+                                          : theme.colorScheme.onSurface,
                                   fontSize: 14.sp,
                                   fontWeight:
                                       isSelected
@@ -188,7 +203,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
                   SizedBox(height: 24.h),
 
-                  // 3. Task List Content
+                  // Task List
                   Expanded(
                     child: Builder(
                       builder: (context) {
@@ -197,12 +212,19 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                             child: CircularProgressIndicator(),
                           );
                         } else if (state.status == TasksStatus.failure) {
-                          return Center(child: Text(state.errorMessage));
+                          return Center(
+                            child: Text(
+                              state.errorMessage,
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          );
                         } else if (visibleTasks.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Text(
                               "No tasks found",
-                              style: TextStyle(color: Colors.black54),
+                              style: TextStyle(
+                                color: theme.colorScheme.secondary,
+                              ),
                             ),
                           );
                         }
@@ -211,21 +233,21 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                           physics: const BouncingScrollPhysics(),
                           children: [
                             if (todayTasks.isNotEmpty) ...[
-                              _buildSectionHeader("Today"),
+                              _buildSectionHeader(context, "Today"),
                               ...todayTasks.map(
                                 (t) => _buildTaskItem(context, t),
                               ),
                             ],
                             if (tomorrowTasks.isNotEmpty) ...[
                               SizedBox(height: 20.h),
-                              _buildSectionHeader("Tomorrow"),
+                              _buildSectionHeader(context, "Tomorrow"),
                               ...tomorrowTasks.map(
                                 (t) => _buildTaskItem(context, t),
                               ),
                             ],
                             if (laterTasks.isNotEmpty) ...[
                               SizedBox(height: 20.h),
-                              _buildSectionHeader("Later"),
+                              _buildSectionHeader(context, "Later"),
                               ...laterTasks.map(
                                 (t) => _buildTaskItem(context, t),
                               ),
@@ -247,30 +269,39 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
   // --- Helpers ---
 
-  // Updated to accept data
-  Widget _buildProgressCard(double progressValue, int percentage) {
+  Widget _buildProgressCard(
+    BuildContext context,
+    double progressValue,
+    int percentage,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.lightBackground,
-            AppColors.lightBackground.withOpacity(0.9),
-          ], // Assuming dark logic, adjust for light
-          // For Light theme specific:
-          // colors: [Colors.deepPurple.shade900, Colors.deepPurple.shade800],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: theme.colorScheme.surface, // Matches theme card color
         borderRadius: BorderRadius.circular(24.r),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
+        // Optional Gradient for Dark Mode to make it pop
+        gradient:
+            isDark
+                ? LinearGradient(
+                  colors: [
+                    AppColors.darkCard,
+                    AppColors.darkCard.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+                : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,21 +309,16 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Overall Progress",
-                style: TextStyle(color: Colors.black, fontSize: 16.sp),
-              ),
-              Text(
-                "$percentage%", // Dynamic percentage
-                style: TextStyle(color: Colors.black, fontSize: 14.sp),
-              ),
+              Text("Overall Progress", style: theme.textTheme.bodyLarge),
+              Text("$percentage%", style: theme.textTheme.bodyMedium),
             ],
           ),
           SizedBox(height: 15.h),
           LinearProgressIndicator(
-            value: progressValue, // Dynamic value (0.0 to 1.0)
-            backgroundColor: Colors.white10,
-            color: AppColors.primary,
+            value: progressValue,
+            backgroundColor:
+                isDark ? Colors.white10 : Colors.deepPurple.shade50,
+            color: theme.colorScheme.primary,
             minHeight: 8.h,
             borderRadius: BorderRadius.circular(10.r),
           ),
@@ -323,21 +349,19 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h, left: 4.w),
       child: Text(
         title,
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 18.sp,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.bold,
+          fontSize: 18.sp,
         ),
       ),
     );
   }
 
-  // Helper to split lists (0=Today, 1=Tomorrow, 2=Later)
   List<TaskEntity> _filterTasksByDate(List<TaskEntity> tasks, int type) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
