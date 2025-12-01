@@ -93,7 +93,7 @@ class NoteCard extends StatelessWidget {
                     .take(2)
                     .map(
                       (tag) => Padding(
-                        padding: EdgeInsets.only(right: 8.w),
+                        padding: EdgeInsets.only(right: 4.w),
                         child: _buildMiniTag(context, tag),
                       ),
                     ),
@@ -101,9 +101,8 @@ class NoteCard extends StatelessWidget {
                   Text(
                     "+${note.tags.length - 2}  ",
                     style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                    overflow: TextOverflow.ellipsis,
                   ),
-
-                const Spacer(),
 
                 Text(
                   _timeAgo(note.lastEditDate),
@@ -111,6 +110,7 @@ class NoteCard extends StatelessWidget {
                     fontSize: 12.sp,
                     color: theme.colorScheme.secondary,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

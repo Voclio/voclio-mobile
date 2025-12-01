@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/enums/enums.dart'; // Adjust path
+import 'package:voclio_app/features/notes/presentation/widgets/tag_selection_sheet.dart';
 import '../../domain/entities/note_entity.dart'; // Adjust path
 import '../bloc/notes_cubit.dart';
 
@@ -18,6 +19,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   late List<AppTag> _selectedTags;
+  late NotesCubit cubit;
+
   bool _isModified = false;
 
   @override
@@ -28,6 +31,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       text: widget.note?.content ?? '',
     );
     _selectedTags = List.from(widget.note?.tags ?? []);
+    cubit = context.read<NotesCubit>();
   }
 
   @override
@@ -71,6 +75,64 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
   }
 
+  void _showDeleteConfirmation(BuildContext context) {
+    final theme = Theme.of(context);
+    // final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: theme.colorScheme.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            title: Text(
+              "Delete Note?",
+              style: theme.textTheme.headlineSmall?.copyWith(fontSize: 20.sp),
+            ),
+            content: Text(
+              "This action cannot be undone.",
+              style: theme.textTheme.bodyMedium,
+            ),
+            actions: [
+              // CANCEL
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(color: theme.colorScheme.secondary),
+                ),
+              ),
+
+              // DELETE
+              TextButton(
+                onPressed: () {
+                  // 1. Close the Dialog
+                  Navigator.pop(context);
+
+                  // 2. Prevent Auto-Save from running when we pop the screen
+                  _isModified = false;
+
+                  // 3. Delete logic
+                  cubit.deleteNote(widget.note!.id);
+
+                  // 4. Close the Detail Screen
+                  Navigator.pop(context);
+                },
+                child: const Text(
+                  "Delete",
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -99,10 +161,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               ),
               onPressed: () {},
             ),
-            IconButton(
-              icon: Icon(Icons.more_vert, color: theme.colorScheme.onSurface),
-              onPressed: () {},
-            ),
+            if (widget.note != null)
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: Colors.redAccent),
+                onPressed: () {
+                  _showDeleteConfirmation(context);
+                },
+              ),
           ],
         ),
         body: SafeArea(
@@ -151,19 +216,35 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   runSpacing: 8.h,
                   children: [
                     ..._selectedTags.map((tag) => _buildTagChip(context, tag)),
+                    // ... inside Wrap ...
+
                     // Add Tag Button
                     GestureDetector(
-                      onTap: () {
-                        // TODO: Show Tag Picker Dialog
-                        // For now, let's just add a dummy tag to test logic
-                        setState(() {
-                          if (!_selectedTags.contains(AppTag.ideas)) {
-                            _selectedTags.add(AppTag.ideas);
+                      onTap: () async {
+                        // 1. Show Bottom Sheet and wait for result
+                        final List<AppTag>? result = await showModalBottomSheet(
+                          context: context,
+                          isScrollControlled:
+                              true, // Allows sheet to be taller if needed
+                          backgroundColor:
+                              Colors
+                                  .transparent, // Important for rounded corners
+                          builder:
+                              (context) => TagSelectionSheet(
+                                selectedTags: _selectedTags,
+                              ),
+                        );
+
+                        // 2. If user clicked "Done" (result is not null), update state
+                        if (result != null) {
+                          setState(() {
+                            _selectedTags = result;
                             _isModified = true;
-                          }
-                        });
+                          });
+                        }
                       },
                       child: Container(
+                        // ... (Container styling remains the same as before)
                         padding: EdgeInsets.symmetric(
                           horizontal: 12.w,
                           vertical: 6.h,
@@ -184,7 +265,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             ),
                             SizedBox(width: 4.w),
                             Text(
-                              "Add tag",
+                              "Manage tags", // Changed text slightly to indicate full management
                               style: TextStyle(
                                 color: theme.colorScheme.secondary,
                                 fontSize: 12.sp,

@@ -193,8 +193,12 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (_) => NoteDetailScreen(
-                                            note: filteredNotes[index],
+                                          (_) => BlocProvider.value(
+                                            value: context.read<NotesCubit>(),
+
+                                            child: NoteDetailScreen(
+                                              note: filteredNotes[index],
+                                            ),
                                           ),
                                     ),
                                   );
@@ -204,6 +208,8 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                         : ListView.separated(
                           physics: const BouncingScrollPhysics(),
                           itemCount: filteredNotes.length,
+                          padding: EdgeInsets.only(bottom: 45.h),
+
                           separatorBuilder: (_, __) => SizedBox(height: 16.h),
                           itemBuilder:
                               (context, index) => NoteCard(
@@ -213,8 +219,12 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                     context,
                                     MaterialPageRoute(
                                       builder:
-                                          (_) => NoteDetailScreen(
-                                            note: filteredNotes[index],
+                                          (_) => BlocProvider.value(
+                                            value: context.read<NotesCubit>(),
+
+                                            child: NoteDetailScreen(
+                                              note: filteredNotes[index],
+                                            ),
                                           ),
                                     ),
                                   );

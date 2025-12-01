@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
 import 'package:voclio_app/features/notes/domain/entities/note_entity.dart';
 import 'package:voclio_app/features/notes/domain/usecases/add_note_use_case.dart';
 import 'package:voclio_app/features/notes/domain/usecases/delete_note_use_case.dart';
@@ -57,19 +56,19 @@ class NotesCubit extends Cubit<NotesState> {
   }
 
   Future<void> updateNote(NoteEntity note) async {
-    // Optimistic Update
-    final index = state.notes.indexWhere((n) => n.id == note.id);
-    if (index != -1) {
-      final updatedList = List<NoteEntity>.from(state.notes);
-      updatedList[index] = note;
-      emit(state.copyWith(notes: updatedList));
-    }
+    try {
+      final index = state.notes.indexWhere((n) => n.id == note.id);
+      if (index != -1) {
+        final updatedList = List<NoteEntity>.from(state.notes);
+        updatedList[index] = note;
+        emit(state.copyWith(notes: updatedList));
+      }
 
-    final result = await updateNoteUseCase(note);
-    result.fold((failure) {
-      // Revert or error
-      getNotes();
-    }, (_) {});
+      final result = await updateNoteUseCase(note);
+      result.fold((failure) => getNotes(), (_) {});
+    } catch (e) {
+      getNotes(); // Revert on error
+    }
   }
 
   Future<void> deleteNote(String id) async {
