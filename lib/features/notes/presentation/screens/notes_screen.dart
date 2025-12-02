@@ -176,36 +176,58 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                     }
 
                     return _isGridMode
-                        ? GridView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 16.w,
-                                mainAxisSpacing: 16.h,
-                                childAspectRatio: 0.8, // Taller cards
-                              ),
-                          itemCount: filteredNotes.length,
-                          itemBuilder:
-                              (context, index) => NoteCard(
-                                note: filteredNotes[index],
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) => BlocProvider.value(
-                                            value: context.read<NotesCubit>(),
+                        ? Builder(
+                          builder: (context) {
+                            // 1. Calculate dynamic aspect ratio
+                            // We want the card to have a fixed height (e.g., 200.h) regardless of width
+                            // Formula: Ratio = Width / DesiredHeight
 
-                                            child: NoteDetailScreen(
-                                              note: filteredNotes[index],
-                                            ),
-                                          ),
-                                    ),
-                                  );
-                                }, // Todo: Navigate to details
-                              ),
+                            final double screenWidth =
+                                MediaQuery.of(context).size.width;
+                            // Total Horizontal Padding = 20.w (left) + 20.w (right) + 16.w (middle gap)
+                            final double totalPadding = 56.w;
+                            final double cardWidth =
+                                (screenWidth - totalPadding) / 2;
+
+                            // Adjust this value (210.h) until your content fits perfectly
+                            final double desiredCardHeight = 210.h;
+                            final double childAspectRatio =
+                                cardWidth / desiredCardHeight;
+
+                            return GridView.builder(
+                              physics: const BouncingScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 16.w,
+                                    mainAxisSpacing: 16.h,
+                                    // 2. Use the calculated ratio
+                                    childAspectRatio: childAspectRatio,
+                                  ),
+                              itemCount: filteredNotes.length,
+                              itemBuilder:
+                                  (context, index) => NoteCard(
+                                    note: filteredNotes[index],
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => BlocProvider.value(
+                                                value:
+                                                    context.read<NotesCubit>(),
+                                                child: NoteDetailScreen(
+                                                  note: filteredNotes[index],
+                                                ),
+                                              ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                            );
+                          },
                         )
+                        // ... existing list view code ...
                         : ListView.separated(
                           physics: const BouncingScrollPhysics(),
                           itemCount: filteredNotes.length,
