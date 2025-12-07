@@ -34,7 +34,7 @@ class AuthTextField extends StatelessWidget {
     final colors = context.colors;
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
-    
+
     return CustomFadeInUp(
       duration: 600,
       child: Column(
@@ -44,77 +44,70 @@ class AuthTextField extends StatelessWidget {
             text: label,
             theme: context.textStyle.copyWith(
               fontSize: isSmall ? 14.sp : 16.sp,
-              fontWeight: FontWeightHelper.medium,
-              color: colors.primary,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+              letterSpacing: 0.2,
             ),
           ),
-          SizedBox(height: isSmall ? 6.h : 8.h),
-          TextFormField(
-
-            controller: controller,
-            keyboardType: keyboardType,
-            obscureText: obscureText,
-            validator: validator,
-            onChanged: onChanged,
-            enabled: enabled,
-            style: context.textStyle.copyWith(
-              fontSize: isSmall ? 14.sp : 16.sp,
-              color: colors.primary,
+          SizedBox(height: 10.h),
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF6C4FBB).withOpacity(0.08),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
             ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: context.textStyle.copyWith(
-                fontSize: isSmall ? 12.sp : 14.sp,
-                color: colors.primary?.withOpacity(0.6),
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              obscureText: obscureText,
+              validator: validator,
+              onChanged: onChanged,
+              enabled: enabled,
+              style: context.textStyle.copyWith(
+                fontSize: isSmall ? 14.sp : 16.sp,
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w500,
               ),
-              suffixIcon: suffixIcon,
-              filled: true,
-              fillColor: colors.background!.withOpacity(0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
-                borderSide: BorderSide(
-                  color: colors.primary!.withOpacity(0.3),
-                  width: 1,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: context.textStyle.copyWith(
+                  fontSize: isSmall ? 13.sp : 15.sp,
+                  color: colors.grey?.withOpacity(0.5),
+                  fontWeight: FontWeight.w400,
                 ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
-                borderSide: BorderSide(
-                  color: colors.primary!.withOpacity(0.3),
-                  width: 1,
+                suffixIcon: suffixIcon,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
-                borderSide: BorderSide(
-                  color: colors.primary!,
-                  width: 2,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(color: Color(0xFFE5E7EB), width: 1.5),
                 ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
-                borderSide: BorderSide(
-                  color: Colors.red,
-                  width: 1,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(color: colors.primary!, width: 2.5),
                 ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
-                borderSide: BorderSide(
-                  color: Colors.red,
-                  width: 2,
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(color: Color(0xFFEF4444), width: 1.5),
                 ),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
-                borderSide: BorderSide(
-                  color: colors.primary!.withOpacity(0.1),
-                  width: 1,
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14.r),
+                  borderSide: BorderSide(color: Color(0xFFEF4444), width: 2.5),
                 ),
-              ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: isSmall ? 14.w : 16.w,
-                vertical: isSmall ? 14.h : 16.h,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 18.w,
+                  vertical: 18.h,
+                ),
               ),
             ),
           ),

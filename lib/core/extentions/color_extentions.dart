@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 /// Used throughout the app for consistent color management
 class MyColors extends ThemeExtension<MyColors> {
   const MyColors({
-
     required this.primary,
 
     required this.accent,
@@ -32,29 +31,28 @@ class MyColors extends ThemeExtension<MyColors> {
 
   final Color? primary;
 
-  
   // Accent colors for secondary elements
   final Color? accent;
   final Color? accentLight;
   final Color? accentDark;
-  
+
   // Basic colors
   final Color? white;
   final Color? black;
   final Color? grey;
   final Color? greyLight;
   final Color? greyDark;
-  
+
   // Text colors for different contexts
   final Color? textPrimary;
   final Color? textSecondary;
   final Color? textLight;
-  
+
   // Background colors
   final Color? background;
   final Color? backgroundLight;
   final Color? backgroundDark;
-  
+
   // Status colors for different states
   final Color? success;
   final Color? warning;
@@ -64,7 +62,6 @@ class MyColors extends ThemeExtension<MyColors> {
   /// Creates a copy of this color theme with some properties overridden
   @override
   ThemeExtension<MyColors> copyWith({
-
     Color? primary,
 
     Color? accent,
@@ -112,9 +109,9 @@ class MyColors extends ThemeExtension<MyColors> {
   /// Interpolates between two color themes for smooth transitions
   @override
   ThemeExtension<MyColors> lerp(
-      covariant ThemeExtension<MyColors>? other,
-      double t,
-      ) {
+    covariant ThemeExtension<MyColors>? other,
+    double t,
+  ) {
     if (other is! MyColors) return this;
 
     return MyColors(
@@ -138,32 +135,31 @@ class MyColors extends ThemeExtension<MyColors> {
       warning: Color.lerp(warning, other.warning, t),
       error: Color.lerp(error, other.error, t),
       info: Color.lerp(info, other.info, t),
-
     );
   }
 
   /// Light theme configuration - Professional blue and green colors
   /// Suitable for productivity and voice-to-text applications
   static const MyColors light = MyColors(
-    primary: Color(0xFF9B87C8), // Professional blue for productivity apps
+    primary: Color(0xFF6C4FBB), // Rich, vibrant purple for modern UI
     accent: Color(0xFF4CAF50), // Green for success and productivity
     accentLight: Color(0xFF81C784), // Light green, comfortable
     accentDark: Color(0xFF388E3C), // Dark green, professional
     white: Color(0xFFFFFFFF),
     black: Color(0xFF000000),
-    grey: Color(0xFF6B6B7E),
-    greyLight: Color(0xFFF5F5F5),
-    greyDark: Color(0xFF424242),
-    textPrimary: Color(0xFF2A2A3E),
-    textSecondary: Color(0xFF757575),
+    grey: Color(0xFF424242), // Darker grey for better readability
+    greyLight: Color(0xFFF5F5F7),
+    greyDark: Color(0xFF1A1A1A),
+    textPrimary: Color(0xFF1A1A2E), // Very dark text for strong contrast
+    textSecondary: Color(0xFF6B7280),
     textLight: Color(0xFFFFFFFF),
     background: Color(0xFFFFFFFF),
     backgroundLight: Color(0xFFFAFAFA),
     backgroundDark: Color(0xFF303030),
-    success: Color(0xFF4CAF50),
-    warning: Color(0xFFFF9800),
-    error: Color(0xFFF44336),
-    info: Color(0xFF2196F3),
+    success: Color(0xFF10B981),
+    warning: Color(0xFFF59E0B),
+    error: Color(0xFFEF4444),
+    info: Color(0xFF3B82F6),
   );
 
   /// Dark theme configuration - Same professional colors with dark backgrounds

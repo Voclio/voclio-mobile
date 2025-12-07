@@ -32,51 +32,73 @@ class AuthButton extends StatelessWidget {
 
     return CustomFadeInUp(
       duration: 600,
-      child: SizedBox(
-        width: double.infinity,
-        height: isSmall ? 50.h : 56.h,
-        child: ElevatedButton(
-          onPressed: isEnabled && !isLoading ? onPressed : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: effectiveBackgroundColor,
-            disabledBackgroundColor: effectiveBackgroundColor.withOpacity(0.5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(isSmall ? 10.r : 12.r),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow:
+              isEnabled && !isLoading
+                  ? [
+                    BoxShadow(
+                      color: effectiveBackgroundColor.withOpacity(0.35),
+                      blurRadius: 20,
+                      offset: Offset(0, 8),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                  : [],
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          height: isSmall ? 54.h : 60.h,
+          child: ElevatedButton(
+            onPressed: isEnabled && !isLoading ? onPressed : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: effectiveBackgroundColor,
+              disabledBackgroundColor: effectiveBackgroundColor.withOpacity(
+                0.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14.r),
+              ),
+              elevation: 0,
+              shadowColor: Colors.transparent,
             ),
-            elevation: 0,
-            shadowColor: Colors.transparent,
-          ),
-          child: isLoading
-              ? Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: isSmall ? 18.w : 20.w,
-                      height: isSmall ? 18.h : 20.h,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(effectiveTextColor),
-                      ),
-                    ),
-                    SizedBox(width: isSmall ? 8.w : 12.w),
-                    Text(
-                      'Loading...',
+            child:
+                isLoading
+                    ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: isSmall ? 20.w : 22.w,
+                          height: isSmall ? 20.h : 22.h,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              effectiveTextColor,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: isSmall ? 10.w : 12.w),
+                        Text(
+                          'Loading...',
+                          style: context.textStyle.copyWith(
+                            fontSize: isSmall ? 14.sp : 16.sp,
+                            fontWeight: FontWeight.w600,
+                            color: effectiveTextColor.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    )
+                    : Text(
+                      text,
                       style: context.textStyle.copyWith(
-                        fontSize: isSmall ? 12.sp : 14.sp,
-                        fontWeight: FontWeightHelper.medium,
-                        color: effectiveTextColor.withOpacity(0.8),
+                        fontSize: isSmall ? 16.sp : 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: effectiveTextColor,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                  ],
-                )
-              : Text(
-                  text,
-                  style: context.textStyle.copyWith(
-                    fontSize: isSmall ? 14.sp : 16.sp,
-                    fontWeight: FontWeightHelper.semiBold,
-                    color: effectiveTextColor,
-                  ),
-                ),
+          ),
         ),
       ),
     );
