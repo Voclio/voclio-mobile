@@ -17,6 +17,55 @@ import 'package:voclio_app/features/tasks/domain/usecases/get_all_tasks_use_case
 import 'package:voclio_app/features/tasks/domain/usecases/get_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_task_use_case.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
+import 'package:voclio_app/features/auth/data/datasources/auth_remote_datasource_impl.dart'
+    as auth_impl;
+
+// Settings
+import '../../features/settings/presentation/cubit/settings_cubit.dart';
+
+// Tags
+import '../../features/tags/domain/repositories/tag_repository.dart';
+import '../../features/tags/domain/usecases/create_tag_usecase.dart';
+import '../../features/tags/domain/usecases/delete_tag_usecase.dart';
+import '../../features/tags/domain/usecases/get_tags_usecase.dart';
+import '../../features/tags/domain/usecases/update_tag_usecase.dart';
+import '../../features/tags/data/repositories/tag_repository_impl.dart';
+import '../../features/tags/data/datasources/tag_remote_datasource.dart';
+import '../../features/tags/presentation/cubit/tag_cubit.dart';
+
+// Reminders
+import '../../features/reminders/domain/repositories/reminder_repository.dart';
+import '../../features/reminders/domain/usecases/create_reminder_usecase.dart';
+import '../../features/reminders/domain/usecases/delete_reminder_usecase.dart';
+import '../../features/reminders/domain/usecases/get_reminders_usecase.dart';
+import '../../features/reminders/domain/usecases/snooze_reminder_usecase.dart';
+import '../../features/reminders/domain/usecases/update_reminder_usecase.dart';
+import '../../features/reminders/data/repositories/reminder_repository_impl.dart';
+import '../../features/reminders/data/datasources/reminder_remote_datasource.dart';
+import '../../features/reminders/presentation/cubit/reminders_cubit.dart';
+
+// Notifications
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_as_read_usecase.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
+import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
+
+// Productivity
+import '../../features/productivity/domain/repositories/productivity_repository.dart';
+import '../../features/productivity/domain/usecases/productivity_usecases.dart';
+import '../../features/productivity/data/repositories/productivity_repository_impl.dart';
+import '../../features/productivity/data/datasources/productivity_remote_datasource.dart';
+import '../../features/productivity/presentation/bloc/productivity_cubit.dart';
+
+// Dashboard
+import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
+import '../../features/dashboard/domain/usecases/get_dashboard_stats_usecase.dart';
+import '../../features/dashboard/domain/usecases/get_quick_stats_usecase.dart';
+import '../../features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import '../../features/dashboard/presentation/bloc/dashboard_cubit.dart';
 
 // Domain
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -31,7 +80,6 @@ import '../../features/auth/domain/usecases/reset_password_usecase.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/datasources/auth_local_datasource_impl.dart';
-import '../../features/auth/data/datasources/auth_remote_datasource_impl.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 
 // Presentation
@@ -39,6 +87,7 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 // App
 import '../app/app_cubit.dart';
+import '../api/api_client.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -47,12 +96,15 @@ Future<void> setupDependencies() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
 
+  // Core - API Client
+  getIt.registerLazySingleton<ApiClient>(() => ApiClient());
+
   // Data sources
   getIt.registerLazySingleton<AuthLocalDataSource>(
     () => AuthLocalDataSourceImpl(getIt<SharedPreferences>()),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(),
+    () => auth_impl.AuthRemoteDataSourceImpl(),
   );
 
   // Repository
@@ -101,7 +153,7 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerLazySingleton<TaskRemoteDataSource>(
-    () => TaskRemoteDataSourceImpl(getIt()),
+    () => TaskRemoteDataSourceImpl(getIt(), apiClient: getIt<ApiClient>()),
   );
 
   getIt.registerLazySingleton<TaskRepository>(() => FakeRepo());
@@ -134,6 +186,139 @@ Future<void> setupDependencies() async {
       getNoteUseCase: getIt(),
       updateNoteUseCase: getIt(),
       deleteNoteUseCase: getIt(),
+    ),
+  );
+
+  // Settings
+  getIt.registerFactory<SettingsCubit>(
+    () => SettingsCubit(prefs: getIt<SharedPreferences>()),
+  );
+
+  // Tags
+  getIt.registerLazySingleton<TagRemoteDataSource>(
+    () => TagRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TagRepository>(
+    () => TagRepositoryImpl(remoteDataSource: getIt<TagRemoteDataSource>()),
+  );
+  getIt.registerLazySingleton(() => GetTagsUseCase(getIt<TagRepository>()));
+  getIt.registerLazySingleton(() => CreateTagUseCase(getIt<TagRepository>()));
+  getIt.registerLazySingleton(() => UpdateTagUseCase(getIt<TagRepository>()));
+  getIt.registerLazySingleton(() => DeleteTagUseCase(getIt<TagRepository>()));
+  getIt.registerFactory<TagCubit>(
+    () => TagCubit(
+      getTagsUseCase: getIt(),
+      createTagUseCase: getIt(),
+      updateTagUseCase: getIt(),
+      deleteTagUseCase: getIt(),
+    ),
+  );
+
+  // Reminders
+  getIt.registerLazySingleton<ReminderRemoteDataSource>(
+    () => ReminderRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ReminderRepository>(
+    () => ReminderRepositoryImpl(
+      remoteDataSource: getIt<ReminderRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => GetRemindersUseCase(getIt<ReminderRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => CreateReminderUseCase(getIt<ReminderRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => UpdateReminderUseCase(getIt<ReminderRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => DeleteReminderUseCase(getIt<ReminderRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => SnoozeReminderUseCase(getIt<ReminderRepository>()),
+  );
+  getIt.registerFactory<RemindersCubit>(
+    () => RemindersCubit(
+      getRemindersUseCase: getIt(),
+      createReminderUseCase: getIt(),
+      updateReminderUseCase: getIt(),
+      deleteReminderUseCase: getIt(),
+      snoozeReminderUseCase: getIt(),
+    ),
+  );
+
+  // Notifications
+  getIt.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      remoteDataSource: getIt<NotificationRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => GetNotificationsUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => MarkAsReadUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerFactory<NotificationsCubit>(
+    () => NotificationsCubit(
+      getNotificationsUseCase: getIt(),
+      markAsReadUseCase: getIt(),
+    ),
+  );
+
+  // Productivity
+  getIt.registerLazySingleton<ProductivityRemoteDataSource>(
+    () => ProductivityRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ProductivityRepository>(
+    () => ProductivityRepositoryImpl(
+      remoteDataSource: getIt<ProductivityRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => StartFocusSessionUseCase(getIt<ProductivityRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => EndFocusSessionUseCase(getIt<ProductivityRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => GetStreakUseCase(getIt<ProductivityRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => GetAchievementsUseCase(getIt<ProductivityRepository>()),
+  );
+  getIt.registerFactory<ProductivityCubit>(
+    () => ProductivityCubit(
+      startFocusSessionUseCase: getIt(),
+      endFocusSessionUseCase: getIt(),
+      getStreakUseCase: getIt(),
+      getAchievementsUseCase: getIt(),
+    ),
+  );
+
+  // Dashboard
+  getIt.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(
+      remoteDataSource: getIt<DashboardRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => GetDashboardStatsUseCase(getIt<DashboardRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => GetQuickStatsUseCase(getIt<DashboardRepository>()),
+  );
+  getIt.registerFactory<DashboardCubit>(
+    () => DashboardCubit(
+      getDashboardStatsUseCase: getIt(),
+      getQuickStatsUseCase: getIt(),
     ),
   );
 }

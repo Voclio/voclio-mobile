@@ -1,0 +1,160 @@
+import 'package:voclio_app/core/api/api_client.dart';
+import 'package:voclio_app/core/api/api_endpoints.dart';
+import '../models/productivity_models.dart';
+
+abstract class ProductivityRemoteDataSource {
+  Future<FocusSessionModel> startFocusSession(
+    int duration,
+    String? sound,
+    int? volume,
+  );
+  Future<List<FocusSessionModel>> getFocusSessions();
+  Future<void> endFocusSession(String id, int actualDuration);
+  Future<StreakModel> getStreak();
+  Future<List<AchievementModel>> getAchievements();
+}
+
+class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
+  final ApiClient apiClient;
+
+  ProductivityRemoteDataSourceImpl({required this.apiClient});
+
+  @override
+  Future<FocusSessionModel> startFocusSession(
+    int duration,
+    String? sound,
+    int? volume,
+  ) async {
+    try {
+      final response = await apiClient.post(
+        ApiEndpoints.focusSessions,
+        data: {
+          'timer_duration': duration,
+          if (sound != null) 'ambient_sound': sound,
+          if (volume != null) 'sound_volume': volume,
+        },
+      );
+      return FocusSessionModel.fromJson(response.data['data']);
+    } catch (e) {
+      // Return mock focus session
+      return FocusSessionModel(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        timerDuration: duration * 60,
+        ambientSound: sound,
+        soundVolume: volume,
+        completed: false,
+        createdAt: DateTime.now(),
+      );
+    }
+  }
+
+  @override
+  Future<List<FocusSessionModel>> getFocusSessions() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.focusSessions);
+      final List<dynamic> data = response.data['data'];
+      return data.map((json) => FocusSessionModel.fromJson(json)).toList();
+    } catch (e) {
+      // Return mock data if API fails
+      return [
+        FocusSessionModel(
+          id: '1',
+          timerDuration: 1500,
+          actualDuration: 1500,
+          completed: true,
+          createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        ),
+        FocusSessionModel(
+          id: '2',
+          timerDuration: 3600,
+          actualDuration: 3200,
+          completed: true,
+          createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+      ];
+    }
+  }
+
+  @override
+  Future<void> endFocusSession(String id, int actualDuration) async {
+    try {
+      await apiClient.put(
+        ApiEndpoints.focusSessionById(id),
+        data: {'completed': true, 'actual_duration': actualDuration},
+      );
+    } catch (e) {
+      // Mock success - do nothing
+      return;
+    }
+  }
+
+  @override
+  Future<StreakModel> getStreak() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.streak);
+      return StreakModel.fromJson(response.data['data']);
+    } catch (e) {
+      // Return mock data if API fails
+      return StreakModel(
+        currentStreak: 5,
+        longestStreak: 12,
+        lastActivityDate: DateTime.now().subtract(const Duration(days: 1)),
+      );
+    }
+  }
+
+  @override
+  Future<List<AchievementModel>> getAchievements() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.achievements);
+      final List<dynamic> data = response.data['data'];
+      return data.map((json) => AchievementModel.fromJson(json)).toList();
+    } catch (e) {
+      // Return mock data if API fails
+      return [
+        AchievementModel(
+          id: '1',
+          title: 'First Focus',
+          description: 'Complete your first focus session',
+          icon: '🎯',
+          isUnlocked: true,
+        ),
+        AchievementModel(
+          id: '2',
+          title: 'Week Warrior',
+          description: 'Maintain a 7-day streak',
+          icon: '🔥',
+          isUnlocked: true,
+        ),
+        AchievementModel(
+          id: '3',
+          title: 'Focus Master',
+          description: 'Complete 50 focus sessions',
+          icon: '👑',
+          isUnlocked: false,
+        ),
+        AchievementModel(
+          id: '4',
+          title: 'Early Bird',
+          description: 'Start a session before 8 AM',
+          icon: '🌅',
+          isUnlocked: true,
+        ),
+        AchievementModel(
+          id: '5',
+          title: 'Night Owl',
+          description: 'Complete a session after 10 PM',
+          icon: '🦉',
+          isUnlocked: false,
+        ),
+        AchievementModel(
+          id: '6',
+          title: 'Marathon Runner',
+          description: 'Complete a 2-hour focus session',
+          icon: '⚡',
+          isUnlocked: false,
+        ),
+      ];
+    }
+  }
+}

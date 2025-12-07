@@ -2,13 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../core/app/linaer_container.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/routes/App_routes.dart';
 import '../widgets/home_list_tile.dart';
-import '../widgets/feature_card.dart';
-import '../widgets/stats_card.dart';
+import '../../../voice/presentation/screens/voice_recording_screen.dart';
 
 class HomeScreenBody extends StatefulWidget {
-  const HomeScreenBody({super.key});
+  final Function(int)? onTabChange;
+
+  const HomeScreenBody({super.key, this.onTabChange});
 
   @override
   State<HomeScreenBody> createState() => _HomeScreenBodyState();
@@ -330,7 +332,10 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Navigate to tasks bottom bar tab (index 1)
+                        // This will be handled by MainLayout state
+                      },
                       child: Text(
                         'View All',
                         style: TextStyle(
@@ -400,7 +405,10 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                       ),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Navigate to notes bottom bar tab (index 3)
+                        // This will be handled by MainLayout state
+                      },
                       child: Text(
                         'View All',
                         style: TextStyle(
@@ -465,41 +473,61 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   children: [
-                    _buildActionCard(
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
                           context,
-                          'Record Voice Note',
-                          'Capture your thoughts instantly',
-                          Icons.mic_rounded,
-                          theme.primaryColor,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 700.ms)
-                        .slideX(begin: -0.2),
+                          MaterialPageRoute(
+                            builder: (context) => const VoiceRecordingScreen(),
+                          ),
+                        );
+                      },
+                      child: _buildActionCard(
+                            context,
+                            'Record Voice Note',
+                            'Capture your thoughts instantly',
+                            Icons.mic_rounded,
+                            theme.primaryColor,
+                          )
+                          .animate()
+                          .fadeIn(duration: 600.ms, delay: 700.ms)
+                          .slideX(begin: -0.2),
+                    ),
                     SizedBox(height: 12.h),
-                    _buildActionCard(
-                          context,
-                          'Create Task',
-                          'Add a new task to your list',
-                          Icons.add_task_rounded,
-                          theme.primaryColor,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 800.ms)
-                        .slideX(begin: -0.2),
+                    InkWell(
+                      onTap: () => context.push(AppRouter.dashboard),
+                      child: _buildActionCard(
+                            context,
+                            'View Dashboard',
+                            'Track your productivity stats',
+                            Icons.dashboard_rounded,
+                            theme.primaryColor,
+                          )
+                          .animate()
+                          .fadeIn(duration: 600.ms, delay: 800.ms)
+                          .slideX(begin: -0.2),
+                    ),
                     SizedBox(height: 12.h),
-                    _buildActionCard(
-                          context,
-                          'View Calendar',
-                          'Check your upcoming events',
-                          Icons.calendar_month_rounded,
-                          theme.primaryColor,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 900.ms)
-                        .slideX(begin: -0.2),
+                    InkWell(
+                      onTap: () {
+                        widget.onTabChange?.call(2);
+                      },
+                      child: _buildActionCard(
+                            context,
+                            'View Calendar',
+                            'Check your upcoming events',
+                            Icons.calendar_month_rounded,
+                            theme.primaryColor,
+                          )
+                          .animate()
+                          .fadeIn(duration: 600.ms, delay: 900.ms)
+                          .slideX(begin: -0.2),
+                    ),
                   ],
                 ),
               ),
+
+              SizedBox(height: 32.h),
 
               SizedBox(height: 100.h), // Space for bottom nav
             ],
@@ -763,6 +791,53 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
             color: Colors.grey.shade400,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16.r),
+      child: Container(
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color, color.withOpacity(0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 32.sp),
+            SizedBox(height: 8.h),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

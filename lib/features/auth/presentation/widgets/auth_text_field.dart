@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import '../../../../core/common/animation/animate_do.dart';
 import '../../../../core/common/inputs/text_app.dart';
-import '../../../../core/styles/fonts/font_weight_helper.dart';
 
 class AuthTextField extends StatelessWidget {
   final String label;

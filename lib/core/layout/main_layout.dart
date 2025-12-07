@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../features/home/presentation/refactor/home_screen_body.dart';
 import '../../features/tasks/presentation/screens/tasks_screen.dart';
 import '../../features/calendar/presentation/screens/calendar_screen.dart';
@@ -11,6 +10,9 @@ import '../../features/voice/presentation/screens/voice_recording_screen.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
+  static final GlobalKey<_MainLayoutState> mainLayoutKey =
+      GlobalKey<_MainLayoutState>();
+
   @override
   State<MainLayout> createState() => _MainLayoutState();
 }
@@ -19,13 +21,9 @@ class _MainLayoutState extends State<MainLayout>
     with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _fabAnimationController;
+  late PageController _pageController;
 
-  final List<Widget> _screens = const [
-    HomeScreenBody(),
-    TasksScreen(),
-    CalendarScreen(),
-    NotesScreen(),
-  ];
+  late final List<Widget> _screens;
 
   final iconList = <IconData>[
     Icons.home_rounded,
@@ -39,6 +37,13 @@ class _MainLayoutState extends State<MainLayout>
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
+    _screens = [
+      HomeScreenBody(onTabChange: changeTab),
+      const TasksScreen(),
+      const CalendarScreen(),
+      const NotesScreen(),
+    ];
     _fabAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -47,8 +52,17 @@ class _MainLayoutState extends State<MainLayout>
     _fabAnimationController.forward();
   }
 
+  void changeTab(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   void dispose() {
+    _pageController.dispose();
     _fabAnimationController.dispose();
     super.dispose();
   }
@@ -58,9 +72,18 @@ class _MainLayoutState extends State<MainLayout>
     final theme = Theme.of(context);
 
     return Scaffold(
+      key: MainLayout.mainLayoutKey,
       backgroundColor: Colors.transparent,
       extendBody: true,
-      body: _screens[_currentIndex],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: _screens,
+      ),
       floatingActionButton: Container(
         width: 65.r,
         height: 65.r,
@@ -179,9 +202,11 @@ class _MainLayoutState extends State<MainLayout>
           leftCornerRadius: 28.r,
           rightCornerRadius: 28.r,
           onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
           },
           shadow: const BoxShadow(color: Colors.transparent, blurRadius: 0),
           height: 65.h,

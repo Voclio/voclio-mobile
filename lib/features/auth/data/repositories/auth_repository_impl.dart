@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:voclio_app/core/errors/failures.dart';
 import '../../domain/entities/auth_request.dart';
 import '../../domain/entities/auth_response.dart';
 import '../../domain/entities/otp_request.dart';
@@ -15,8 +17,8 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required AuthRemoteDataSource remoteDataSource,
     required AuthLocalDataSource localDataSource,
-  })  : _remoteDataSource = remoteDataSource,
-        _localDataSource = localDataSource;
+  }) : _remoteDataSource = remoteDataSource,
+       _localDataSource = localDataSource;
 
   @override
   Future<AuthResponse> login(AuthRequest request) async {
@@ -53,7 +55,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> resetPassword(String email, String newPassword, String otp) async {
+  Future<void> resetPassword(
+    String email,
+    String newPassword,
+    String otp,
+  ) async {
     await _remoteDataSource.resetPassword(email, newPassword, otp);
   }
 
@@ -68,5 +74,38 @@ class AuthRepositoryImpl implements AuthRepository {
     final responseModel = await _remoteDataSource.refreshToken(refreshToken);
     await _localDataSource.saveAuthData(responseModel);
     return responseModel;
+  }
+
+  @override
+  Future<Either<Failure, String>> googleSignIn() async {
+    try {
+      final token = await _remoteDataSource.googleSignIn();
+      return Right(token);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> facebookSignIn() async {
+    try {
+      final token = await _remoteDataSource.facebookSignIn();
+      return Right(token);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      await _remoteDataSource.changePassword(currentPassword, newPassword);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
   }
 }

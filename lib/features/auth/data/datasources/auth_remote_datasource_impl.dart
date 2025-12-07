@@ -19,7 +19,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'https://your-api.com/auth/login',
         data: request.toJson(),
       );
-      
+
       // For now, return a mock response
       // Replace this with actual API response parsing
       return AuthResponseModel.fromJson({
@@ -32,8 +32,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'updatedAt': null,
         },
         'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refreshToken': 'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-        'expiresAt': DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
+        'refreshToken':
+            'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+        'expiresAt':
+            DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
       });
     } catch (e) {
       throw Exception('Login failed: $e');
@@ -48,7 +50,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'https://your-api.com/auth/register',
         data: request.toJson(),
       );
-      
+
       // For now, return a mock response
       return AuthResponseModel.fromJson({
         'user': {
@@ -60,8 +62,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'updatedAt': null,
         },
         'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refreshToken': 'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-        'expiresAt': DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
+        'refreshToken':
+            'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+        'expiresAt':
+            DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
       });
     } catch (e) {
       throw Exception('Registration failed: $e');
@@ -74,18 +78,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // TODO: Replace with your actual API endpoint
       await _dio.post(
         'https://your-api.com/auth/send-otp',
-        data: {
-          'email': email,
-          'type': type.toString().split('.').last,
-        },
+        data: {'email': email, 'type': type.toString().split('.').last},
       );
-      
+
       // For now, return a mock response
       return OTPResponseModel.fromJson({
         'success': true,
         'message': 'OTP sent successfully',
         'sessionId': 'mock_session_${DateTime.now().millisecondsSinceEpoch}',
-        'expiresAt': DateTime.now().add(const Duration(minutes: 5)).toIso8601String(),
+        'expiresAt':
+            DateTime.now().add(const Duration(minutes: 5)).toIso8601String(),
       });
     } catch (e) {
       throw Exception('Send OTP failed: $e');
@@ -100,13 +102,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'https://your-api.com/auth/verify-otp',
         data: request.toJson(),
       );
-      
+
       // For now, return a mock response
       return OTPResponseModel.fromJson({
         'success': true,
         'message': 'OTP verified successfully',
         'sessionId': 'mock_session_${DateTime.now().millisecondsSinceEpoch}',
-        'expiresAt': DateTime.now().add(const Duration(minutes: 5)).toIso8601String(),
+        'expiresAt':
+            DateTime.now().add(const Duration(minutes: 5)).toIso8601String(),
       });
     } catch (e) {
       throw Exception('Verify OTP failed: $e');
@@ -127,16 +130,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> resetPassword(String email, String newPassword, String otp) async {
+  Future<void> resetPassword(
+    String email,
+    String newPassword,
+    String otp,
+  ) async {
     try {
       // TODO: Replace with your actual API endpoint
       await _dio.post(
         'https://your-api.com/auth/reset-password',
-        data: {
-          'email': email,
-          'newPassword': newPassword,
-          'otp': otp,
-        },
+        data: {'email': email, 'newPassword': newPassword, 'otp': otp},
       );
     } catch (e) {
       throw Exception('Reset password failed: $e');
@@ -161,7 +164,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'https://your-api.com/auth/refresh',
         data: {'refreshToken': refreshToken},
       );
-      
+
       // For now, return a mock response
       return AuthResponseModel.fromJson({
         'user': {
@@ -173,11 +176,51 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'updatedAt': null,
         },
         'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refreshToken': 'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-        'expiresAt': DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
+        'refreshToken':
+            'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+        'expiresAt':
+            DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
       });
     } catch (e) {
       throw Exception('Refresh token failed: $e');
+    }
+  }
+
+  @override
+  Future<String> googleSignIn() async {
+    try {
+      // TODO: Implement Google Sign In with google_sign_in package
+      await Future.delayed(const Duration(seconds: 1));
+      return 'mock_google_token_${DateTime.now().millisecondsSinceEpoch}';
+    } catch (e) {
+      throw Exception('Google sign in failed: $e');
+    }
+  }
+
+  @override
+  Future<String> facebookSignIn() async {
+    try {
+      // TODO: Implement Facebook Sign In with flutter_facebook_auth package
+      await Future.delayed(const Duration(seconds: 1));
+      return 'mock_facebook_token_${DateTime.now().millisecondsSinceEpoch}';
+    } catch (e) {
+      throw Exception('Facebook sign in failed: $e');
+    }
+  }
+
+  @override
+  Future<void> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    try {
+      // TODO: Replace with your actual API endpoint
+      await _dio.post(
+        'https://your-api.com/auth/change-password',
+        data: {'currentPassword': currentPassword, 'newPassword': newPassword},
+      );
+    } catch (e) {
+      throw Exception('Change password failed: $e');
     }
   }
 }

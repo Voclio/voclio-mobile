@@ -6,6 +6,8 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/app_cubit.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../common/inputs/text_app.dart';
 import '../styles/fonts/font_weight_helper.dart';
 import 'package:video_player/video_player.dart';
@@ -21,6 +23,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _controller = PageController();
   int _current = 0;
   bool _showButtons = false;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId:
+        '701480352843-58nr2brm1noe4n9rjj1d6ekqr7qqi343.apps.googleusercontent.com',
+  );
 
   @override
   void dispose() {
@@ -38,8 +44,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onGetStarted() => context.goRoute(AppRouter.login);
-  void _onSignIn() => context.goRoute(AppRouter.login);
-  void _onSignUp() => context.goRoute(AppRouter.register);
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser != null) {
+        // Success - navigate to main app
+        if (mounted) {
+          context.goRoute(AppRouter.home);
+        }
+      }
+    } catch (error) {
+      print('Google Sign In Error: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to sign in with Google')),
+        );
+      }
+    }
+  }
+
+  Future<void> _signInWithFacebook() async {
+    try {
+      final LoginResult result = await FacebookAuth.instance.login();
+
+      if (result.status == LoginStatus.success) {
+        // Success - navigate to main app
+        if (mounted) {
+          context.goRoute(AppRouter.home);
+        }
+      } else {
+        print('Facebook Sign In Failed: ${result.message}');
+      }
+    } catch (error) {
+      print('Facebook Sign In Error: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to sign in with Facebook')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -229,57 +274,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         .animate()
                         .fadeIn(duration: 600.ms)
                         .slideY(begin: 0.3, end: 0),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 16.h),
                     Text(
-                      'or sign in with',
+                      'or continue with',
                       style: TextStyle(fontSize: 13.sp, color: Colors.grey),
                     ).animate().fadeIn(duration: 600.ms, delay: 200.ms),
-                    SizedBox(height: 10.h),
+                    SizedBox(height: 16.h),
                     Row(
                           children: [
                             Expanded(
-                              child: OutlinedButton(
+                              child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 12.h),
                                   side: BorderSide(
                                     color: Colors.grey.shade300,
-                                    width: 2,
+                                    width: 1.5,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16.r),
+                                    borderRadius: BorderRadius.circular(12.r),
+                                  ),
+                                  backgroundColor: Color(0xFFEA4335),
+                                ),
+                                onPressed: _signInWithGoogle,
+                                icon: Container(
+                                  width: 20.w,
+                                  height: 20.h,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'G',
+                                      style: TextStyle(
+                                        color: Color(0xFFEA4335),
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                onPressed: _onSignUp,
-                                child: Text(
-                                  'Sign Up',
+                                label: Text(
+                                  'Google',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14.sp,
-                                    color: Colors.black87,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
                             ),
                             SizedBox(width: 12.w),
                             Expanded(
-                              child: OutlinedButton(
+                              child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 12.h),
                                   side: BorderSide(
                                     color: Colors.grey.shade300,
-                                    width: 2,
+                                    width: 1.5,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16.r),
+                                    borderRadius: BorderRadius.circular(12.r),
                                   ),
+                                  backgroundColor: const Color(0xFF1877F2),
                                 ),
-                                onPressed: _onSignIn,
-                                child: Text(
-                                  'Login',
+                                onPressed: _signInWithFacebook,
+                                icon: Icon(
+                                  Icons.facebook,
+                                  color: Colors.white,
+                                  size: 20.sp,
+                                ),
+                                label: Text(
+                                  'Facebook',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14.sp,
-                                    color: Colors.black87,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),

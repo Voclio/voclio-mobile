@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 import 'package:voclio_app/core/enums/enums.dart'; // Adjust path
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
@@ -52,46 +53,54 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Notes", style: theme.textTheme.headlineSmall),
-                      BlocBuilder<NotesCubit, NotesState>(
-                        builder: (context, state) {
-                          return Text(
-                            "${state.notes.length} total notes",
-                            style: theme.textTheme.bodyMedium,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Notes", style: theme.textTheme.headlineSmall),
+                          BlocBuilder<NotesCubit, NotesState>(
+                            builder: (context, state) {
+                              return Text(
+                                "${state.notes.length} total notes",
+                                style: theme.textTheme.bodyMedium,
+                              );
+                            },
+                          ),
+                        ],
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .slideX(begin: -0.2, end: 0),
                   // Grid/List Toggle
                   Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white10 : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.list),
-                          color:
-                              !_isGridMode
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.secondary,
-                          onPressed: () => setState(() => _isGridMode = false),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12.r),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.grid_view),
-                          color:
-                              _isGridMode
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.secondary,
-                          onPressed: () => setState(() => _isGridMode = true),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.list),
+                              color:
+                                  !_isGridMode
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.secondary,
+                              onPressed:
+                                  () => setState(() => _isGridMode = false),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.grid_view),
+                              color:
+                                  _isGridMode
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.secondary,
+                              onPressed:
+                                  () => setState(() => _isGridMode = true),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms, delay: 100.ms)
+                      .scale(begin: const Offset(0.8, 0.8)),
                 ],
               ),
 
@@ -99,46 +108,52 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
 
               // 2. Search Bar
               TextField(
-                onChanged: (val) => setState(() => _searchQuery = val),
-                style: theme.textTheme.bodyLarge,
-                decoration: InputDecoration(
-                  hintText: "Search notes...",
-                  hintStyle: TextStyle(color: theme.colorScheme.secondary),
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: theme.colorScheme.secondary,
-                  ),
-                  filled: true,
-                  fillColor:
-                      isDark
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.grey.shade100,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 16.h,
-                  ),
-                ),
-              ),
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                    style: theme.textTheme.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: "Search notes...",
+                      hintStyle: TextStyle(color: theme.colorScheme.secondary),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: theme.colorScheme.secondary,
+                      ),
+                      filled: true,
+                      fillColor:
+                          isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 16.h,
+                      ),
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 200.ms)
+                  .slideY(begin: 0.2, end: 0),
 
               SizedBox(height: 20.h),
 
               // 3. Filter Chips
               SizedBox(
-                height: 40.h,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _buildFilterChip("All ", null),
-                    ...AppTag.values.map(
-                      (tag) => _buildFilterChip(tag.label, tag),
+                    height: 40.h,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        _buildFilterChip("All ", null),
+                        ...AppTag.values.map(
+                          (tag) => _buildFilterChip(tag.label, tag),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 300.ms)
+                  .slideX(begin: -0.2, end: 0),
 
               SizedBox(height: 20.h),
 
@@ -196,6 +211,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
 
                             return GridView.builder(
                               physics: const BouncingScrollPhysics(),
+                              padding: EdgeInsets.only(bottom: 100.h),
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
@@ -207,6 +223,52 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                               itemCount: filteredNotes.length,
                               itemBuilder:
                                   (context, index) => NoteCard(
+                                        note: filteredNotes[index],
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => BlocProvider.value(
+                                                    value:
+                                                        context
+                                                            .read<NotesCubit>(),
+                                                    child: NoteDetailScreen(
+                                                      note:
+                                                          filteredNotes[index],
+                                                    ),
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      )
+                                      .animate()
+                                      .fadeIn(
+                                        duration: 400.ms,
+                                        delay: Duration(
+                                          milliseconds: 50 * index,
+                                        ),
+                                      )
+                                      .slideY(
+                                        begin: 0.2,
+                                        end: 0,
+                                        duration: 400.ms,
+                                        delay: Duration(
+                                          milliseconds: 50 * index,
+                                        ),
+                                      ),
+                            );
+                          },
+                        )
+                        // ... existing list view code ...
+                        : ListView.separated(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: filteredNotes.length,
+                          padding: EdgeInsets.only(bottom: 100.h),
+
+                          separatorBuilder: (_, __) => SizedBox(height: 16.h),
+                          itemBuilder:
+                              (context, index) => NoteCard(
                                     note: filteredNotes[index],
                                     onTap: () {
                                       Navigator.push(
@@ -216,43 +278,26 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                               (_) => BlocProvider.value(
                                                 value:
                                                     context.read<NotesCubit>(),
+
                                                 child: NoteDetailScreen(
                                                   note: filteredNotes[index],
                                                 ),
                                               ),
                                         ),
                                       );
-                                    },
+                                    }, // Todo: Navigate to details
+                                  )
+                                  .animate()
+                                  .fadeIn(
+                                    duration: 400.ms,
+                                    delay: Duration(milliseconds: 50 * index),
+                                  )
+                                  .slideY(
+                                    begin: 0.2,
+                                    end: 0,
+                                    duration: 400.ms,
+                                    delay: Duration(milliseconds: 50 * index),
                                   ),
-                            );
-                          },
-                        )
-                        // ... existing list view code ...
-                        : ListView.separated(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: filteredNotes.length,
-                          padding: EdgeInsets.only(bottom: 45.h),
-
-                          separatorBuilder: (_, __) => SizedBox(height: 16.h),
-                          itemBuilder:
-                              (context, index) => NoteCard(
-                                note: filteredNotes[index],
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) => BlocProvider.value(
-                                            value: context.read<NotesCubit>(),
-
-                                            child: NoteDetailScreen(
-                                              note: filteredNotes[index],
-                                            ),
-                                          ),
-                                    ),
-                                  );
-                                }, // Todo: Navigate to details
-                              ),
                         );
                   },
                 ),
@@ -262,7 +307,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 60),
+        padding: EdgeInsets.only(bottom: 85.h),
         child: FloatingActionButton(
           onPressed: () {
             showModalBottomSheet(

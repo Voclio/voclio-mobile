@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
@@ -81,40 +82,46 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tasks',
-                      // 4. Use Theme Typography
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tasks',
+                          // 4. Use Theme Typography
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        Text(
+                          'You have $totalTasks tasks',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.secondary,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                      ],
+                    )
+                    .animate()
+                    .fadeIn(duration: 600.ms)
+                    .slideX(begin: -0.2, end: 0),
+                IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.filter_list_rounded,
+                        // 5. Use Theme Icon Color
                         color: theme.colorScheme.onSurface,
                       ),
-                    ),
-                    Text(
-                      'You have $totalTasks tasks',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.secondary,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.filter_list_rounded,
-                    // 5. Use Theme Icon Color
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
+                    )
+                    .animate()
+                    .fadeIn(duration: 600.ms, delay: 100.ms)
+                    .scale(begin: const Offset(0.8, 0.8)),
               ],
             ),
           ),
 
           floatingActionButton: Padding(
-            padding: const EdgeInsets.only(bottom: 60),
+            padding: EdgeInsets.only(bottom: 85.h),
             child: FloatingActionButton(
               onPressed: () {
                 showModalBottomSheet(
@@ -143,63 +150,70 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                 children: [
                   SizedBox(height: 10.h), // Reduced top spacing slightly
                   // Progress Card
-                  _buildProgressCard(context, progressValue, progressPercent),
+                  _buildProgressCard(context, progressValue, progressPercent)
+                      .animate()
+                      .fadeIn(duration: 600.ms, delay: 200.ms)
+                      .slideY(begin: 0.2, end: 0),
 
                   SizedBox(height: 24.h),
 
                   // Filter Chips
                   SizedBox(
-                    height: 40.h,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _filterTags.length,
-                      separatorBuilder: (_, __) => SizedBox(width: 10.w),
-                      itemBuilder: (context, index) {
-                        final isSelected = _selectedTagIndex == index;
-                        return GestureDetector(
-                          onTap:
-                              () => setState(() => _selectedTagIndex = index),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20.w,
-                              vertical: 8.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  isSelected
-                                      ? theme.colorScheme.primary
-                                      : Colors.transparent,
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color:
-                                    isSelected
-                                        ? theme.colorScheme.primary
-                                        : (isDark
-                                            ? Colors.white24
-                                            : Colors.black12),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                _filterTags[index],
-                                style: TextStyle(
+                        height: 40.h,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _filterTags.length,
+                          separatorBuilder: (_, __) => SizedBox(width: 10.w),
+                          itemBuilder: (context, index) {
+                            final isSelected = _selectedTagIndex == index;
+                            return GestureDetector(
+                              onTap:
+                                  () =>
+                                      setState(() => _selectedTagIndex = index),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20.w,
+                                  vertical: 8.h,
+                                ),
+                                decoration: BoxDecoration(
                                   color:
                                       isSelected
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface,
-                                  fontSize: 14.sp,
-                                  fontWeight:
-                                      isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                          ? theme.colorScheme.primary
+                                          : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  border: Border.all(
+                                    color:
+                                        isSelected
+                                            ? theme.colorScheme.primary
+                                            : (isDark
+                                                ? Colors.white24
+                                                : Colors.black12),
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    _filterTags[index],
+                                    style: TextStyle(
+                                      color:
+                                          isSelected
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurface,
+                                      fontSize: 14.sp,
+                                      fontWeight:
+                                          isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                            );
+                          },
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms, delay: 300.ms)
+                      .slideX(begin: -0.2, end: 0),
 
                   SizedBox(height: 24.h),
 
@@ -231,28 +245,73 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
                         return ListView(
                           physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.only(bottom: 100.h),
                           children: [
                             if (todayTasks.isNotEmpty) ...[
                               _buildSectionHeader(context, "Today"),
-                              ...todayTasks.map(
-                                (t) => _buildTaskItem(context, t),
+                              ...todayTasks.asMap().entries.map(
+                                (entry) => _buildTaskItem(context, entry.value)
+                                    .animate()
+                                    .fadeIn(
+                                      duration: 400.ms,
+                                      delay: Duration(
+                                        milliseconds: 50 * entry.key,
+                                      ),
+                                    )
+                                    .slideX(
+                                      begin: -0.2,
+                                      end: 0,
+                                      duration: 400.ms,
+                                      delay: Duration(
+                                        milliseconds: 50 * entry.key,
+                                      ),
+                                    ),
                               ),
                             ],
                             if (tomorrowTasks.isNotEmpty) ...[
                               SizedBox(height: 20.h),
                               _buildSectionHeader(context, "Tomorrow"),
-                              ...tomorrowTasks.map(
-                                (t) => _buildTaskItem(context, t),
+                              ...tomorrowTasks.asMap().entries.map(
+                                (entry) => _buildTaskItem(context, entry.value)
+                                    .animate()
+                                    .fadeIn(
+                                      duration: 400.ms,
+                                      delay: Duration(
+                                        milliseconds: 50 * entry.key,
+                                      ),
+                                    )
+                                    .slideX(
+                                      begin: -0.2,
+                                      end: 0,
+                                      duration: 400.ms,
+                                      delay: Duration(
+                                        milliseconds: 50 * entry.key,
+                                      ),
+                                    ),
                               ),
                             ],
                             if (laterTasks.isNotEmpty) ...[
                               SizedBox(height: 20.h),
                               _buildSectionHeader(context, "Later"),
-                              ...laterTasks.map(
-                                (t) => _buildTaskItem(context, t),
+                              ...laterTasks.asMap().entries.map(
+                                (entry) => _buildTaskItem(context, entry.value)
+                                    .animate()
+                                    .fadeIn(
+                                      duration: 400.ms,
+                                      delay: Duration(
+                                        milliseconds: 50 * entry.key,
+                                      ),
+                                    )
+                                    .slideX(
+                                      begin: -0.2,
+                                      end: 0,
+                                      duration: 400.ms,
+                                      delay: Duration(
+                                        milliseconds: 50 * entry.key,
+                                      ),
+                                    ),
                               ),
                             ],
-                            SizedBox(height: 80.h),
                           ],
                         );
                       },

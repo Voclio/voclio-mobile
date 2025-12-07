@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import '../../../../core/common/animation/animate_do.dart';
-import '../../../../core/styles/fonts/font_weight_helper.dart';
 
 class AuthButton extends StatelessWidget {
   final String text;

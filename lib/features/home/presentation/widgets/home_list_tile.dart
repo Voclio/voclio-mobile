@@ -5,9 +5,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/language/lang_keys.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
-import '../../../../core/common/inputs/text_app.dart';
-import '../../../../core/styles/fonts/font_weight_helper.dart';
-
 class HomeListTile extends StatelessWidget {
   const HomeListTile({super.key});
 

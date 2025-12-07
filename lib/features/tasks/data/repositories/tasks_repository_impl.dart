@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:voclio_app/core/errors/failures.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import '../../domain/repositories/task_repository.dart';
+import '../../domain/entities/task_extensions.dart';
 import '../datasources/task_remote_data_source.dart';
 import '../models/task_model.dart';
 
@@ -115,6 +116,122 @@ class TaskRepositoryImpl implements TaskRepository {
       );
     } catch (e) {
       return null; // Or throw a specific failure if needed
+    }
+  }
+
+  // Subtasks
+  @override
+  Future<Either<Failure, List<SubtaskEntity>>> getSubtasks(
+    String taskId,
+  ) async {
+    try {
+      final subtasks = await remoteDataSource.getSubtasks(taskId);
+      return Right(subtasks.map((model) => model.toEntity()).toList());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, SubtaskEntity>> createSubtask(
+    String taskId,
+    String title,
+    int order,
+  ) async {
+    try {
+      final subtask = await remoteDataSource.createSubtask(
+        taskId,
+        title,
+        order,
+      );
+      return Right(subtask.toEntity());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateSubtask(
+    String subtaskId,
+    String title,
+    bool completed,
+  ) async {
+    try {
+      await remoteDataSource.updateSubtask(subtaskId, title, completed);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteSubtask(String subtaskId) async {
+    try {
+      await remoteDataSource.deleteSubtask(subtaskId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  // Categories
+  @override
+  Future<Either<Failure, List<TaskCategoryEntity>>> getCategories() async {
+    try {
+      final categories = await remoteDataSource.getCategories();
+      return Right(categories.map((model) => model.toEntity()).toList());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, TaskCategoryEntity>> createCategory(
+    String name,
+    String color,
+    String icon,
+  ) async {
+    try {
+      final category = await remoteDataSource.createCategory(name, color, icon);
+      return Right(category.toEntity());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateCategory(
+    String id,
+    String name,
+    String color,
+    String icon,
+  ) async {
+    try {
+      await remoteDataSource.updateCategory(id, name, color, icon);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteCategory(String id) async {
+    try {
+      await remoteDataSource.deleteCategory(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  // Statistics
+  @override
+  Future<Either<Failure, TaskStatisticsEntity>> getTaskStatistics() async {
+    try {
+      final stats = await remoteDataSource.getTaskStatistics();
+      return Right(stats.toEntity());
+    } catch (e) {
+      return Left(ServerFailure());
     }
   }
 }
