@@ -10,8 +10,8 @@ import '../../features/voice/presentation/screens/voice_recording_screen.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
-  static final GlobalKey<_MainLayoutState> mainLayoutKey =
-      GlobalKey<_MainLayoutState>();
+  static final GlobalKey<State<MainLayout>> mainLayoutKey =
+      GlobalKey<State<MainLayout>>();
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -90,19 +90,19 @@ class _MainLayoutState extends State<MainLayout>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
-            colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
+            colors: [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.8)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.primaryColor.withOpacity(0.4),
+              color: theme.primaryColor.withValues(alpha: 0.4),
               blurRadius: 20,
               spreadRadius: 0,
               offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: theme.primaryColor.withOpacity(0.2),
+              color: theme.primaryColor.withValues(alpha: 0.2),
               blurRadius: 35,
               spreadRadius: 5,
               offset: const Offset(0, 4),
@@ -121,7 +121,7 @@ class _MainLayoutState extends State<MainLayout>
               );
             },
             customBorder: const CircleBorder(),
-            splashColor: Colors.white.withOpacity(0.3),
+            splashColor: Colors.white.withValues(alpha: 0.3),
             child: Center(
               child: Icon(Icons.mic_rounded, size: 32.sp, color: Colors.white),
             ),
@@ -137,13 +137,13 @@ class _MainLayoutState extends State<MainLayout>
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.primaryColor.withOpacity(0.15),
+              color: theme.primaryColor.withValues(alpha: 0.15),
               blurRadius: 30,
               offset: const Offset(0, -8),
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -4),
               spreadRadius: 0,

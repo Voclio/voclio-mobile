@@ -31,7 +31,7 @@ import '../../features/tags/domain/usecases/get_tags_usecase.dart';
 import '../../features/tags/domain/usecases/update_tag_usecase.dart';
 import '../../features/tags/data/repositories/tag_repository_impl.dart';
 import '../../features/tags/data/datasources/tag_remote_datasource.dart';
-import '../../features/tags/presentation/cubit/tag_cubit.dart';
+import '../../features/tags/presentation/bloc/tags_cubit.dart';
 
 // Reminders
 import '../../features/reminders/domain/repositories/reminder_repository.dart';
@@ -205,8 +205,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => CreateTagUseCase(getIt<TagRepository>()));
   getIt.registerLazySingleton(() => UpdateTagUseCase(getIt<TagRepository>()));
   getIt.registerLazySingleton(() => DeleteTagUseCase(getIt<TagRepository>()));
-  getIt.registerFactory<TagCubit>(
-    () => TagCubit(
+  getIt.registerFactory<TagsCubit>(
+    () => TagsCubit(
       getTagsUseCase: getIt(),
       createTagUseCase: getIt(),
       updateTagUseCase: getIt(),

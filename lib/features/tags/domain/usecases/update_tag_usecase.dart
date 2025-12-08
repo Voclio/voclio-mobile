@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:voclio_app/core/errors/failures.dart';
+import '../entities/tag_entity.dart';
 import '../repositories/tag_repository.dart';
 
 class UpdateTagUseCase {
@@ -7,11 +8,7 @@ class UpdateTagUseCase {
 
   UpdateTagUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(
-    String id,
-    String name,
-    String color,
-  ) async {
-    return await repository.updateTag(id, name, color);
+  Future<Either<Failure, TagEntity>> call(TagEntity tag) async {
+    return await repository.updateTag(tag);
   }
 }

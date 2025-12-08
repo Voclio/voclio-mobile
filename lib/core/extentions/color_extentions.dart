@@ -109,9 +109,9 @@ class MyColors extends ThemeExtension<MyColors> {
   /// Interpolates between two color themes for smooth transitions
   @override
   ThemeExtension<MyColors> lerp(
-    covariant ThemeExtension<MyColors>? other,
-    double t,
-  ) {
+      covariant ThemeExtension<MyColors>? other,
+      double t,
+      ) {
     if (other is! MyColors) return this;
 
     return MyColors(
@@ -162,30 +162,30 @@ class MyColors extends ThemeExtension<MyColors> {
     info: Color(0xFF3B82F6),
   );
 
-  /// Dark theme configuration - Same professional colors with dark backgrounds
-  /// Maintains consistency with light theme while providing dark mode support
-  // static const MyColors dark = MyColors(
-  //   primary: Color(0xFF2196F3), // Same professional blue
-  //   primaryLight: Color(0xFF64B5F6), // Same light blue
-  //   primaryDark: Color(0xFF1976D2), // Same dark blue
-  //   textColor: Color(0xFF64B5F6), // Light blue text for visibility in dark mode
-  //   accent: Color(0xFF4CAF50), // Same green for success and productivity
-  //   accentLight: Color(0xFF81C784), // Same light green
-  //   accentDark: Color(0xFF388E3C), // Same dark green
-  //   white: Color(0xFFFFFFFF),
-  //   black: Color(0xFF000000),
-  //   grey: Color(0xFF424242), // Medium grey for dark mode
-  //   greyLight: Color(0xFF616161), // Light grey for dark mode
-  //   greyDark: Color(0xFF212121), // Dark grey for dark mode
-  //   textPrimary: Color(0xFFFFFFFF), // White for primary text
-  //   textSecondary: Color(0xFFB0B0B0), // Grey for secondary text
-  //   textLight: Color(0xFFFFFFFF), // White for light text
-  //   background: Color(0xFF121212), // Dark background
-  //   backgroundLight: Color(0xFF1E1E1E), // Slightly lighter dark background
-  //   backgroundDark: Color(0xFF000000), // Very dark background
-  //   success: Color(0xFF4CAF50), // Green for success
-  //   warning: Color(0xFFFF9800), // Orange for warnings
-  //   error: Color(0xFFF44336), // Red for errors
-  //   info: Color(0xFF2196F3), // Blue for information
-  // );
+/// Dark theme configuration - Same professional colors with dark backgrounds
+/// Maintains consistency with light theme while providing dark mode support
+// static const MyColors dark = MyColors(
+//   primary: Color(0xFF2196F3), // Same professional blue
+//   primaryLight: Color(0xFF64B5F6), // Same light blue
+//   primaryDark: Color(0xFF1976D2), // Same dark blue
+//   textColor: Color(0xFF64B5F6), // Light blue text for visibility in dark mode
+//   accent: Color(0xFF4CAF50), // Same green for success and productivity
+//   accentLight: Color(0xFF81C784), // Same light green
+//   accentDark: Color(0xFF388E3C), // Same dark green
+//   white: Color(0xFFFFFFFF),
+//   black: Color(0xFF000000),
+//   grey: Color(0xFF424242), // Medium grey for dark mode
+//   greyLight: Color(0xFF616161), // Light grey for dark mode
+//   greyDark: Color(0xFF212121), // Dark grey for dark mode
+//   textPrimary: Color(0xFFFFFFFF), // White for primary text
+//   textSecondary: Color(0xFFB0B0B0), // Grey for secondary text
+//   textLight: Color(0xFFFFFFFF), // White for light text
+//   background: Color(0xFF121212), // Dark background
+//   backgroundLight: Color(0xFF1E1E1E), // Slightly lighter dark background
+//   backgroundDark: Color(0xFF000000), // Very dark background
+//   success: Color(0xFF4CAF50), // Green for success
+//   warning: Color(0xFFFF9800), // Orange for warnings
+//   error: Color(0xFFF44336), // Red for errors
+//   info: Color(0xFF2196F3), // Blue for information
+// );
 }

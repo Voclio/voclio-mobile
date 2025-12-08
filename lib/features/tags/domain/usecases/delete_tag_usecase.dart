@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import 'package:voclio_app/core/errors/failures.dart';
 import '../repositories/tag_repository.dart';
 
 class DeleteTagUseCase {
