@@ -61,7 +61,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     _floatController = AnimationController(
       duration: const Duration(milliseconds: 2500),
       vsync: this,
-    )..repeat(reverse: true);
+    )..repeat(reverse: true);//ش
 
     _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
       CurvedAnimation(
