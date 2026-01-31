@@ -1,6 +1,6 @@
 class ApiEndpoints {
   // Base URL
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'https://voclio-backend.build8.dev/api';
 
   // Production URL (uncomment when deploying)
   // static const String baseUrl = 'https://your-production-url.com/api';

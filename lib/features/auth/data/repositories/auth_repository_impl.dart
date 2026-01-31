@@ -22,18 +22,28 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthResponse> login(AuthRequest request) async {
-    final requestModel = AuthRequestModel.fromEntity(request);
-    final responseModel = await _remoteDataSource.login(requestModel);
-    await _localDataSource.saveAuthData(responseModel);
-    return responseModel;
+    try {
+      final requestModel = AuthRequestModel.fromEntity(request);
+      final responseModel = await _remoteDataSource.login(requestModel);
+      await _localDataSource.saveAuthData(responseModel);
+      return responseModel;
+    } catch (e) {
+      // Re-throw to preserve the original error details
+      rethrow;
+    }
   }
 
   @override
   Future<AuthResponse> register(AuthRequest request) async {
-    final requestModel = AuthRequestModel.fromEntity(request);
-    final responseModel = await _remoteDataSource.register(requestModel);
-    await _localDataSource.saveAuthData(responseModel);
-    return responseModel;
+    try {
+      final requestModel = AuthRequestModel.fromEntity(request);
+      final responseModel = await _remoteDataSource.register(requestModel);
+      await _localDataSource.saveAuthData(responseModel);
+      return responseModel;
+    } catch (e) {
+      // Re-throw to preserve the original error details
+      rethrow;
+    }
   }
 
   @override
@@ -55,10 +65,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> resetPassword(
-    String token,
-    String newPassword,
-  ) async {
+  Future<void> resetPassword(String token, String newPassword) async {
     await _remoteDataSource.resetPassword(token, newPassword);
   }
 
@@ -111,7 +118,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthResponse>> updateProfile(String name, String phoneNumber) async {
+  Future<Either<Failure, AuthResponse>> updateProfile(
+    String name,
+    String phoneNumber,
+  ) async {
     try {
       final response = await _remoteDataSource.updateProfile(name, phoneNumber);
       await _localDataSource.saveAuthData(response);

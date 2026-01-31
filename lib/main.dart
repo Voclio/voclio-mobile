@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:voclio_app/voclio_app.dart';
+import 'core/api/my_http_overrides.dart';
 import 'core/app/connectivily_control.dart';
 import 'core/app/theme_controller.dart';
 import 'core/app/language_controller.dart';
@@ -10,6 +12,9 @@ void main() async {
   
   // Initialize dependencies
   await setupDependencies();
+  
+  // Bypass SSL verification for development
+  HttpOverrides.global = MyHttpOverrides();
   
   // Initialize controllers
   await ConnectivityControler.instance.init();

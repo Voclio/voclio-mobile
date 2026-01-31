@@ -28,97 +28,65 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<AuthResponseModel> login(AuthRequestModel request) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.login,
-        data: request.toJson(),
-      );
-      return AuthResponseModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Login failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.login,
+      data: request.toJson(),
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
   Future<AuthResponseModel> register(AuthRequestModel request) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.register,
-        data: request.toJson(),
-      );
-      return AuthResponseModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Registration failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.register,
+      data: request.toJson(),
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
   Future<OTPResponseModel> sendOTP(String email, OTPType type) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.sendOtp,
-        data: {'email': email, 'type': type.toString().split('.').last},
-      );
-      return OTPResponseModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Send OTP failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.sendOtp,
+      data: {'email': email, 'type': type.toString().split('.').last},
+    );
+    return OTPResponseModel.fromJson(response.data);
   }
 
   @override
   Future<OTPResponseModel> verifyOTP(OTPRequestModel request) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.verifyOtp,
-        data: request.toJson(),
-      );
-      return OTPResponseModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Verify OTP failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.verifyOtp,
+      data: request.toJson(),
+    );
+    return OTPResponseModel.fromJson(response.data);
   }
 
   @override
   Future<void> forgotPassword(String email) async {
-    try {
-      await apiClient.post(ApiEndpoints.forgotPassword, data: {'email': email});
-    } catch (e) {
-      throw Exception('Forgot password failed: $e');
-    }
+    await apiClient.post(ApiEndpoints.forgotPassword, data: {'email': email});
   }
 
   @override
   Future<void> resetPassword(String token, String newPassword) async {
-    try {
-      await apiClient.post(
-        ApiEndpoints.resetPassword,
-        data: {'token': token, 'new_password': newPassword},
-      );
-    } catch (e) {
-      throw Exception('Reset password failed: $e');
-    }
+    await apiClient.post(
+      ApiEndpoints.resetPassword,
+      data: {'token': token, 'new_password': newPassword},
+    );
   }
 
   @override
   Future<void> logout() async {
-    try {
-      await apiClient.post(ApiEndpoints.logout);
-    } catch (e) {
-      throw Exception('Logout failed: $e');
-    }
+    await apiClient.post(ApiEndpoints.logout);
   }
 
   @override
   Future<AuthResponseModel> refreshToken(String refreshToken) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.refreshToken,
-        data: {'refresh_token': refreshToken},
-      );
-      return AuthResponseModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Refresh token failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.refreshToken,
+      data: {'refresh_token': refreshToken},
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
@@ -156,29 +124,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String currentPassword,
     String newPassword,
   ) async {
-    try {
-      await apiClient.post(
-        ApiEndpoints.changePassword,
-        data: {
-          'current_password': currentPassword,
-          'new_password': newPassword,
-        },
-      );
-    } catch (e) {
-      throw Exception('Change password failed: $e');
-    }
+    await apiClient.post(
+      ApiEndpoints.changePassword,
+      data: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
   }
 
   @override
   Future<AuthResponseModel> updateProfile(String name, String phoneNumber) async {
-    try {
-       final response = await apiClient.post(
-         ApiEndpoints.updateProfile,
-         data: {'name': name, 'phone_number': phoneNumber},
-       );
-       return AuthResponseModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Update profile failed: $e');
-    }
+     final response = await apiClient.post(
+       ApiEndpoints.updateProfile,
+       data: {'name': name, 'phone_number': phoneNumber},
+     );
+     return AuthResponseModel.fromJson(response.data);
   }
 }

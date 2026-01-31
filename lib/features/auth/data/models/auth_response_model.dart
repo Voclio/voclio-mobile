@@ -10,12 +10,34 @@ class AuthResponseModel extends AuthResponse {
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
+    // Check if the response is wrapped in a "data" field (standard API response)
+    final data =
+        json['data'] != null ? json['data'] as Map<String, dynamic> : json;
+
+    // Extract user
+    final userMap = data['user'] as Map<String, dynamic>;
+
+    // Extract tokens
+    final tokensMap =
+        data['tokens'] != null
+            ? data['tokens'] as Map<String, dynamic>
+            : data; // Fallback if flat
+
+    final accessToken =
+        (tokensMap['access_token'] ?? tokensMap['token']) as String;
+    final refreshToken =
+        (tokensMap['refresh_token'] ?? tokensMap['refreshToken']) as String;
+
+    // Calculate expiration
+    // Default to 24 hours if not provided
+    final expiresIn = tokensMap['expires_in'] as int? ?? 86400;
+    final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
+
     return AuthResponseModel(
-      user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
-      token: json['token'] as String,
-      refreshToken: (json['refresh_token'] ?? json['refreshToken']) as String,
-      expiresAt: DateTime.parse(
-          (json['expires_at'] ?? json['expiresAt']) as String),
+      user: UserModel.fromJson(userMap),
+      token: accessToken,
+      refreshToken: refreshToken,
+      expiresAt: expiresAt,
     );
   }
 

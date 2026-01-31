@@ -32,14 +32,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required ForgotPasswordUseCase forgotPasswordUseCase,
     required ResetPasswordUseCase resetPasswordUseCase,
     required UpdateProfileUseCase updateProfileUseCase,
-  })  : _loginUseCase = loginUseCase,
-        _registerUseCase = registerUseCase,
-        _sendOTPUseCase = sendOTPUseCase,
-        _verifyOTPUseCase = verifyOTPUseCase,
-        _forgotPasswordUseCase = forgotPasswordUseCase,
-        _resetPasswordUseCase = resetPasswordUseCase,
-        _updateProfileUseCase = updateProfileUseCase,
-        super(AuthInitial()) {
+  }) : _loginUseCase = loginUseCase,
+       _registerUseCase = registerUseCase,
+       _sendOTPUseCase = sendOTPUseCase,
+       _verifyOTPUseCase = verifyOTPUseCase,
+       _forgotPasswordUseCase = forgotPasswordUseCase,
+       _resetPasswordUseCase = resetPasswordUseCase,
+       _updateProfileUseCase = updateProfileUseCase,
+       super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
     on<SendOTPEvent>(_onSendOTP);
@@ -57,7 +57,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _loginUseCase(event.request);
       emit(AuthSuccess(response));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      // Clean up error message by removing exception wrappers
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      emit(AuthError(errorMessage));
     }
   }
 
@@ -67,7 +72,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final response = await _registerUseCase(event.request);
       emit(AuthSuccess(response));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      // Clean up error message by removing exception wrappers
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      emit(AuthError(errorMessage));
     }
   }
 
@@ -81,7 +91,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onVerifyOTP(VerifyOTPEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onVerifyOTP(
+    VerifyOTPEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(OTPLoading());
     try {
       final response = await _verifyOTPUseCase(event.request);
@@ -91,7 +104,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onForgotPassword(ForgotPasswordEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onForgotPassword(
+    ForgotPasswordEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       await _forgotPasswordUseCase(event.email);
@@ -101,7 +117,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onResetPassword(ResetPasswordEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onResetPassword(
+    ResetPasswordEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       await _resetPasswordUseCase(event.token, event.newPassword);
@@ -111,13 +130,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onUpdateProfile(UpdateProfileEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onUpdateProfile(
+    UpdateProfileEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       final result = await _updateProfileUseCase(event.name, event.phoneNumber);
       result.fold(
-            (failure) => emit(AuthError(failure.message)),
-            (response) => emit(AuthSuccess(response)),
+        (failure) => emit(AuthError(failure.message)),
+        (response) => emit(AuthSuccess(response)),
       );
     } catch (e) {
       emit(AuthError(e.toString()));
@@ -134,7 +156,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onRefresh(RefreshAuthEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onRefresh(
+    RefreshAuthEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     // Simply reset to initial state to clear any errors
     emit(AuthInitial());
   }

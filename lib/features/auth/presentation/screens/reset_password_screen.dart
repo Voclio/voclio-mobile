@@ -12,14 +12,17 @@ import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
+import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
+  final String token;
 
   const ResetPasswordScreen({
     super.key,
     required this.email,
+    required this.token,
   });
 
   @override
@@ -28,7 +31,6 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscureNewPassword = true;
@@ -36,7 +38,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   void dispose() {
-    _otpController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -45,7 +46,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   void _onResetPassword() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(ResetPasswordEvent(
-        _otpController.text.trim(),
+        widget.token,
         _newPasswordController.text,
       ));
     }
@@ -62,131 +63,175 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
     
-    return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _onRefresh,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmall ? 20.w : 24.w,
-              vertical: isSmall ? 16.h : 20.h,
-            ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // Top controls (theme and language toggles)
-                AuthTopControls(),
-
-                SizedBox(height: isSmall ? 20.h : 40.h),
-
-                // Content wrapped with CustomFadeIn
-                CustomFadeIn(
-                  duration: 600,
-                  child: Column(
-                    children: [
-                      // Title info
-                      TextApp(
-                        text: context.translate(LangKeys.resetPassword),
-                        textAlign: TextAlign.center,
-                        theme: context.textStyle.copyWith(
-                            fontSize: isSmall ? 24.sp : 30.sp,
-                            fontWeight: FontWeightHelper.bold,
-                            color: context.colors.primary
-                        ),
-                      ),
-
-
-
-
-
-
-                      SizedBox(height: isSmall ? 16.h : 20.h),
-
-                      // New password field
-                      AuthTextField(
-                        label: 'New ${context.translate(LangKeys.password)}',
-                        hint: 'New ${context.translate(LangKeys.password)}',
-                        controller: _newPasswordController,
-                        obscureText: _obscureNewPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
-                            color: context.colors.primary,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureNewPassword = !_obscureNewPassword;
-                            });
-                          },
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return context.translate(LangKeys.validPasswrod);
-                          }
-                          if (value.length < 6) {
-                            return context.translate(LangKeys.validPasswrod);
-                          }
-                          return null;
-                        },
-                      ),
-
-                      SizedBox(height: isSmall ? 16.h : 20.h),
-
-                      // Confirm password field
-                      AuthTextField(
-                        label: 'Confirm New ${context.translate(LangKeys.password)}',
-                        hint: 'Confirm New ${context.translate(LangKeys.password)}',
-                        controller: _confirmPasswordController,
-                        obscureText: _obscureConfirmPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                            color: context.colors.primary,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
-                            });
-                          },
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please confirm your new password';
-                          }
-                          if (value != _newPasswordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      SizedBox(height: isSmall ? 24.h : 32.h),
-
-                      // Reset password button
-                      AuthButton(
-                            text: context.translate(LangKeys.resetPassword),
-                            onPressed: _onResetPassword,
-
-                          ),
-
-                      SizedBox(height: isSmall ? 20.h : 24.h),
-
-                      // Back to login
-                      AuthLinkButton(
-                        text: 'Back to ${context.translate(LangKeys.login)}',
-                        onPressed: () {
-                          context.goRoute(AppRouter.login);
-                        },
-                      ),
-                    ],
-                  ),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoading) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const AuthLoadingDialog(message: 'Resetting password...'),
+          );
+        } else if (state is PasswordResetSuccess) {
+          Navigator.of(context).pop(); // Dismiss loading
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Success'),
+              content: const Text('Password reset successfully!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.goRoute(AppRouter.login);
+                  },
+                  child: const Text('OK'),
                 ),
               ],
             ),
+          );
+        } else if (state is AuthError) {
+          Navigator.of(context).pop(); // Dismiss loading
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Reset Failed'),
+              content: Text(state.message),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmall ? 20.w : 24.w,
+                vertical: isSmall ? 16.h : 20.h,
+              ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Top controls (theme and language toggles)
+                  AuthTopControls(),
+  
+                  SizedBox(height: isSmall ? 20.h : 40.h),
+  
+                  // Content wrapped with CustomFadeIn
+                  CustomFadeIn(
+                    duration: 600,
+                    child: Column(
+                      children: [
+                        // Title info
+                        TextApp(
+                          text: context.translate(LangKeys.resetPassword),
+                          textAlign: TextAlign.center,
+                          theme: context.textStyle.copyWith(
+                              fontSize: isSmall ? 24.sp : 30.sp,
+                              fontWeight: FontWeightHelper.bold,
+                              color: context.colors.primary
+                          ),
+                        ),
+  
+  
+  
+  
+  
+  
+                        SizedBox(height: isSmall ? 16.h : 20.h),
+  
+                        // New password field
+                        AuthTextField(
+                          label: 'New ${context.translate(LangKeys.password)}',
+                          hint: 'New ${context.translate(LangKeys.password)}',
+                          controller: _newPasswordController,
+                          obscureText: _obscureNewPassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                              color: context.colors.primary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureNewPassword = !_obscureNewPassword;
+                              });
+                            },
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return context.translate(LangKeys.validPasswrod);
+                            }
+                            if (value.length < 6) {
+                              return context.translate(LangKeys.validPasswrod);
+                            }
+                            return null;
+                          },
+                        ),
+  
+                        SizedBox(height: isSmall ? 16.h : 20.h),
+  
+                        // Confirm password field
+                        AuthTextField(
+                          label: 'Confirm New ${context.translate(LangKeys.password)}',
+                          hint: 'Confirm New ${context.translate(LangKeys.password)}',
+                          controller: _confirmPasswordController,
+                          obscureText: _obscureConfirmPassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                              color: context.colors.primary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please confirm your new password';
+                            }
+                            if (value != _newPasswordController.text) {
+                              return 'Passwords do not match';
+                            }
+                            return null;
+                          },
+                        ),
+  
+                        SizedBox(height: isSmall ? 24.h : 32.h),
+  
+                        // Reset password button
+                        AuthButton(
+                              text: context.translate(LangKeys.resetPassword),
+                              onPressed: _onResetPassword,
+  
+                            ),
+  
+                        SizedBox(height: isSmall ? 20.h : 24.h),
+  
+                        // Back to login
+                        AuthLinkButton(
+                          text: 'Back to ${context.translate(LangKeys.login)}',
+                          onPressed: () {
+                            context.goRoute(AppRouter.login);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+          ),
         ),
       ),
     );

@@ -80,7 +80,8 @@ class AppRouter {
         path: resetPassword,
         builder: (context, state) {
           final email = state.uri.queryParameters['email'] ?? '';
-          return ResetPasswordScreen(email: email);
+          final token = state.uri.queryParameters['token'] ?? '';
+          return ResetPasswordScreen(email: email, token: token);
         },
       ),
       GoRoute(path: home, builder: (context, state) => const HomeScreen()),

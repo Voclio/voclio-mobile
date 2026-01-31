@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_endpoints.dart';
 import 'interceptors/auth_interceptor.dart';
@@ -22,6 +24,17 @@ class ApiClient {
         },
       ),
     );
+
+    /* 
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+        return client;
+      },
+    );
+    */
 
     _initializeInterceptors();
   }
@@ -215,16 +228,28 @@ class ApiClient {
 class TimeoutException implements Exception {
   final String message;
   TimeoutException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class ServerException implements Exception {
   final int statusCode;
   final String message;
   ServerException(this.statusCode, this.message);
+
+  @override
+  String toString() => message;
 }
 
 class RequestCancelledException implements Exception {}
 
-class NoInternetException implements Exception {}
+class NoInternetException implements Exception {
+  @override
+  String toString() => 'No internet connection';
+}
 
-class UnknownException implements Exception {}
+class UnknownException implements Exception {
+  @override
+  String toString() => 'An unknown error occurred';
+}

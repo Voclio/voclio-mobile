@@ -184,3 +184,39 @@ class _AuthShimmerWidgetState extends State<AuthShimmerWidget>
     );
   }
 }
+
+class AuthLoadingDialog extends StatelessWidget {
+  final String message;
+
+  const AuthLoadingDialog({
+    super.key,
+    this.message = 'Loading...',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.all(24.w),
+          margin: EdgeInsets.symmetric(horizontal: 32.w),
+          decoration: BoxDecoration(
+            color: context.colors.background!,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: AuthLoadingWidget(
+            message: message,
+          ),
+        ),
+      ),
+    );
+  }
+}

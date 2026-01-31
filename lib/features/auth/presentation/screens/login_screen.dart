@@ -12,6 +12,7 @@ import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
+import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
 
@@ -39,174 +40,203 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
-    return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _onRefresh,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: isSmall ? 20.w : 16.w,
-              vertical: isSmall ? 16.h : 20.h,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoading) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const AuthLoadingDialog(message: 'Logging in...'),
+          );
+        } else if (state is AuthSuccess) {
+          Navigator.of(context).pop(); // Dismiss loading
+          context.goRoute(AppRouter.home);
+        } else if (state is AuthError) {
+          Navigator.of(context).pop(); // Dismiss loading
+           showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Login Failed'),
+              content: Text(state.message),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
             ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    MediaQuery.of(context).size.height -
-                    MediaQuery.of(context).padding.top -
-                    MediaQuery.of(context).padding.bottom,
+          );
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmall ? 20.w : 16.w,
+                vertical: isSmall ? 16.h : 20.h,
               ),
-              child: IntrinsicHeight(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // Top controls - Logo centered with Skip button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SizedBox(width: 60.w), // Balance the skip button
-                          Expanded(child: AuthTopControls()),
-                          AuthLinkButton(
-                            text: 'As Guest',
-                            onPressed: () {
-                              context.goRoute(AppRouter.home);
-                            },
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: isSmall ? 35.h : 35.h),
-
-                      // Title info wrapped with CustomFadeIn
-                      CustomFadeIn(
-                        duration: 600,
-                        child: Column(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom,
+                ),
+                child: IntrinsicHeight(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        // Top controls - Logo centered with Skip button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            TextApp(
-                              text: context.translate(LangKeys.login),
-                              textAlign: TextAlign.center,
-                              theme: context.textStyle.copyWith(
-                                fontSize: isSmall ? 24.sp : 30.sp,
-                                fontWeight: FontWeightHelper.bold,
-                                color: context.colors.primary,
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            TextApp(
-                              text: context.translate(LangKeys.welcome),
-                              textAlign: TextAlign.center,
-                              theme: context.textStyle.copyWith(
-                                fontSize: isSmall ? 15.sp : 14.sp,
-                                fontWeight: FontWeight.w400,
-                                color: context.colors.grey?.withOpacity(0.7),
-                              ),
+                            SizedBox(width: 60.w), // Balance the skip button
+                            Expanded(child: AuthTopControls()),
+                            AuthLinkButton(
+                              text: 'As Guest',
+                              onPressed: () {
+                                context.goRoute(AppRouter.home);
+                              },
                             ),
                           ],
                         ),
-                      ),
 
-                      SizedBox(height: isSmall ? 30.h : 40.h),
+                        SizedBox(height: isSmall ? 35.h : 35.h),
 
-                      // Email field
-                      AuthTextField(
-                        label: context.translate(LangKeys.email),
-                        hint: context.translate(LangKeys.email),
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return context.translate(LangKeys.validEmail);
-                          }
-                          if (!RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          ).hasMatch(value)) {
-                            return context.translate(LangKeys.validEmail);
-                          }
-                          return null;
-                        },
-                      ),
-
-                      SizedBox(height: isSmall ? 16.h : 20.h),
-
-                      // Password field
-                      AuthTextField(
-                        label: context.translate(LangKeys.password),
-                        hint: context.translate(LangKeys.password),
-
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: context.colors.primary,
+                        // Title info wrapped with CustomFadeIn
+                        CustomFadeIn(
+                          duration: 600,
+                          child: Column(
+                            children: [
+                              TextApp(
+                                text: context.translate(LangKeys.login),
+                                textAlign: TextAlign.center,
+                                theme: context.textStyle.copyWith(
+                                  fontSize: isSmall ? 24.sp : 30.sp,
+                                  fontWeight: FontWeightHelper.bold,
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              TextApp(
+                                text: context.translate(LangKeys.welcome),
+                                textAlign: TextAlign.center,
+                                theme: context.textStyle.copyWith(
+                                  fontSize: isSmall ? 15.sp : 14.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: context.colors.grey?.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
+                        ),
+
+                        SizedBox(height: isSmall ? 30.h : 40.h),
+
+                        // Email field
+                        AuthTextField(
+                          label: context.translate(LangKeys.email),
+                          hint: context.translate(LangKeys.email),
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return context.translate(LangKeys.validEmail);
+                            }
+                            if (!RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                            ).hasMatch(value)) {
+                              return context.translate(LangKeys.validEmail);
+                            }
+                            return null;
                           },
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return context.translate(LangKeys.validPasswrod);
-                          }
-                          if (value.length < 6) {
-                            return context.translate(LangKeys.validPasswrod);
-                          }
-                          return null;
-                        },
-                      ),
 
-                      SizedBox(height: isSmall ? 12.h : 16.h),
+                        SizedBox(height: isSmall ? 16.h : 20.h),
 
-                      // Forgot password link
-                      Align(
-                        alignment: Alignment.centerRight,
+                        // Password field
+                        AuthTextField(
+                          label: context.translate(LangKeys.password),
+                          hint: context.translate(LangKeys.password),
 
-                        child: AuthLinkButton(
-                          text: context.translate(LangKeys.forgotPassword),
-                          onPressed: () {
-                            context.goRoute(AppRouter.forgotPassword);
-                          },
-                        ),
-                      ),
-
-                      SizedBox(height: isSmall ? 24.h : 20.h),
-
-                      // Login button
-                      AuthButton(
-                        text: context.translate(LangKeys.login),
-                        onPressed: _onLogin,
-                      ),
-
-                      SizedBox(height: isSmall ? 20.h : 24.h),
-
-                      // Register link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            context.translate(LangKeys.youHaveAccount),
-                            style: context.textStyle.copyWith(
-                              fontSize: isSmall ? 12.sp : 14.sp,
-                              color: context.colors.grey?.withOpacity(0.7),
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: context.colors.primary,
                             ),
-                          ),
-                          AuthLinkButton(
-                            text: context.translate(LangKeys.createAccount),
                             onPressed: () {
-                              context.goRoute(AppRouter.register);
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
                             },
                           ),
-                        ],
-                      ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return context.translate(LangKeys.validPasswrod);
+                            }
+                            if (value.length < 6) {
+                              return context.translate(LangKeys.validPasswrod);
+                            }
+                            return null;
+                          },
+                        ),
 
-                      // Spacer to push content up and fill empty space
-                      const Spacer(),
-                    ],
+                        SizedBox(height: isSmall ? 12.h : 16.h),
+
+                        // Forgot password link
+                        Align(
+                          alignment: Alignment.centerRight,
+
+                          child: AuthLinkButton(
+                            text: context.translate(LangKeys.forgotPassword),
+                            onPressed: () {
+                              context.goRoute(AppRouter.forgotPassword);
+                            },
+                          ),
+                        ),
+
+                        SizedBox(height: isSmall ? 24.h : 20.h),
+
+                        // Login button
+                        AuthButton(
+                          text: context.translate(LangKeys.login),
+                          onPressed: _onLogin,
+                        ),
+
+                        SizedBox(height: isSmall ? 20.h : 24.h),
+
+                        // Register link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              context.translate(LangKeys.youHaveAccount),
+                              style: context.textStyle.copyWith(
+                                fontSize: isSmall ? 12.sp : 14.sp,
+                                color: context.colors.grey?.withOpacity(0.7),
+                              ),
+                            ),
+                            AuthLinkButton(
+                              text: context.translate(LangKeys.createAccount),
+                              onPressed: () {
+                                context.goRoute(AppRouter.register);
+                              },
+                            ),
+                          ],
+                        ),
+
+                        // Spacer to push content up and fill empty space
+                        const Spacer(),
+                      ],
+                    ),
                   ),
                 ),
               ),
