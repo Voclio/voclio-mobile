@@ -11,7 +11,7 @@ abstract class AuthRepository {
   Future<OTPResponse> sendOTP(String email, OTPType type);
   Future<OTPResponse> verifyOTP(OTPRequest request);
   Future<void> forgotPassword(String email);
-  Future<void> resetPassword(String email, String newPassword, String otp);
+  Future<void> resetPassword(String token, String newPassword);
   Future<void> logout();
   Future<AuthResponse> refreshToken(String refreshToken);
   Future<Either<Failure, String>> googleSignIn();
@@ -20,4 +20,5 @@ abstract class AuthRepository {
     String currentPassword,
     String newPassword,
   );
+  Future<Either<Failure, AuthResponse>> updateProfile(String name, String phoneNumber);
 }

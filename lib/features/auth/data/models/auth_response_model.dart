@@ -13,8 +13,9 @@ class AuthResponseModel extends AuthResponse {
     return AuthResponseModel(
       user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
       token: json['token'] as String,
-      refreshToken: json['refreshToken'] as String,
-      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      refreshToken: (json['refresh_token'] ?? json['refreshToken']) as String,
+      expiresAt: DateTime.parse(
+          (json['expires_at'] ?? json['expiresAt']) as String),
     );
   }
 

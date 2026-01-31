@@ -56,11 +56,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> resetPassword(
-    String email,
+    String token,
     String newPassword,
-    String otp,
   ) async {
-    await _remoteDataSource.resetPassword(email, newPassword, otp);
+    await _remoteDataSource.resetPassword(token, newPassword);
   }
 
   @override
@@ -79,8 +78,9 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, String>> googleSignIn() async {
     try {
-      final token = await _remoteDataSource.googleSignIn();
-      return Right(token);
+      final response = await _remoteDataSource.googleSignIn();
+      await _localDataSource.saveAuthData(response);
+      return Right(response.token);
     } catch (e) {
       return Left(ServerFailure());
     }
@@ -89,8 +89,9 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, String>> facebookSignIn() async {
     try {
-      final token = await _remoteDataSource.facebookSignIn();
-      return Right(token);
+      final response = await _remoteDataSource.facebookSignIn();
+      await _localDataSource.saveAuthData(response);
+      return Right(response.token);
     } catch (e) {
       return Left(ServerFailure());
     }
@@ -104,6 +105,17 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.changePassword(currentPassword, newPassword);
       return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthResponse>> updateProfile(String name, String phoneNumber) async {
+    try {
+      final response = await _remoteDataSource.updateProfile(name, phoneNumber);
+      await _localDataSource.saveAuthData(response);
+      return Right(response);
     } catch (e) {
       return Left(ServerFailure());
     }

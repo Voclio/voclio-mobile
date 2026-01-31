@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(width: 60.w), // Balance the skip button
                           Expanded(child: AuthTopControls()),
                           AuthLinkButton(
-                            text: 'Skip',
+                            text: 'As Guest',
                             onPressed: () {
                               context.goRoute(AppRouter.home);
                             },
@@ -76,7 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
 
-                      SizedBox(height: isSmall ? 30.h : 40.h),
+                      SizedBox(height: isSmall ? 35.h : 35.h),
 
                       // Title info wrapped with CustomFadeIn
                       CustomFadeIn(

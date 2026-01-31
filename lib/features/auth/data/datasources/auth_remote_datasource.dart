@@ -12,12 +12,13 @@ abstract class AuthRemoteDataSource {
   Future<OTPResponseModel> sendOTP(String email, OTPType type);
   Future<OTPResponseModel> verifyOTP(OTPRequestModel request);
   Future<void> forgotPassword(String email);
-  Future<void> resetPassword(String email, String newPassword, String otp);
+  Future<void> resetPassword(String token, String newPassword);
   Future<void> logout();
   Future<AuthResponseModel> refreshToken(String refreshToken);
-  Future<String> googleSignIn();
-  Future<String> facebookSignIn();
+  Future<AuthResponseModel> googleSignIn();
+  Future<AuthResponseModel> facebookSignIn();
   Future<void> changePassword(String currentPassword, String newPassword);
+  Future<AuthResponseModel> updateProfile(String name, String phoneNumber);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -87,15 +88,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> resetPassword(
-    String email,
-    String newPassword,
-    String otp,
-  ) async {
+  Future<void> resetPassword(String token, String newPassword) async {
     try {
       await apiClient.post(
         ApiEndpoints.resetPassword,
-        data: {'email': email, 'new_password': newPassword, 'otp': otp},
+        data: {'token': token, 'new_password': newPassword},
       );
     } catch (e) {
       throw Exception('Reset password failed: $e');
@@ -125,20 +122,30 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<String> googleSignIn() async {
+  Future<AuthResponseModel> googleSignIn() async {
     try {
-      final response = await apiClient.post(ApiEndpoints.googleAuth);
-      return response.data['data']['token'] ?? '';
+      // Assuming token is obtained here or passed logically. 
+      // Requirement asks for body {"id_token": ...}
+      final String idToken = "YOUR_GOOGLE_ID_TOKEN"; 
+      final response = await apiClient.post(
+        ApiEndpoints.googleAuth, 
+        data: {'id_token': idToken}
+      );
+      return AuthResponseModel.fromJson(response.data);
     } catch (e) {
       throw Exception('Google sign in failed: $e');
     }
   }
 
   @override
-  Future<String> facebookSignIn() async {
+  Future<AuthResponseModel> facebookSignIn() async {
     try {
-      final response = await apiClient.post(ApiEndpoints.facebookAuth);
-      return response.data['data']['token'] ?? '';
+      final String accessToken = "YOUR_FACEBOOK_ACCESS_TOKEN";
+      final response = await apiClient.post(
+          ApiEndpoints.facebookAuth,
+          data: {'access_token': accessToken}
+      );
+      return AuthResponseModel.fromJson(response.data);
     } catch (e) {
       throw Exception('Facebook sign in failed: $e');
     }
@@ -159,6 +166,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
     } catch (e) {
       throw Exception('Change password failed: $e');
+    }
+  }
+
+  @override
+  Future<AuthResponseModel> updateProfile(String name, String phoneNumber) async {
+    try {
+       final response = await apiClient.post(
+         ApiEndpoints.updateProfile,
+         data: {'name': name, 'phone_number': phoneNumber},
+       );
+       return AuthResponseModel.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Update profile failed: $e');
     }
   }
 }

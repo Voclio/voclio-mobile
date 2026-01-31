@@ -114,25 +114,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Container(
-                    width: 45.w,
-                    height: 45.h,
+                    width: 70.w,
+                    height: 70.h,
                     child: Image.asset(
-                      'assets/images/Microphone Icon.png',
+                      'assets/images/12.png',
                       fit: BoxFit.contain,
-                      color: colors.primary,
+
                       colorBlendMode: BlendMode.srcIn,
                     ),
                   ),
                   SizedBox(width: 8),
-                  TextApp(
-                    text: 'Voclio',
-                    textAlign: TextAlign.center,
-                    theme: context.textStyle.copyWith(
-                      fontSize: 27.sp,
-                      fontWeight: FontWeightHelper.bold,
-                      color: colors.primary,
-                    ),
-                  ),
+
                 ],
               ),
             ),

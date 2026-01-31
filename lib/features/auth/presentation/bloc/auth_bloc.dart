@@ -10,6 +10,7 @@ import '../../domain/usecases/send_otp_usecase.dart';
 import '../../domain/usecases/verify_otp_usecase.dart';
 import '../../domain/usecases/forgot_password_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -21,6 +22,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final VerifyOTPUseCase _verifyOTPUseCase;
   final ForgotPasswordUseCase _forgotPasswordUseCase;
   final ResetPasswordUseCase _resetPasswordUseCase;
+  final UpdateProfileUseCase _updateProfileUseCase;
 
   AuthBloc({
     required LoginUseCase loginUseCase,
@@ -29,12 +31,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required VerifyOTPUseCase verifyOTPUseCase,
     required ForgotPasswordUseCase forgotPasswordUseCase,
     required ResetPasswordUseCase resetPasswordUseCase,
+    required UpdateProfileUseCase updateProfileUseCase,
   })  : _loginUseCase = loginUseCase,
         _registerUseCase = registerUseCase,
         _sendOTPUseCase = sendOTPUseCase,
         _verifyOTPUseCase = verifyOTPUseCase,
         _forgotPasswordUseCase = forgotPasswordUseCase,
         _resetPasswordUseCase = resetPasswordUseCase,
+        _updateProfileUseCase = updateProfileUseCase,
         super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
@@ -42,6 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<VerifyOTPEvent>(_onVerifyOTP);
     on<ForgotPasswordEvent>(_onForgotPassword);
     on<ResetPasswordEvent>(_onResetPassword);
+    on<UpdateProfileEvent>(_onUpdateProfile);
     on<LogoutEvent>(_onLogout);
     on<RefreshAuthEvent>(_onRefresh);
   }
@@ -99,8 +104,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onResetPassword(ResetPasswordEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
-      await _resetPasswordUseCase(event.email, event.newPassword, event.otp);
+      await _resetPasswordUseCase(event.token, event.newPassword);
       emit(PasswordResetSuccess());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onUpdateProfile(UpdateProfileEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final result = await _updateProfileUseCase(event.name, event.phoneNumber);
+      result.fold(
+            (failure) => emit(AuthError(failure.message)),
+            (response) => emit(AuthSuccess(response)),
+      );
     } catch (e) {
       emit(AuthError(e.toString()));
     }

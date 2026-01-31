@@ -45,9 +45,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   void _onResetPassword() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(ResetPasswordEvent(
-        widget.email,
-        _newPasswordController.text,
         _otpController.text.trim(),
+        _newPasswordController.text,
       ));
     }
   }

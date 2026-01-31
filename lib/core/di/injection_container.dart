@@ -75,6 +75,7 @@ import '../../features/auth/domain/usecases/send_otp_usecase.dart';
 import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
 import '../../features/auth/domain/usecases/forgot_password_usecase.dart';
 import '../../features/auth/domain/usecases/reset_password_usecase.dart';
+import '../../features/auth/domain/usecases/update_profile_usecase.dart';
 
 // Data
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
@@ -134,6 +135,9 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<ResetPasswordUseCase>(
     () => ResetPasswordUseCase(getIt<AuthRepository>()),
   );
+  getIt.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(getIt<AuthRepository>()),
+  );
 
   // BLoC
   getIt.registerFactory<AuthBloc>(
@@ -144,6 +148,7 @@ Future<void> setupDependencies() async {
       verifyOTPUseCase: getIt<VerifyOTPUseCase>(),
       forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
       resetPasswordUseCase: getIt<ResetPasswordUseCase>(),
+      updateProfileUseCase: getIt<UpdateProfileUseCase>(),
     ),
   );
 

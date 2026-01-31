@@ -354,10 +354,10 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
             child: Opacity(
               opacity: _logoOpacity.value,
               child: Image.asset(
-                'assets/images/Microphone Icon.png',
+                'assets/images/12.png',
                 width: logoSize,
                 height: logoSize,
-                color: colors.primary,
+
               ),
             ),
           ),

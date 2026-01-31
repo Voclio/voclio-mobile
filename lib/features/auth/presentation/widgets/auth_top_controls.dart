@@ -35,26 +35,18 @@ class AuthTopControls extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: isSmall ? 40.w : 45.w,
-            height: isSmall ? 40.h : 45.h,
+          SizedBox(width: 20.w,),
+          SizedBox(
+            width: isSmall ? 70.w :70.w,
+            height: isSmall ? 70.h : 70.h,
             child: Image.asset(
-              'assets/images/Microphone Icon.png',
+              'assets/images/12.png',
               fit: BoxFit.contain,
-              color: context.colors.primary,
               colorBlendMode: BlendMode.srcIn,
             ),
           ),
-          SizedBox(width: 8.w),
-          TextApp(
-            text: 'Voclio',
-            textAlign: TextAlign.center,
-            theme: context.textStyle.copyWith(
-              fontSize: isSmall ? 24.sp : 27.sp,
-              fontWeight: FontWeightHelper.bold,
-              color: context.colors.primary,
-            ),
-          ),
+
+
         ],
       ),
     );

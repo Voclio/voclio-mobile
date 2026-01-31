@@ -5,7 +5,7 @@ class ResetPasswordUseCase {
 
   ResetPasswordUseCase(this._repository);
 
-  Future<void> call(String email, String newPassword, String otp) async {
-    return await _repository.resetPassword(email, newPassword, otp);
+  Future<void> call(String token, String newPassword) async {
+    return await _repository.resetPassword(token, newPassword);
   }
 }
