@@ -3,12 +3,14 @@ class AuthRequest {
   final String password;
   final String? fullName;
   final String? phoneNumber;
+  final String? otp;
 
   const AuthRequest({
     required this.email,
     required this.password,
     this.fullName,
     this.phoneNumber,
+    this.otp,
   });
 
   @override
@@ -18,7 +20,8 @@ class AuthRequest {
         other.email == email &&
         other.password == password &&
         other.fullName == fullName &&
-        other.phoneNumber == phoneNumber;
+        other.phoneNumber == phoneNumber &&
+        other.otp == otp;
   }
 
   @override
@@ -26,11 +29,12 @@ class AuthRequest {
     return email.hashCode ^
         password.hashCode ^
         fullName.hashCode ^
-        phoneNumber.hashCode;
+        phoneNumber.hashCode ^
+        otp.hashCode;
   }
 
   @override
   String toString() {
-    return 'AuthRequest(email: $email, password: $password, fullName: $fullName, phoneNumber: $phoneNumber)';
+    return 'AuthRequest(email: $email, password: $password, fullName: $fullName, phoneNumber: $phoneNumber, otp: $otp)';
   }
 }

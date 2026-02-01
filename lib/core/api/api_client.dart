@@ -1,6 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
-import 'dart:io';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_endpoints.dart';
 import 'interceptors/auth_interceptor.dart';

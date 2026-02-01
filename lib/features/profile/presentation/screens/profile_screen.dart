@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/routes/app_routes.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
 import 'edit_profile_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'about_screen.dart';

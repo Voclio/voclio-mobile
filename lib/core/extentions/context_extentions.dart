@@ -27,16 +27,18 @@ extension AppExtensions on BuildContext {
   
   /// Navigate to a new route (push)
   /// [route] - the route path to navigate to
+  /// [extra] - optional object to pass to the route
   /// Allows going back to previous screen
-  void pushRoute(String route) {
-    push(route);
+  void pushRoute(String route, {Object? extra}) {
+    push(route, extra: extra);
   }
 
   /// Navigate to a new route (replace current)
   /// [route] - the route path to navigate to
+  /// [extra] - optional object to pass to the route
   /// Cannot go back to previous screen
-  void goRoute(String route) {
-    go(route);
+  void goRoute(String route, {Object? extra}) {
+    go(route, extra: extra);
   }
 
   /// Go back to previous screen

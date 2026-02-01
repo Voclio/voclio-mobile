@@ -7,6 +7,7 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/auth/domain/entities/otp_request.dart';
+import '../../features/auth/domain/entities/auth_request.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/dashboard/presentation/bloc/dashboard_cubit.dart';
@@ -62,13 +63,18 @@ class AppRouter {
         path: otp,
         builder: (context, state) {
           final email = state.uri.queryParameters['email'] ?? '';
-          final type = state.uri.queryParameters['type'] ?? 'registration';
+          final typeStr = state.uri.queryParameters['type'] ?? 'registration';
+          final registrationData = state.extra as AuthRequest?;
+
+          final type =
+              typeStr == 'forgotPassword'
+                  ? OTPType.forgotPassword
+                  : OTPType.registration;
+
           return OTPScreen(
             email: email,
-            type:
-                type == 'forgotPassword'
-                    ? OTPType.forgotPassword
-                    : OTPType.registration,
+            type: type,
+            registrationData: registrationData,
           );
         },
       ),

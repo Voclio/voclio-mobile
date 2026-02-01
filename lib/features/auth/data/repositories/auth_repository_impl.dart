@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/errors/failures.dart';
 import '../../domain/entities/auth_request.dart';
 import '../../domain/entities/auth_response.dart';
@@ -21,94 +22,134 @@ class AuthRepositoryImpl implements AuthRepository {
        _localDataSource = localDataSource;
 
   @override
-  Future<AuthResponse> login(AuthRequest request) async {
+  Future<Either<Failure, AuthResponse>> login(AuthRequest request) async {
     try {
       final requestModel = AuthRequestModel.fromEntity(request);
       final responseModel = await _remoteDataSource.login(requestModel);
       await _localDataSource.saveAuthData(responseModel);
-      return responseModel;
+      return Right(responseModel);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      // Re-throw to preserve the original error details
-      rethrow;
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<AuthResponse> register(AuthRequest request) async {
+  Future<Either<Failure, AuthResponse>> register(AuthRequest request) async {
     try {
       final requestModel = AuthRequestModel.fromEntity(request);
       final responseModel = await _remoteDataSource.register(requestModel);
       await _localDataSource.saveAuthData(responseModel);
-      return responseModel;
+      return Right(responseModel);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      // Re-throw to preserve the original error details
-      rethrow;
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<OTPResponse> sendOTP(String email, OTPType type) async {
-    final responseModel = await _remoteDataSource.sendOTP(email, type);
-    return responseModel;
+  Future<Either<Failure, OTPResponse>> sendOTP(String email, OTPType type) async {
+    try {
+      final responseModel = await _remoteDataSource.sendOTP(email, type);
+      return Right(responseModel);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<OTPResponse> verifyOTP(OTPRequest request) async {
-    final requestModel = OTPRequestModel.fromEntity(request);
-    final responseModel = await _remoteDataSource.verifyOTP(requestModel);
-    return responseModel;
+  Future<Either<Failure, OTPResponse>> verifyOTP(OTPRequest request) async {
+    try {
+      final requestModel = OTPRequestModel.fromEntity(request);
+      final responseModel = await _remoteDataSource.verifyOTP(requestModel);
+      return Right(responseModel);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<void> forgotPassword(String email) async {
+  Future<Either<Failure, void>> forgotPassword(String email) async {
     try {
       await _remoteDataSource.forgotPassword(email);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      rethrow;
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<void> resetPassword(String token, String newPassword) async {
+  Future<Either<Failure, void>> resetPassword(String token, String newPassword) async {
     try {
       await _remoteDataSource.resetPassword(token, newPassword);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      rethrow;
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<void> logout() async {
-    await _remoteDataSource.logout();
-    await _localDataSource.clearAuthData();
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await _remoteDataSource.logout();
+      await _localDataSource.clearAuthData();
+      return const Right(null);
+    } on ServerException catch (e) {
+      // Even if server logout fails, we should clear local data
+      await _localDataSource.clearAuthData();
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+       await _localDataSource.clearAuthData();
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<AuthResponse> refreshToken(String refreshToken) async {
-    final responseModel = await _remoteDataSource.refreshToken(refreshToken);
-    await _localDataSource.saveAuthData(responseModel);
-    return responseModel;
+  Future<Either<Failure, AuthResponse>> refreshToken(String refreshToken) async {
+    try {
+      final responseModel = await _remoteDataSource.refreshToken(refreshToken);
+      await _localDataSource.saveAuthData(responseModel);
+      return Right(responseModel);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
-  Future<Either<Failure, String>> googleSignIn() async {
+  Future<Either<Failure, AuthResponse>> googleSignIn() async {
     try {
       final response = await _remoteDataSource.googleSignIn();
       await _localDataSource.saveAuthData(response);
-      return Right(response.token);
+      return Right(response);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, String>> facebookSignIn() async {
+  Future<Either<Failure, AuthResponse>> facebookSignIn() async {
     try {
       final response = await _remoteDataSource.facebookSignIn();
       await _localDataSource.saveAuthData(response);
-      return Right(response.token);
+      return Right(response);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -120,8 +161,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.changePassword(currentPassword, newPassword);
       return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -134,8 +177,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final response = await _remoteDataSource.updateProfile(name, phoneNumber);
       await _localDataSource.saveAuthData(response);
       return Right(response);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

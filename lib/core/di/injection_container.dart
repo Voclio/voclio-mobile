@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voclio_app/features/notes/data/repositories/fake_note_repo.dart';
@@ -76,6 +77,10 @@ import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
 import '../../features/auth/domain/usecases/forgot_password_usecase.dart';
 import '../../features/auth/domain/usecases/reset_password_usecase.dart';
 import '../../features/auth/domain/usecases/update_profile_usecase.dart';
+import '../../features/auth/domain/usecases/logout_usecase.dart';
+import '../../features/auth/domain/usecases/google_sign_in_usecase.dart';
+import '../../features/auth/domain/usecases/facebook_sign_in_usecase.dart';
+import '../../features/auth/domain/usecases/change_password_usecase.dart';
 
 // Data
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
@@ -96,13 +101,19 @@ Future<void> setupDependencies() async {
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
+  getIt.registerSingleton<FlutterSecureStorage>(const FlutterSecureStorage());
 
   // Core - API Client
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient());
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(storage: getIt<FlutterSecureStorage>()),
+  );
 
   // Data sources
   getIt.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(getIt<SharedPreferences>()),
+    () => AuthLocalDataSourceImpl(
+      prefs: getIt<SharedPreferences>(),
+      storage: getIt<FlutterSecureStorage>(),
+    ),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => auth_impl.AuthRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
@@ -138,6 +149,18 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<UpdateProfileUseCase>(
     () => UpdateProfileUseCase(getIt<AuthRepository>()),
   );
+  getIt.registerLazySingleton<LogoutUseCase>(
+    () => LogoutUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<GoogleSignInUseCase>(
+    () => GoogleSignInUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<FacebookSignInUseCase>(
+    () => FacebookSignInUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<ChangePasswordUseCase>(
+    () => ChangePasswordUseCase(getIt<AuthRepository>()),
+  );
 
   // BLoC
   getIt.registerFactory<AuthBloc>(
@@ -149,6 +172,10 @@ Future<void> setupDependencies() async {
       forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
       resetPasswordUseCase: getIt<ResetPasswordUseCase>(),
       updateProfileUseCase: getIt<UpdateProfileUseCase>(),
+      logoutUseCase: getIt<LogoutUseCase>(),
+      googleSignInUseCase: getIt<GoogleSignInUseCase>(),
+      facebookSignInUseCase: getIt<FacebookSignInUseCase>(),
+      changePasswordUseCase: getIt<ChangePasswordUseCase>(),
     ),
   );
 

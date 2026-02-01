@@ -5,6 +5,17 @@ class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
 
+  static const List<String> _publicEndpoints = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/google',
+    '/auth/facebook',
+    '/auth/refresh-token',
+    '/auth/reset-password',
+    '/health',
+    '/',
+  ];
+
   AuthInterceptor(this._storage, this._dio);
 
   @override
@@ -12,19 +23,7 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Skip auth for public endpoints
-    final publicEndpoints = [
-      '/auth/login',
-      '/auth/register',
-      '/auth/google',
-      '/auth/facebook',
-      '/auth/refresh-token',
-      '/auth/reset-password',
-      '/health',
-      '/',
-    ];
-
-    if (publicEndpoints.contains(options.path)) {
+    if (_publicEndpoints.contains(options.path)) {
       return handler.next(options);
     }
 
@@ -42,6 +41,11 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    // Skip 401 handling for public endpoints
+    if (_publicEndpoints.contains(err.requestOptions.path)) {
+      return handler.next(err);
+    }
+
     // Handle 401 Unauthorized - Token expired
     if (err.response?.statusCode == 401) {
       try {

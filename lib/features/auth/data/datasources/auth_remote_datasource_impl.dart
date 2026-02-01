@@ -34,7 +34,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<OTPResponseModel> sendOTP(String email, OTPType type) async {
     final response = await apiClient.post(
       ApiEndpoints.sendOtp,
-      data: {'email': email, 'type': type.toString().split('.').last},
+      data: {'email': email, 'type': type.toShortString},
     );
     return OTPResponseModel.fromJson(response.data);
   }

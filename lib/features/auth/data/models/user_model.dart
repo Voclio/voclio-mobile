@@ -12,28 +12,30 @@ class UserModel extends User {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     // Handle both 'user_id' (from API) and 'id' (possible local format)
-    final userId = (json['user_id'] ?? json['id']).toString();
+    final userId = (json['user_id'] ?? json['id'] ?? '').toString();
 
     // Handle both 'name' (from API) and 'fullName' (possible local format)
     final userName =
-        (json['name'] ?? json['full_name'] ?? json['fullName']) as String;
+        (json['name'] ?? json['full_name'] ?? json['fullName'] ?? 'Unknown User')
+            as String;
 
     return UserModel(
       id: userId,
-      email: json['email'] as String,
+      email: (json['email'] ?? '') as String,
       fullName: userName,
       avatar: json['avatar'] as String?,
       // Provide default value if createdAt is not present
       createdAt:
           json['created_at'] != null || json['createdAt'] != null
-              ? DateTime.parse(
-                (json['created_at'] ?? json['createdAt']) as String,
-              )
+              ? DateTime.tryParse(
+                    (json['created_at'] ?? json['createdAt']).toString(),
+                  ) ??
+                  DateTime.now()
               : DateTime.now(),
       updatedAt:
           json['updated_at'] != null || json['updatedAt'] != null
-              ? DateTime.parse(
-                (json['updated_at'] ?? json['updatedAt']) as String,
+              ? DateTime.tryParse(
+                (json['updated_at'] ?? json['updatedAt']).toString(),
               )
               : null,
     );

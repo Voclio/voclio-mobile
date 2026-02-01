@@ -68,6 +68,27 @@ class UpdateProfileEvent extends AuthEvent {
   List<Object?> get props => [name, phoneNumber];
 }
 
+class GoogleSignInEvent extends AuthEvent {
+  const GoogleSignInEvent();
+}
+
+class FacebookSignInEvent extends AuthEvent {
+  const FacebookSignInEvent();
+}
+
+class ChangePasswordEvent extends AuthEvent {
+  final String currentPassword;
+  final String newPassword;
+
+  const ChangePasswordEvent({
+    required this.currentPassword,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object?> get props => [currentPassword, newPassword];
+}
+
 class LogoutEvent extends AuthEvent {
   const LogoutEvent();
 }
