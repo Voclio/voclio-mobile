@@ -1,35 +1,37 @@
 import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart';
 
 class DashboardStatsModel {
-  final TaskStatsModel taskStats;
-  final NoteStatsModel noteStats;
-  final ProductivityStatsModel productivityStats;
+  final DashboardOverviewModel overview;
   final List<TaskModel> upcomingTasks;
   final List<NoteModel> recentNotes;
+  final ProductivityStatsModel productivity;
+  final List<QuickActionModel> quickActions;
 
   DashboardStatsModel({
-    required this.taskStats,
-    required this.noteStats,
-    required this.productivityStats,
+    required this.overview,
     required this.upcomingTasks,
     required this.recentNotes,
+    required this.productivity,
+    required this.quickActions,
   });
 
   factory DashboardStatsModel.fromJson(Map<String, dynamic> json) {
     return DashboardStatsModel(
-      taskStats: TaskStatsModel.fromJson(json['taskStats'] ?? {}),
-      noteStats: NoteStatsModel.fromJson(json['noteStats'] ?? {}),
-      productivityStats: ProductivityStatsModel.fromJson(
-        json['productivityStats'] ?? {},
-      ),
+      overview: DashboardOverviewModel.fromJson(json['overview'] ?? {}),
       upcomingTasks:
-          (json['upcomingTasks'] as List<dynamic>?)
+          (json['upcoming_tasks'] as List<dynamic>?)
               ?.map((e) => TaskModel.fromJson(e))
               .toList() ??
           [],
       recentNotes:
-          (json['recentNotes'] as List<dynamic>?)
+          (json['recent_notes'] as List<dynamic>?)
               ?.map((e) => NoteModel.fromJson(e))
+              .toList() ??
+          [],
+      productivity: ProductivityStatsModel.fromJson(json['productivity'] ?? {}),
+      quickActions:
+          (json['quick_actions'] as List<dynamic>?)
+              ?.map((e) => QuickActionModel.fromJson(e))
               .toList() ??
           [],
     );
@@ -37,137 +39,89 @@ class DashboardStatsModel {
 
   DashboardStatsEntity toEntity() {
     return DashboardStatsEntity(
-      taskStats: taskStats.toEntity(),
-      noteStats: noteStats.toEntity(),
-      productivityStats: productivityStats.toEntity(),
+      overview: overview.toEntity(),
       upcomingTasks: upcomingTasks.map((e) => e.toEntity()).toList(),
       recentNotes: recentNotes.map((e) => e.toEntity()).toList(),
+      productivity: productivity.toEntity(),
+      quickActions: quickActions.map((e) => e.toEntity()).toList(),
     );
   }
 }
 
-class TaskStatsModel {
+class DashboardOverviewModel {
   final int totalTasks;
   final int completedTasks;
   final int pendingTasks;
   final int overdueTasks;
-  final double completionRate;
+  final double overallProgress;
+  final int totalNotes;
+  final int totalRecordings;
+  final int totalAchievements;
 
-  TaskStatsModel({
+  DashboardOverviewModel({
     required this.totalTasks,
     required this.completedTasks,
     required this.pendingTasks,
     required this.overdueTasks,
-    required this.completionRate,
+    required this.overallProgress,
+    required this.totalNotes,
+    required this.totalRecordings,
+    required this.totalAchievements,
   });
 
-  factory TaskStatsModel.fromJson(Map<String, dynamic> json) {
-    return TaskStatsModel(
-      totalTasks: json['totalTasks'] ?? 0,
-      completedTasks: json['completedTasks'] ?? 0,
-      pendingTasks: json['pendingTasks'] ?? 0,
-      overdueTasks: json['overdueTasks'] ?? 0,
-      completionRate: (json['completionRate'] ?? 0.0).toDouble(),
+  factory DashboardOverviewModel.fromJson(Map<String, dynamic> json) {
+    return DashboardOverviewModel(
+      totalTasks: json['total_tasks'] ?? 0,
+      completedTasks: json['completed_tasks'] ?? 0,
+      pendingTasks: json['pending_tasks'] ?? 0,
+      overdueTasks: json['overdue_tasks'] ?? 0,
+      overallProgress: (json['overall_progress'] ?? 0.0).toDouble(),
+      totalNotes: json['total_notes'] ?? 0,
+      totalRecordings: json['total_recordings'] ?? 0,
+      totalAchievements: json['total_achievements'] ?? 0,
     );
   }
 
-  TaskStats toEntity() {
-    return TaskStats(
+  DashboardOverview toEntity() {
+    return DashboardOverview(
       totalTasks: totalTasks,
       completedTasks: completedTasks,
       pendingTasks: pendingTasks,
       overdueTasks: overdueTasks,
-      completionRate: completionRate,
-    );
-  }
-}
-
-class NoteStatsModel {
-  final int totalNotes;
-  final int notesThisWeek;
-  final int notesThisMonth;
-
-  NoteStatsModel({
-    required this.totalNotes,
-    required this.notesThisWeek,
-    required this.notesThisMonth,
-  });
-
-  factory NoteStatsModel.fromJson(Map<String, dynamic> json) {
-    return NoteStatsModel(
-      totalNotes: json['totalNotes'] ?? 0,
-      notesThisWeek: json['notesThisWeek'] ?? 0,
-      notesThisMonth: json['notesThisMonth'] ?? 0,
-    );
-  }
-
-  NoteStats toEntity() {
-    return NoteStats(
+      overallProgress: overallProgress,
       totalNotes: totalNotes,
-      notesThisWeek: notesThisWeek,
-      notesThisMonth: notesThisMonth,
-    );
-  }
-}
-
-class ProductivityStatsModel {
-  final int currentStreak;
-  final int longestStreak;
-  final int totalFocusTime;
-  final int focusSessionsCompleted;
-
-  ProductivityStatsModel({
-    required this.currentStreak,
-    required this.longestStreak,
-    required this.totalFocusTime,
-    required this.focusSessionsCompleted,
-  });
-
-  factory ProductivityStatsModel.fromJson(Map<String, dynamic> json) {
-    return ProductivityStatsModel(
-      currentStreak: json['currentStreak'] ?? 0,
-      longestStreak: json['longestStreak'] ?? 0,
-      totalFocusTime: json['totalFocusTime'] ?? 0,
-      focusSessionsCompleted: json['focusSessionsCompleted'] ?? 0,
-    );
-  }
-
-  ProductivityStats toEntity() {
-    return ProductivityStats(
-      currentStreak: currentStreak,
-      longestStreak: longestStreak,
-      totalFocusTime: totalFocusTime,
-      focusSessionsCompleted: focusSessionsCompleted,
+      totalRecordings: totalRecordings,
+      totalAchievements: totalAchievements,
     );
   }
 }
 
 class TaskModel {
-  final String id;
+  final int id;
   final String title;
-  final String? description;
   final DateTime? dueDate;
   final String priority;
-  final bool isDone;
+  final String status;
+  final int? categoryId;
 
   TaskModel({
     required this.id,
     required this.title,
-    this.description,
     this.dueDate,
     required this.priority,
-    required this.isDone,
+    required this.status,
+    this.categoryId,
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
-      id: json['task_id'] ?? json['id'] ?? '',
+      id: json['task_id'] ?? 0,
       title: json['title'] ?? '',
-      description: json['description'],
       dueDate:
           json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
       priority: json['priority'] ?? 'medium',
-      isDone: json['is_done'] ?? json['isDone'] ?? false,
+      status: json['status'] ?? 'pending',
+      categoryId: json['category_id'],
     );
   }
 
@@ -175,32 +129,32 @@ class TaskModel {
     return TaskEntity(
       id: id,
       title: title,
-      description: description,
       dueDate: dueDate,
       priority: priority,
-      isDone: isDone,
+      status: status,
+      categoryId: categoryId,
     );
   }
 }
 
 class NoteModel {
-  final String id;
+  final int id;
   final String title;
-  final String content;
+  final String preview;
   final DateTime createdAt;
 
   NoteModel({
     required this.id,
     required this.title,
-    required this.content,
+    required this.preview,
     required this.createdAt,
   });
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
-      id: json['note_id'] ?? json['id'] ?? '',
+      id: json['note_id'] ?? 0,
       title: json['title'] ?? '',
-      content: json['content'] ?? '',
+      preview: json['preview'] ?? '',
       createdAt:
           json['created_at'] != null
               ? DateTime.parse(json['created_at'])
@@ -212,8 +166,56 @@ class NoteModel {
     return NoteEntity(
       id: id,
       title: title,
-      content: content,
+      preview: preview,
       createdAt: createdAt,
     );
+  }
+}
+
+class ProductivityStatsModel {
+  final int currentStreak;
+  final int longestStreak;
+  final int todayFocusMinutes;
+
+  ProductivityStatsModel({
+    required this.currentStreak,
+    required this.longestStreak,
+    required this.todayFocusMinutes,
+  });
+
+  factory ProductivityStatsModel.fromJson(Map<String, dynamic> json) {
+    return ProductivityStatsModel(
+      currentStreak: json['current_streak'] ?? 0,
+      longestStreak: json['longest_streak'] ?? 0,
+      todayFocusMinutes: json['today_focus_minutes'] ?? 0,
+    );
+  }
+
+  ProductivityStats toEntity() {
+    return ProductivityStats(
+      currentStreak: currentStreak,
+      longestStreak: longestStreak,
+      todayFocusMinutes: todayFocusMinutes,
+    );
+  }
+}
+
+class QuickActionModel {
+  final String id;
+  final String label;
+  final String icon;
+
+  QuickActionModel({required this.id, required this.label, required this.icon});
+
+  factory QuickActionModel.fromJson(Map<String, dynamic> json) {
+    return QuickActionModel(
+      id: json['id'] ?? '',
+      label: json['label'] ?? '',
+      icon: json['icon'] ?? '',
+    );
+  }
+
+  QuickActionEntity toEntity() {
+    return QuickActionEntity(id: id, label: label, icon: icon);
   }
 }

@@ -1,43 +1,49 @@
 import 'package:equatable/equatable.dart';
 
 class DashboardStatsEntity extends Equatable {
-  final TaskStats taskStats;
-  final NoteStats noteStats;
-  final ProductivityStats productivityStats;
+  final DashboardOverview overview;
   final List<TaskEntity> upcomingTasks;
   final List<NoteEntity> recentNotes;
+  final ProductivityStats productivity;
+  final List<QuickActionEntity> quickActions;
 
   const DashboardStatsEntity({
-    required this.taskStats,
-    required this.noteStats,
-    required this.productivityStats,
+    required this.overview,
     required this.upcomingTasks,
     required this.recentNotes,
+    required this.productivity,
+    required this.quickActions,
   });
 
   @override
   List<Object?> get props => [
-    taskStats,
-    noteStats,
-    productivityStats,
+    overview,
     upcomingTasks,
     recentNotes,
+    productivity,
+    quickActions,
   ];
 }
 
-class TaskStats extends Equatable {
+class DashboardOverview extends Equatable {
   final int totalTasks;
   final int completedTasks;
   final int pendingTasks;
   final int overdueTasks;
-  final double completionRate;
+  final double overallProgress;
+  final int totalNotes;
+  final int totalRecordings;
+  final int totalAchievements;
 
-  const TaskStats({
+  const DashboardOverview({
     required this.totalTasks,
     required this.completedTasks,
     required this.pendingTasks,
     required this.overdueTasks,
-    required this.completionRate,
+    required this.overallProgress,
+    required this.totalNotes,
+    required this.totalRecordings,
+    required this.totalAchievements,
   });
 
   @override
@@ -46,88 +52,77 @@ class TaskStats extends Equatable {
     completedTasks,
     pendingTasks,
     overdueTasks,
-    completionRate,
-  ];
-}
-
-class NoteStats extends Equatable {
-  final int totalNotes;
-  final int notesThisWeek;
-  final int notesThisMonth;
-
-  const NoteStats({
-    required this.totalNotes,
-    required this.notesThisWeek,
-    required this.notesThisMonth,
-  });
-
-  @override
-  List<Object?> get props => [totalNotes, notesThisWeek, notesThisMonth];
-}
-
-class ProductivityStats extends Equatable {
-  final int currentStreak;
-  final int longestStreak;
-  final int totalFocusTime;
-  final int focusSessionsCompleted;
-
-  const ProductivityStats({
-    required this.currentStreak,
-    required this.longestStreak,
-    required this.totalFocusTime,
-    required this.focusSessionsCompleted,
-  });
-
-  @override
-  List<Object?> get props => [
-    currentStreak,
-    longestStreak,
-    totalFocusTime,
-    focusSessionsCompleted,
+    overallProgress,
+    totalNotes,
+    totalRecordings,
+    totalAchievements,
   ];
 }
 
 class TaskEntity extends Equatable {
-  final String id;
+  final int id;
   final String title;
-  final String? description;
   final DateTime? dueDate;
   final String priority;
-  final bool isDone;
+  final String status;
+  final int? categoryId;
 
   const TaskEntity({
     required this.id,
     required this.title,
-    this.description,
     this.dueDate,
     required this.priority,
-    required this.isDone,
+    required this.status,
+    this.categoryId,
   });
 
   @override
-  List<Object?> get props => [
-    id,
-    title,
-    description,
-    dueDate,
-    priority,
-    isDone,
-  ];
+  List<Object?> get props => [id, title, dueDate, priority, status, categoryId];
 }
 
 class NoteEntity extends Equatable {
-  final String id;
+  final int id;
   final String title;
-  final String content;
+  final String preview;
   final DateTime createdAt;
 
   const NoteEntity({
     required this.id,
     required this.title,
-    required this.content,
+    required this.preview,
     required this.createdAt,
   });
 
   @override
-  List<Object?> get props => [id, title, content, createdAt];
+  List<Object?> get props => [id, title, preview, createdAt];
+}
+
+class ProductivityStats extends Equatable {
+  final int currentStreak;
+  final int longestStreak;
+  final int todayFocusMinutes;
+
+  const ProductivityStats({
+    required this.currentStreak,
+    required this.longestStreak,
+    required this.todayFocusMinutes,
+  });
+
+  @override
+  List<Object?> get props => [currentStreak, longestStreak, todayFocusMinutes];
+}
+
+class QuickActionEntity extends Equatable {
+  final String id;
+  final String label;
+  final String icon;
+
+  const QuickActionEntity({
+    required this.id,
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  List<Object?> get props => [id, label, icon];
 }

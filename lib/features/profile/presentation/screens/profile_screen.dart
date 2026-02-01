@@ -119,6 +119,18 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
 
+                  // Dashboard
+                  _buildMenuCard(
+                    context,
+                    icon: Icons.dashboard_outlined,
+                    title: 'Dashboard',
+                    subtitle: 'Activity & productivity stats',
+                    color: Colors.deepPurple,
+                    onTap: () => context.push(AppRouter.dashboard),
+                  ),
+
+                  SizedBox(height: 12.h),
+
                   // Notifications
                   _buildMenuCard(
                     context,

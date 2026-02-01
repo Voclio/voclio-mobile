@@ -12,6 +12,7 @@ import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
+import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 
 import 'core/common/screens/no_network_screen.dart';
 
@@ -55,6 +56,9 @@ class VoclioApp extends StatelessWidget {
                                       DateTime.now().year,
                                       DateTime.now().month,
                                     ),
+                          ),
+                          BlocProvider<DashboardCubit>(
+                            create: (context) => getIt<DashboardCubit>(),
                           ),
                         ],
                         child: MaterialApp.router(

@@ -1,5 +1,4 @@
 import 'package:go_router/go_router.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
@@ -9,9 +8,7 @@ import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/auth/domain/entities/otp_request.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
-import '../../features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import '../../features/reminders/presentation/screens/reminders_screen.dart';
-import '../di/injection_container.dart';
 import '../../features/productivity/presentation/screens/focus_timer_screen.dart';
 import '../../features/productivity/presentation/screens/achievements_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
@@ -87,11 +84,7 @@ class AppRouter {
       GoRoute(path: home, builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: dashboard,
-        builder:
-            (context, state) => BlocProvider(
-              create: (context) => getIt<DashboardCubit>(),
-              child: const DashboardScreen(),
-            ),
+        builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(
         path: reminders,

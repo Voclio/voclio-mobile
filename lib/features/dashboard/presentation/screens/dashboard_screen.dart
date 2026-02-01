@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
+import '../../domain/entities/dashboard_stats_entity.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -115,7 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             children: [
                               _buildQuickStat(
                                 'Streak',
-                                '${stats.productivityStats.currentStreak}',
+                                '${stats.productivity.currentStreak}',
                                 'days',
                                 Icons.local_fire_department_rounded,
                                 Colors.orange.shade400,
@@ -123,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               SizedBox(width: 16.w),
                               _buildQuickStat(
                                 'Tasks',
-                                '${stats.taskStats.completedTasks}/${stats.taskStats.totalTasks}',
+                                '${stats.overview.completedTasks}/${stats.overview.totalTasks}',
                                 'done',
                                 Icons.task_alt_rounded,
                                 Colors.green.shade400,
@@ -142,8 +143,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           // Task Completion Circle
                           _buildCompletionCard(
-                            stats.taskStats.completionRate,
-                            stats.taskStats,
+                            stats.overview.overallProgress,
+                            stats.overview,
                           ),
 
                           SizedBox(height: 24.h),
@@ -163,7 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Expanded(
                                 child: _buildOverviewCard(
                                   'Notes',
-                                  stats.noteStats.totalNotes.toString(),
+                                  stats.overview.totalNotes.toString(),
                                   Icons.note_rounded,
                                   const Color(0xFF9C27B0),
                                   'Total',
@@ -172,11 +173,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               SizedBox(width: 12.w),
                               Expanded(
                                 child: _buildOverviewCard(
-                                  'This Week',
-                                  stats.noteStats.notesThisWeek.toString(),
-                                  Icons.event_note_rounded,
+                                  'Recordings',
+                                  stats.overview.totalRecordings.toString(),
+                                  Icons.mic_rounded,
                                   const Color(0xFF00BCD4),
-                                  'Notes',
+                                  'Voice',
                                 ),
                               ),
                             ],
@@ -187,21 +188,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Expanded(
                                 child: _buildOverviewCard(
                                   'Focus Time',
-                                  '${(stats.productivityStats.totalFocusTime / 60).toStringAsFixed(1)}h',
+                                  '${stats.productivity.todayFocusMinutes}m',
                                   Icons.timer_rounded,
                                   const Color(0xFF3F51B5),
-                                  'Total',
+                                  'Today',
                                 ),
                               ),
                               SizedBox(width: 12.w),
                               Expanded(
                                 child: _buildOverviewCard(
-                                  'Sessions',
-                                  stats.productivityStats.focusSessionsCompleted
-                                      .toString(),
-                                  Icons.psychology_rounded,
+                                  'Achievements',
+                                  stats.overview.totalAchievements.toString(),
+                                  Icons.emoji_events_rounded,
                                   const Color(0xFFFF9800),
-                                  'Completed',
+                                  'Unlocked',
                                 ),
                               ),
                             ],
@@ -324,7 +324,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCompletionCard(double completionRate, dynamic taskStats) {
+  Widget _buildCompletionCard(
+    double completionRate,
+    DashboardOverview overview,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(24.w),
@@ -346,7 +349,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               _buildCompletionStat(
                 'Pending',
-                taskStats.pendingTasks,
+                overview.pendingTasks,
                 Colors.orange,
               ),
               Container(
@@ -386,7 +389,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               _buildCompletionStat(
                 'Overdue',
-                taskStats.overdueTasks,
+                overview.overdueTasks,
                 Colors.red,
               ),
             ],
@@ -470,7 +473,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildTaskItem(dynamic task) {
+  Widget _buildTaskItem(TaskEntity task) {
     final isUrgent =
         task.dueDate != null &&
         task.dueDate!.difference(DateTime.now()).inHours < 24;
@@ -515,18 +518,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  // Removed maxLines: 1 to support longer titles like the one in user JSON
                 ),
-                if (task.description != null) ...[
-                  SizedBox(height: 4.h),
-                  Text(
-                    task.description!,
-                    style: TextStyle(fontSize: 13.sp, color: Colors.black54),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
               ],
             ),
           ),

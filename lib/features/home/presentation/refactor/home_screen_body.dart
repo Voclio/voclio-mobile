@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../widgets/home_list_tile.dart';
+import 'package:intl/intl.dart';
+import 'package:voclio_app/features/home/presentation/widgets/home_list_tile.dart';
+import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
+import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_state.dart';
+import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -29,6 +34,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
   @override
   void initState() {
     super.initState();
+    context.read<DashboardCubit>().loadDashboardStats();
 
     _floatingController = AnimationController(
       vsync: this,
@@ -93,352 +99,320 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
 
               SizedBox(height: 20.h),
 
-              // Stats Cards - Simplified horizontal layout
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                            padding: EdgeInsets.all(16.w),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.primaryColor,
-                                  theme.primaryColor.withOpacity(0.8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.primaryColor.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.task_alt_rounded,
-                                  color: Colors.white.withOpacity(0.9),
-                                  size: 24.sp,
-                                ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  '12',
-                                  style: TextStyle(
-                                    fontSize: 28.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 2.h),
-                                Text(
-                                  'Tasks',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: Colors.white.withOpacity(0.85),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 600.ms, delay: 400.ms)
-                          .slideY(begin: 0.2),
+              // Stats Cards
+              BlocBuilder<DashboardCubit, DashboardState>(
+                builder: (context, state) {
+                  final stats =
+                      state is DashboardStatsLoaded ? state.stats : null;
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatsCard(
+                            theme,
+                            Icons.task_alt_rounded,
+                            stats?.overview.totalTasks.toString() ?? '...',
+                            'Tasks',
+                            400,
+                          ),
+                        ),
+                        SizedBox(width: 16.w),
+                        Expanded(
+                          child: _buildStatsCard(
+                            theme,
+                            Icons.note_alt_outlined,
+                            stats?.overview.totalNotes.toString() ?? '...',
+                            'Notes',
+                            500,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Container(
-                            padding: EdgeInsets.all(16.w),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.primaryColor,
-                                  theme.primaryColor.withOpacity(0.8),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.primaryColor.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.note_alt_outlined,
-                                  color: Colors.white.withOpacity(0.9),
-                                  size: 24.sp,
-                                ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  '24',
-                                  style: TextStyle(
-                                    fontSize: 28.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 2.h),
-                                Text(
-                                  'Notes',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: Colors.white.withOpacity(0.85),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                          .animate()
-                          .fadeIn(duration: 600.ms, delay: 500.ms)
-                          .slideY(begin: 0.2),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
 
               SizedBox(height: 32.h),
 
               // Daily Progress Section
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Progress',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A2E),
-                        fontSize: 20.sp,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Container(
-                      padding: EdgeInsets.all(20.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(
-                          color: theme.primaryColor.withOpacity(0.2),
-                          width: 1,
+              BlocBuilder<DashboardCubit, DashboardState>(
+                builder: (context, state) {
+                  final stats =
+                      state is DashboardStatsLoaded ? state.stats : null;
+                  final progress = stats?.overview.overallProgress ?? 0.0;
+                  final completed = stats?.overview.completedTasks ?? 0;
+                  final total = stats?.overview.totalTasks ?? 0;
+                  final pending = stats?.overview.pendingTasks ?? 0;
+                  final recordings = stats?.overview.totalRecordings ?? 0;
+
+                  return Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daily Progress',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1A1A2E),
+                            fontSize: 20.sp,
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.primaryColor.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '8 of 12 tasks completed',
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1A1A2E),
-                                ),
-                              ),
-                              Text(
-                                '67%',
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: theme.primaryColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12.h),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.r),
-                            child: LinearProgressIndicator(
-                              value: 0.67,
-                              minHeight: 8.h,
-                              backgroundColor: theme.primaryColor.withOpacity(
-                                0.1,
-                              ),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                theme.primaryColor,
-                              ),
+                        SizedBox(height: 16.h),
+                        Container(
+                          padding: EdgeInsets.all(20.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(
+                              color: theme.primaryColor.withOpacity(0.2),
+                              width: 1,
                             ),
-                          ),
-                          SizedBox(height: 16.h),
-                          Row(
-                            children: [
-                              _buildProgressStat(
-                                '4',
-                                'Remaining',
-                                Icons.schedule_rounded,
-                                Colors.orange.shade400,
-                              ),
-                              SizedBox(width: 16.w),
-                              _buildProgressStat(
-                                '2',
-                                'New Notes',
-                                Icons.note_add_rounded,
-                                theme.primaryColor,
+                            boxShadow: [
+                              BoxShadow(
+                                color: theme.primaryColor.withOpacity(0.08),
+                                blurRadius: 20,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '$completed of $total tasks completed',
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF1A1A2E),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${progress.toStringAsFixed(0)}%',
+                                    style: TextStyle(
+                                      fontSize: 15.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.primaryColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 12.h),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: LinearProgressIndicator(
+                                  value: progress / 100,
+                                  minHeight: 8.h,
+                                  backgroundColor: theme.primaryColor
+                                      .withOpacity(0.1),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    theme.primaryColor,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                              Row(
+                                children: [
+                                  _buildProgressStat(
+                                    pending.toString(),
+                                    'Remaining',
+                                    Icons.schedule_rounded,
+                                    Colors.orange.shade400,
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  _buildProgressStat(
+                                    recordings.toString(),
+                                    'Voice Notes',
+                                    Icons.mic_none_rounded,
+                                    theme.primaryColor,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 600.ms, delay: 600.ms),
+                  ).animate().fadeIn(duration: 600.ms, delay: 600.ms);
+                },
+              ),
 
               SizedBox(height: 32.h),
 
               // Upcoming Tasks Section
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Upcoming Tasks',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A2E),
-                        fontSize: 20.sp,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => widget.onTabChange?.call(1),
-                      child: Text(
-                        'View All',
-                        style: TextStyle(
-                          color: theme.primaryColor,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
+              BlocBuilder<DashboardCubit, DashboardState>(
+                builder: (context, state) {
+                  final tasks =
+                      state is DashboardStatsLoaded
+                          ? state.stats.upcomingTasks
+                          : <TaskEntity>[];
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Upcoming Tasks',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1A1A2E),
+                                fontSize: 20.sp,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => widget.onTabChange?.call(1),
+                              child: Text(
+                                'View All',
+                                style: TextStyle(
+                                  color: theme.primaryColor,
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 600.ms, delay: 700.ms),
-
-              SizedBox(height: 12.h),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  children: [
-                    _buildTaskItem(
-                          'Team Meeting',
-                          'Today at 2:00 PM',
-                          theme.primaryColor,
-                          false,
+                      ).animate().fadeIn(duration: 600.ms, delay: 700.ms),
+                      SizedBox(height: 12.h),
+                      if (tasks.isEmpty && state is DashboardStatsLoaded)
+                        Padding(
+                          padding: EdgeInsets.all(20.w),
+                          child: Text(
+                            'No upcoming tasks',
+                            style: TextStyle(color: Colors.grey.shade500),
+                          ),
                         )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 800.ms)
-                        .slideX(begin: -0.2),
-                    SizedBox(height: 12.h),
-                    _buildTaskItem(
-                          'Complete Project Proposal',
-                          'Tomorrow at 10:00 AM',
-                          Colors.orange.shade400,
-                          false,
+                      else if (state is DashboardLoading)
+                        Padding(
+                          padding: EdgeInsets.all(20.w),
+                          child: const CircularProgressIndicator(),
                         )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 900.ms)
-                        .slideX(begin: -0.2),
-                    SizedBox(height: 12.h),
-                    _buildTaskItem(
-                          'Review Design Mockups',
-                          'Dec 1 at 3:00 PM',
-                          theme.primaryColor,
-                          true,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 1000.ms)
-                        .slideX(begin: -0.2),
-                  ],
-                ),
+                      else
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: Column(
+                            children:
+                                tasks
+                                    .take(3)
+                                    .map(
+                                      (task) => Padding(
+                                        padding: EdgeInsets.only(bottom: 12.h),
+                                        child: _buildTaskItem(
+                                              task.title,
+                                              task.dueDate != null
+                                                  ? DateFormat(
+                                                    'MMM d, h:mm a',
+                                                  ).format(task.dueDate!)
+                                                  : 'No due date',
+                                              task.priority.toLowerCase() ==
+                                                      'high'
+                                                  ? Colors.red.shade400
+                                                  : theme.primaryColor,
+                                              task.status.toLowerCase() ==
+                                                  'completed',
+                                            )
+                                            .animate()
+                                            .fadeIn(duration: 600.ms)
+                                            .slideX(begin: -0.1),
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
 
               SizedBox(height: 32.h),
 
               // Recent Notes Section
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Recent Notes',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A2E),
-                        fontSize: 20.sp,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => widget.onTabChange?.call(3),
-                      child: Text(
-                        'View All',
-                        style: TextStyle(
-                          color: theme.primaryColor,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
+              BlocBuilder<DashboardCubit, DashboardState>(
+                builder: (context, state) {
+                  final notes =
+                      state is DashboardStatsLoaded
+                          ? state.stats.recentNotes
+                          : <NoteEntity>[];
+
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Recent Notes',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1A1A2E),
+                                fontSize: 20.sp,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => widget.onTabChange?.call(3),
+                              child: Text(
+                                'View All',
+                                style: TextStyle(
+                                  color: theme.primaryColor,
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 600.ms, delay: 1100.ms),
-
-              SizedBox(height: 12.h),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  children: [
-                    _buildNoteItem(
-                          'Meeting Notes',
-                          'Discussed project timeline and deliverables...',
-                          '2 hours ago',
-                          theme.primaryColor,
+                      ).animate().fadeIn(duration: 600.ms, delay: 1100.ms),
+                      SizedBox(height: 12.h),
+                      if (notes.isEmpty && state is DashboardStatsLoaded)
+                        Padding(
+                          padding: EdgeInsets.all(20.w),
+                          child: Text(
+                            'No recent notes',
+                            style: TextStyle(color: Colors.grey.shade500),
+                          ),
                         )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 1200.ms)
-                        .slideX(begin: -0.2),
-                    SizedBox(height: 12.h),
-                    _buildNoteItem(
-                          'Ideas for New Feature',
-                          'Voice-to-text integration with AI suggestions...',
-                          '5 hours ago',
-                          theme.primaryColor,
+                      else if (state is DashboardLoading)
+                        Padding(
+                          padding: EdgeInsets.all(20.w),
+                          child: const CircularProgressIndicator(),
                         )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 1300.ms)
-                        .slideX(begin: -0.2),
-                  ],
-                ),
+                      else
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: Column(
+                            children:
+                                notes
+                                    .take(2)
+                                    .map(
+                                      (note) => Padding(
+                                        padding: EdgeInsets.only(bottom: 12.h),
+                                        child: _buildNoteItem(
+                                              note.title,
+                                              note.preview,
+                                              DateFormat(
+                                                'MMM d, yyyy',
+                                              ).format(note.createdAt),
+                                              theme.primaryColor,
+                                            )
+                                            .animate()
+                                            .fadeIn(duration: 600.ms)
+                                            .slideX(begin: -0.1),
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
 
               SizedBox(height: 32.h),
@@ -483,7 +457,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                         )
                         .animate()
                         .fadeIn(duration: 600.ms, delay: 800.ms)
-                        .slideX(begin: -0.2),
+                        .slideY(begin: 0.2),
                     SizedBox(height: 12.h),
                     _buildActionCard(
                           context,
@@ -494,7 +468,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                         )
                         .animate()
                         .fadeIn(duration: 600.ms, delay: 900.ms)
-                        .slideX(begin: -0.2),
+                        .slideX(begin: 0.2),
                   ],
                 ),
               ),
@@ -505,6 +479,59 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
         ),
       ),
     );
+  }
+
+  Widget _buildStatsCard(
+    ThemeData theme,
+    IconData icon,
+    String value,
+    String label,
+    int delay,
+  ) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: theme.primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white.withOpacity(0.9), size: 24.sp),
+          SizedBox(height: 8.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 28.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: Colors.white.withOpacity(0.85),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 600.ms, delay: delay.ms).slideY(begin: 0.2);
   }
 
   Widget _buildProgressStat(
