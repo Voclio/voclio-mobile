@@ -46,8 +46,7 @@ import '../../features/reminders/presentation/cubit/reminders_cubit.dart';
 
 // Notifications
 import '../../features/notifications/domain/repositories/notification_repository.dart';
-import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
-import '../../features/notifications/domain/usecases/mark_as_read_usecase.dart';
+import '../../features/notifications/domain/usecases/notification_usecases.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
 import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
@@ -86,9 +85,9 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 // Presentation
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
-// App
 import '../app/app_cubit.dart';
 import '../api/api_client.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -96,13 +95,21 @@ Future<void> setupDependencies() async {
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
+  getIt.registerLazySingleton<FlutterSecureStorage>(
+    () => const FlutterSecureStorage(),
+  );
 
   // Core - API Client
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient());
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(storage: getIt<FlutterSecureStorage>()),
+  );
 
   // Data sources
   getIt.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(getIt<SharedPreferences>()),
+    () => AuthLocalDataSourceImpl(
+      getIt<SharedPreferences>(),
+      getIt<FlutterSecureStorage>(),
+    ),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
     () => auth_impl.AuthRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
@@ -268,10 +275,22 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(
     () => MarkAsReadUseCase(getIt<NotificationRepository>()),
   );
+  getIt.registerLazySingleton(
+    () => MarkAllAsReadUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => DeleteNotificationUseCase(getIt<NotificationRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => DeleteAllNotificationsUseCase(getIt<NotificationRepository>()),
+  );
   getIt.registerFactory<NotificationsCubit>(
     () => NotificationsCubit(
-      getNotificationsUseCase: getIt(),
-      markAsReadUseCase: getIt(),
+      getNotificationsUseCase: getIt<GetNotificationsUseCase>(),
+      markAsReadUseCase: getIt<MarkAsReadUseCase>(),
+      markAllAsReadUseCase: getIt<MarkAllAsReadUseCase>(),
+      deleteNotificationUseCase: getIt<DeleteNotificationUseCase>(),
+      deleteAllNotificationsUseCase: getIt<DeleteAllNotificationsUseCase>(),
     ),
   );
 

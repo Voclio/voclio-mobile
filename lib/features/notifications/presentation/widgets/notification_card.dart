@@ -30,6 +30,12 @@ class NotificationCard extends StatelessWidget {
   }
 
   Color _getColor() {
+    if (notification.priority.toLowerCase() == 'urgent') {
+      return Colors.red;
+    }
+    if (notification.priority.toLowerCase() == 'high') {
+      return Colors.orange;
+    }
     switch (notification.type.toLowerCase()) {
       case 'task':
         return Colors.blue;

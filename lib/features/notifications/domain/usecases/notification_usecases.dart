@@ -28,7 +28,7 @@ class MarkAsReadUseCase {
 
   MarkAsReadUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String id) async {
+  Future<Either<Failure, void>> call(int id) async {
     return await repository.markAsRead(id);
   }
 }
@@ -48,7 +48,17 @@ class DeleteNotificationUseCase {
 
   DeleteNotificationUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String id) async {
+  Future<Either<Failure, void>> call(int id) async {
     return await repository.deleteNotification(id);
+  }
+}
+
+class DeleteAllNotificationsUseCase {
+  final NotificationRepository repository;
+
+  DeleteAllNotificationsUseCase(this.repository);
+
+  Future<Either<Failure, void>> call() async {
+    return await repository.deleteAllNotifications();
   }
 }

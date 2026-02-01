@@ -136,6 +136,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(response);
     } catch (e) {
       return Left(ServerFailure());
+
     }
   }
 }

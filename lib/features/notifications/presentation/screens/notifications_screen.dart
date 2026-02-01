@@ -18,17 +18,30 @@ class NotificationsScreen extends StatelessWidget {
           actions: [
             BlocBuilder<NotificationsCubit, NotificationsState>(
               builder: (context, state) {
-                final unreadCount =
-                    context.read<NotificationsCubit>().unreadCount;
-                if (unreadCount > 0) {
-                  return TextButton(
-                    onPressed: () {
-                      // Mark all as read functionality would go here
-                    },
-                    child: const Text('Mark all read'),
-                  );
-                }
-                return const SizedBox();
+                final cubit = context.read<NotificationsCubit>();
+                final unreadCount = cubit.unreadCount;
+                final state = cubit.state;
+                final hasNotifications =
+                    state is NotificationsLoaded &&
+                    state.notifications.isNotEmpty;
+
+                return Row(
+                  children: [
+                    if (unreadCount > 0)
+                      TextButton(
+                        onPressed: () => cubit.markAllAsRead(),
+                        child: const Text('Mark all read'),
+                      ),
+                    if (hasNotifications)
+                      TextButton(
+                        onPressed: () => cubit.deleteAllNotifications(),
+                        child: const Text(
+                          'Delete all',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ],
+                );
               },
             ),
           ],
@@ -67,7 +80,9 @@ class NotificationsScreen extends StatelessWidget {
                         }
                       },
                       onDelete: () {
-                        // Delete functionality if needed
+                        context.read<NotificationsCubit>().deleteNotification(
+                          notification.id,
+                        );
                       },
                     );
                   },

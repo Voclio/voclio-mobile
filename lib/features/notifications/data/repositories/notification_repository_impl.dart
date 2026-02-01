@@ -30,7 +30,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
-  Future<Either<Failure, void>> markAsRead(String id) async {
+  Future<Either<Failure, void>> markAsRead(int id) async {
     try {
       await remoteDataSource.markAsRead(id);
       return const Right(null);
@@ -50,9 +50,19 @@ class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteNotification(String id) async {
+  Future<Either<Failure, void>> deleteNotification(int id) async {
     try {
       await remoteDataSource.deleteNotification(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteAllNotifications() async {
+    try {
+      await remoteDataSource.deleteAllNotifications();
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure());

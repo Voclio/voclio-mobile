@@ -73,6 +73,7 @@ dependencies:
   
   # Dependency Injection
   get_it: ^7.6.4
+  translator: ^1.0.4+1
 
 dev_dependencies:
   flutter_test:
