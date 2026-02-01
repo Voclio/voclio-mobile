@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/language/lang_keys.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../notifications/presentation/widgets/notification_badge.dart';
 
 class HomeListTile extends StatelessWidget {
   const HomeListTile({super.key});
@@ -81,32 +81,7 @@ class HomeListTile extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: context.colors.primary!.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.mic_rounded,
-                  color: context.colors.primary,
-                  size: 20.sp,
-                ),
-                SizedBox(width: 6.w),
-                Text(
-                  'Voclio',
-                  style: context.textStyle.copyWith(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    color: context.colors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const NotificationBadge(),
         ],
       ),
     );

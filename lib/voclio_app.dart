@@ -10,6 +10,8 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/styles/theme/app_theme.dart';
 import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:voclio_app/features/notifications/presentation/cubit/notifications_cubit.dart';
+import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 
 import 'core/common/screens/no_network_screen.dart';
 
@@ -35,8 +37,26 @@ class VoclioApp extends StatelessWidget {
                     minTextAdapt: true,
                     splitScreenMode: true,
                     builder: (context, child) {
-                      return BlocProvider<AuthBloc>(
-                        create: (context) => getIt<AuthBloc>(),
+                      return MultiBlocProvider(
+                        providers: [
+                          BlocProvider<AuthBloc>(
+                            create: (context) => getIt<AuthBloc>(),
+                          ),
+                          BlocProvider<NotificationsCubit>(
+                            create:
+                                (context) =>
+                                    getIt<NotificationsCubit>()
+                                      ..loadNotifications(),
+                          ),
+                          BlocProvider<CalendarCubit>(
+                            create:
+                                (context) =>
+                                    getIt<CalendarCubit>()..loadMonth(
+                                      DateTime.now().year,
+                                      DateTime.now().month,
+                                    ),
+                          ),
+                        ],
                         child: MaterialApp.router(
                           debugShowCheckedModeBanner: false,
                           theme: themeLight(),

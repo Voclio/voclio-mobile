@@ -2,10 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../core/app/linaer_container.dart';
 import '../widgets/home_list_tile.dart';
-import '../widgets/feature_card.dart';
-import '../widgets/stats_card.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;

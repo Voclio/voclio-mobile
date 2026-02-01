@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import '../../features/home/presentation/refactor/home_screen_body.dart';
 import '../../features/tasks/presentation/screens/tasks_screen.dart';
-import '../../features/calendar/presentation/screens/calendar_screen.dart';
+import '../../features/calendar/presentation/screens/monthly_calendar_screen.dart';
 import '../../features/notes/presentation/screens/notes_screen.dart';
 import '../../features/voice/presentation/screens/voice_recording_screen.dart';
 
@@ -41,7 +41,7 @@ class _MainLayoutState extends State<MainLayout>
     _screens = [
       HomeScreenBody(onTabChange: changeTab),
       const TasksScreen(),
-      const CalendarScreen(),
+      const MonthlyCalendarScreen(),
       const NotesScreen(),
     ];
     _fabAnimationController = AnimationController(
@@ -90,7 +90,10 @@ class _MainLayoutState extends State<MainLayout>
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
-            colors: [theme.primaryColor, theme.primaryColor.withValues(alpha: 0.8)],
+            colors: [
+              theme.primaryColor,
+              theme.primaryColor.withValues(alpha: 0.8),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

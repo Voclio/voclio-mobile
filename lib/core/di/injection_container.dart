@@ -66,6 +66,13 @@ import '../../features/dashboard/data/repositories/dashboard_repository_impl.dar
 import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart';
 import '../../features/dashboard/presentation/bloc/dashboard_cubit.dart';
 
+// Calendar
+import '../../features/calendar/domain/repositories/calendar_repository.dart';
+import '../../features/calendar/domain/usecases/calendar_usecases.dart';
+import '../../features/calendar/data/repositories/calendar_repository_impl.dart';
+import '../../features/calendar/data/datasources/calendar_remote_datasource.dart';
+import '../../features/calendar/presentation/bloc/calendar_cubit.dart';
+
 // Domain
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
@@ -343,6 +350,24 @@ Future<void> setupDependencies() async {
     () => DashboardCubit(
       getDashboardStatsUseCase: getIt(),
       getQuickStatsUseCase: getIt(),
+    ),
+  );
+
+  // Calendar
+  getIt.registerLazySingleton<CalendarRemoteDataSource>(
+    () => CalendarRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<CalendarRepository>(
+    () => CalendarRepositoryImpl(
+      remoteDataSource: getIt<CalendarRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => GetCalendarMonthUseCase(repository: getIt<CalendarRepository>()),
+  );
+  getIt.registerLazySingleton<CalendarCubit>(
+    () => CalendarCubit(
+      getCalendarMonthUseCase: getIt<GetCalendarMonthUseCase>(),
     ),
   );
 }
