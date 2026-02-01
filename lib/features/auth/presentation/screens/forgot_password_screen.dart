@@ -56,45 +56,55 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => const AuthLoadingDialog(message: 'Sending reset code...'),
+            builder:
+                (context) =>
+                    const AuthLoadingDialog(message: 'Sending reset code...'),
           );
         } else if (state is ForgotPasswordSent) {
-          Navigator.of(context).pop(); // Dismiss loading
+          // Dismiss loading if showing
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Check your email'),
-              content: const Text(
-                'We have sent a password reset code to your email.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    final email = _emailController.text.trim();
-                    context.pushRoute(
-                      '${AppRouter.otp}?email=$email&type=forgotPassword',
-                    );
-                  },
-                  child: const Text('OK'),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Check your email'),
+                  content: const Text(
+                    'We have sent a password reset code to your email.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        final email = _emailController.text.trim();
+                        context.pushRoute(
+                          '${AppRouter.otp}?email=$email&type=forgotPassword',
+                        );
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
           );
         } else if (state is AuthError) {
-          Navigator.of(context).pop(); // Dismiss loading
+          // Dismiss loading if showing
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Error'),
-              content: Text(state.message),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Error'),
+                  content: Text(state.message),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
           );
         }
       },
@@ -169,12 +179,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 keyboardType: TextInputType.emailAddress,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return context.translate(LangKeys.validEmail);
+                                    return context.translate(
+                                      LangKeys.validEmail,
+                                    );
                                   }
                                   if (!RegExp(
                                     r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                                   ).hasMatch(value)) {
-                                    return context.translate(LangKeys.validEmail);
+                                    return context.translate(
+                                      LangKeys.validEmail,
+                                    );
                                   }
                                   return null;
                                 },

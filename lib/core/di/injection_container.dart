@@ -105,7 +105,7 @@ Future<void> setupDependencies() async {
     () => AuthLocalDataSourceImpl(getIt<SharedPreferences>()),
   );
   getIt.registerLazySingleton<AuthRemoteDataSource>(
-    () => auth_impl.AuthRemoteDataSourceImpl(),
+    () => auth_impl.AuthRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
   );
 
   // Repository

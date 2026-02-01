@@ -1,4 +1,5 @@
-import 'package:dio/dio.dart';
+import 'package:voclio_app/core/api/api_client.dart';
+import 'package:voclio_app/core/api/api_endpoints.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/auth_request_model.dart';
 import '../models/auth_response_model.dart';
@@ -7,170 +8,84 @@ import '../models/otp_response_model.dart';
 import '../../domain/entities/otp_request.dart';
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final Dio _dio;
+  final ApiClient apiClient;
 
-  AuthRemoteDataSourceImpl() : _dio = Dio();
+  AuthRemoteDataSourceImpl({required this.apiClient});
 
   @override
   Future<AuthResponseModel> login(AuthRequestModel request) async {
-    try {
-      // TODO: Replace with your actual API endpoint
-      await _dio.post(
-        'https://your-api.com/auth/login',
-        data: request.toJson(),
-      );
-
-      // For now, return a mock response
-      // Replace this with actual API response parsing
-      return AuthResponseModel.fromJson({
-        'user': {
-          'id': '1',
-          'email': request.email,
-          'name': 'Test User',
-          'createdAt': DateTime.now().toIso8601String(),
-        },
-        'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refresh_token':
-            'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-      });
-    } catch (e) {
-      throw Exception('Login failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.login,
+      data: request.toJson(),
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
   Future<AuthResponseModel> register(AuthRequestModel request) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/register',
-        data: request.toJson(),
-      );
-
-      return AuthResponseModel.fromJson({
-        'user': {
-          'id': '1',
-          'email': request.email,
-          'name': request.fullName ?? 'New User',
-          'createdAt': DateTime.now().toIso8601String(),
-        },
-        'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refresh_token':
-            'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-      });
-    } catch (e) {
-      throw Exception('Registration failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.register,
+      data: request.toJson(),
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
   Future<OTPResponseModel> sendOTP(String email, OTPType type) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/send-otp',
-        data: {'email': email, 'type': type.toString().split('.').last},
-      );
-
-      return OTPResponseModel.fromJson({
-        'success': true,
-        'message': 'OTP sent successfully',
-      });
-    } catch (e) {
-      throw Exception('Send OTP failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.sendOtp,
+      data: {'email': email, 'type': type.toString().split('.').last},
+    );
+    return OTPResponseModel.fromJson(response.data);
   }
 
   @override
   Future<OTPResponseModel> verifyOTP(OTPRequestModel request) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/verify-otp',
-        data: request.toJson(),
-      );
-
-      return OTPResponseModel.fromJson({
-        'success': true,
-        'message': 'OTP verified successfully',
-      });
-    } catch (e) {
-      throw Exception('Verify OTP failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.verifyOtp,
+      data: request.toJson(),
+    );
+    return OTPResponseModel.fromJson(response.data);
   }
 
   @override
   Future<void> forgotPassword(String email) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/forgot-password',
-        data: {'email': email},
-      );
-    } catch (e) {
-      throw Exception('Forgot password failed: $e');
-    }
+    await apiClient.post(ApiEndpoints.forgotPassword, data: {'email': email});
   }
 
   @override
   Future<void> resetPassword(String token, String newPassword) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/reset-password',
-        data: {'token': token, 'new_password': newPassword},
-      );
-    } catch (e) {
-      throw Exception('Reset password failed: $e');
-    }
+    await apiClient.post(
+      ApiEndpoints.resetPassword,
+      data: {'token': token, 'new_password': newPassword},
+    );
   }
 
   @override
   Future<void> logout() async {
-    try {
-      await _dio.post('https://your-api.com/auth/logout');
-    } catch (e) {
-      throw Exception('Logout failed: $e');
-    }
+    await apiClient.post(ApiEndpoints.logout);
   }
 
   @override
   Future<AuthResponseModel> refreshToken(String refreshToken) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/refresh',
-        data: {'refresh_token': refreshToken},
-      );
-
-      return AuthResponseModel.fromJson({
-        'user': {
-          'id': '1',
-          'email': 'user@example.com',
-          'name': 'Test User',
-          'createdAt': DateTime.now().toIso8601String(),
-        },
-        'token': 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refresh_token':
-            'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-      });
-    } catch (e) {
-      throw Exception('Refresh token failed: $e');
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.refreshToken,
+      data: {'refresh_token': refreshToken},
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
   Future<AuthResponseModel> googleSignIn() async {
     try {
-      final idToken = 'YOUR_GOOGLE_ID_TOKEN';
-      await _dio.post(
-          'https://your-api.com/auth/google',
-          data: {'id_token': idToken}
+      // Assuming token is obtained here or passed logically.
+      // Requirement asks for body {"id_token": ...}
+      final String idToken = "YOUR_GOOGLE_ID_TOKEN";
+      final response = await apiClient.post(
+        ApiEndpoints.googleAuth,
+        data: {'id_token': idToken},
       );
-      return AuthResponseModel.fromJson({
-         'user': {
-          'id': '1',
-          'email': 'user@example.com',
-          'name': 'Google User',
-        },
-        'token': 'mock_google_token_${DateTime.now().millisecondsSinceEpoch}',
-        'refresh_token': 'mock_refresh_token',
-        'expires_at': DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
-      });
+      return AuthResponseModel.fromJson(response.data);
     } catch (e) {
       throw Exception('Google sign in failed: $e');
     }
@@ -179,21 +94,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<AuthResponseModel> facebookSignIn() async {
     try {
-      final accessToken = 'YOUR_FACEBOOK_ACCESS_TOKEN';
-       await _dio.post(
-          'https://your-api.com/auth/facebook',
-          data: {'access_token': accessToken}
+      final String accessToken = "YOUR_FACEBOOK_ACCESS_TOKEN";
+      final response = await apiClient.post(
+        ApiEndpoints.facebookAuth,
+        data: {'access_token': accessToken},
       );
-      return AuthResponseModel.fromJson({
-         'user': {
-          'id': '1',
-          'email': 'user@example.com',
-          'name': 'Facebook User',
-        },
-        'token': 'mock_facebook_token_${DateTime.now().millisecondsSinceEpoch}',
-         'refresh_token': 'mock_refresh_token',
-         'expires_at': DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
-      });
+      return AuthResponseModel.fromJson(response.data);
     } catch (e) {
       throw Exception('Facebook sign in failed: $e');
     }
@@ -204,36 +110,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String currentPassword,
     String newPassword,
   ) async {
-    try {
-      await _dio.post(
-        'https://your-api.com/auth/change-password',
-        data: {'current_password': currentPassword, 'new_password': newPassword},
-      );
-    } catch (e) {
-      throw Exception('Change password failed: $e');
-    }
+    await apiClient.post(
+      ApiEndpoints.changePassword,
+      data: {'current_password': currentPassword, 'new_password': newPassword},
+    );
   }
 
   @override
-  Future<AuthResponseModel> updateProfile(String name, String phoneNumber) async {
-     try {
-      await _dio.post(
-        'https://your-api.com/auth/profile',
-        data: {'name': name, 'phone_number': phoneNumber},
-      );
-      return AuthResponseModel.fromJson({
-         'user': {
-          'id': '1',
-          'email': 'user@example.com',
-          'name': name,
-          'phone_number': phoneNumber
-        },
-        'token': 'mock_token',
-         'refresh_token': 'mock_refresh_token',
-         'expires_at': DateTime.now().add(const Duration(hours: 24)).toIso8601String(),
-      });
-    } catch (e) {
-      throw Exception('Update profile failed: $e');
-    }
+  Future<AuthResponseModel> updateProfile(
+    String name,
+    String phoneNumber,
+  ) async {
+    final response = await apiClient.post(
+      ApiEndpoints.updateProfile,
+      data: {'name': name, 'phone_number': phoneNumber},
+    );
+    return AuthResponseModel.fromJson(response.data);
   }
 }

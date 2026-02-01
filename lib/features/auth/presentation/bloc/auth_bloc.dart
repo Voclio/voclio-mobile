@@ -113,7 +113,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _forgotPasswordUseCase(event.email);
       emit(ForgotPasswordSent());
     } catch (e) {
-      emit(AuthError(e.toString()));
+      // Clean up error message by removing exception wrappers
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      emit(AuthError(errorMessage));
     }
   }
 

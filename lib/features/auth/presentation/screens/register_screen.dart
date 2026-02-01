@@ -27,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
@@ -36,6 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -52,40 +54,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => const AuthLoadingDialog(message: 'Creating account...'),
+            builder:
+                (context) =>
+                    const AuthLoadingDialog(message: 'Creating account...'),
           );
         } else if (state is AuthSuccess) {
           Navigator.of(context).pop(); // Dismiss loading
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Success'),
-              content: const Text('Account created successfully!'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.goRoute(AppRouter.home);
-                  },
-                  child: const Text('OK'),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Success'),
+                  content: const Text('Account created successfully!'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.goRoute(AppRouter.home);
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
           );
         } else if (state is AuthError) {
           Navigator.of(context).pop(); // Dismiss loading
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Registration Failed'),
-              content: Text(state.message),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Registration Failed'),
+                  content: Text(state.message),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
-              ],
-            ),
           );
         }
       },
@@ -150,6 +156,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                                 ).hasMatch(value)) {
                                   return context.translate(LangKeys.validEmail);
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: isSmall ? 16.h : 20.h),
+
+                            AuthTextField(
+                              label: 'Phone Number',
+                              hint: '+1234567890',
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your phone number';
+                                }
+                                // Basic phone validation
+                                if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(
+                                  value.replaceAll(RegExp(r'[\s-]'), ''),
+                                )) {
+                                  return 'Please enter a valid phone number';
                                 }
                                 return null;
                               },
@@ -269,6 +295,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
       );
       context.read<AuthBloc>().add(RegisterEvent(request));
     }

@@ -204,10 +204,30 @@ class ApiClient {
         return TimeoutException('Connection timeout');
 
       case DioExceptionType.badResponse:
-        return ServerException(
-          error.response?.statusCode ?? 500,
-          error.response?.data['message'] ?? 'Server error occurred',
-        );
+        // Try to extract error message from various possible structures
+        String errorMessage = 'Server error occurred';
+
+        if (error.response?.data != null) {
+          final data = error.response!.data;
+
+          // Try different error message locations
+          if (data is Map) {
+            // Check for error.message pattern
+            if (data['error'] is Map && data['error']['message'] != null) {
+              errorMessage = data['error']['message'];
+            }
+            // Check for direct message field
+            else if (data['message'] != null) {
+              errorMessage = data['message'];
+            }
+            // Check for error string field
+            else if (data['error'] is String) {
+              errorMessage = data['error'];
+            }
+          }
+        }
+
+        return ServerException(error.response?.statusCode ?? 500, errorMessage);
 
       case DioExceptionType.cancel:
         return RequestCancelledException();
