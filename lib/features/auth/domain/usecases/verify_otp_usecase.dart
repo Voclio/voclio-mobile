@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:voclio_app/core/errors/failures.dart';
 import '../entities/otp_request.dart';
 import '../entities/otp_response.dart';
 import '../repositories/auth_repository.dart';
@@ -7,7 +9,7 @@ class VerifyOTPUseCase {
 
   VerifyOTPUseCase(this._repository);
 
-  Future<OTPResponse> call(OTPRequest request) async {
+  Future<Either<Failure, OTPResponse>> call(OTPRequest request) async {
     return await _repository.verifyOTP(request);
   }
 }

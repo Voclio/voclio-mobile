@@ -233,86 +233,104 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                             ),
                           );
                         } else if (visibleTasks.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "No tasks found",
-                              style: TextStyle(
-                                color: theme.colorScheme.secondary,
-                              ),
+                          return RefreshIndicator(
+                            onRefresh:
+                                () => context.read<TasksCubit>().getTasks(),
+                            child: ListView(
+                              children: [
+                                SizedBox(height: 200.h),
+                                Center(
+                                  child: Text(
+                                    "No tasks found",
+                                    style: TextStyle(
+                                      color: theme.colorScheme.secondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
 
-                        return ListView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: EdgeInsets.only(bottom: 100.h),
-                          children: [
-                            if (todayTasks.isNotEmpty) ...[
-                              _buildSectionHeader(context, "Today"),
-                              ...todayTasks.asMap().entries.map(
-                                (entry) => _buildTaskItem(context, entry.value)
-                                    .animate()
-                                    .fadeIn(
-                                      duration: 400.ms,
-                                      delay: Duration(
-                                        milliseconds: 50 * entry.key,
-                                      ),
-                                    )
-                                    .slideX(
-                                      begin: -0.2,
-                                      end: 0,
-                                      duration: 400.ms,
-                                      delay: Duration(
-                                        milliseconds: 50 * entry.key,
-                                      ),
-                                    ),
-                              ),
+                        return RefreshIndicator(
+                          onRefresh:
+                              () => context.read<TasksCubit>().getTasks(),
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: BouncingScrollPhysics(),
+                            ),
+                            padding: EdgeInsets.only(bottom: 100.h),
+                            children: [
+                              if (todayTasks.isNotEmpty) ...[
+                                _buildSectionHeader(context, "Today"),
+                                ...todayTasks.asMap().entries.map(
+                                  (entry) =>
+                                      _buildTaskItem(context, entry.value)
+                                          .animate()
+                                          .fadeIn(
+                                            duration: 400.ms,
+                                            delay: Duration(
+                                              milliseconds: 50 * entry.key,
+                                            ),
+                                          )
+                                          .slideX(
+                                            begin: -0.2,
+                                            end: 0,
+                                            duration: 400.ms,
+                                            delay: Duration(
+                                              milliseconds: 50 * entry.key,
+                                            ),
+                                          ),
+                                ),
+                              ],
+                              if (tomorrowTasks.isNotEmpty) ...[
+                                SizedBox(height: 20.h),
+                                _buildSectionHeader(context, "Tomorrow"),
+                                ...tomorrowTasks.asMap().entries.map(
+                                  (entry) =>
+                                      _buildTaskItem(context, entry.value)
+                                          .animate()
+                                          .fadeIn(
+                                            duration: 400.ms,
+                                            delay: Duration(
+                                              milliseconds: 50 * entry.key,
+                                            ),
+                                          )
+                                          .slideX(
+                                            begin: -0.2,
+                                            end: 0,
+                                            duration: 400.ms,
+                                            delay: Duration(
+                                              milliseconds: 50 * entry.key,
+                                            ),
+                                          ),
+                                ),
+                              ],
+                              if (laterTasks.isNotEmpty) ...[
+                                SizedBox(height: 20.h),
+                                _buildSectionHeader(context, "Later"),
+                                ...laterTasks.asMap().entries.map(
+                                  (entry) =>
+                                      _buildTaskItem(context, entry.value)
+                                          .animate()
+                                          .fadeIn(
+                                            duration: 400.ms,
+                                            delay: Duration(
+                                              milliseconds: 50 * entry.key,
+                                            ),
+                                          )
+                                          .slideX(
+                                            begin: -0.2,
+                                            end: 0,
+                                            duration: 400.ms,
+                                            delay: Duration(
+                                              milliseconds: 50 * entry.key,
+                                            ),
+                                          ),
+                                ),
+                              ],
                             ],
-                            if (tomorrowTasks.isNotEmpty) ...[
-                              SizedBox(height: 20.h),
-                              _buildSectionHeader(context, "Tomorrow"),
-                              ...tomorrowTasks.asMap().entries.map(
-                                (entry) => _buildTaskItem(context, entry.value)
-                                    .animate()
-                                    .fadeIn(
-                                      duration: 400.ms,
-                                      delay: Duration(
-                                        milliseconds: 50 * entry.key,
-                                      ),
-                                    )
-                                    .slideX(
-                                      begin: -0.2,
-                                      end: 0,
-                                      duration: 400.ms,
-                                      delay: Duration(
-                                        milliseconds: 50 * entry.key,
-                                      ),
-                                    ),
-                              ),
-                            ],
-                            if (laterTasks.isNotEmpty) ...[
-                              SizedBox(height: 20.h),
-                              _buildSectionHeader(context, "Later"),
-                              ...laterTasks.asMap().entries.map(
-                                (entry) => _buildTaskItem(context, entry.value)
-                                    .animate()
-                                    .fadeIn(
-                                      duration: 400.ms,
-                                      delay: Duration(
-                                        milliseconds: 50 * entry.key,
-                                      ),
-                                    )
-                                    .slideX(
-                                      begin: -0.2,
-                                      end: 0,
-                                      duration: 400.ms,
-                                      delay: Duration(
-                                        milliseconds: 50 * entry.key,
-                                      ),
-                                    ),
-                              ),
-                            ],
-                          ],
+                          ),
                         );
                       },
                     ),
@@ -402,8 +420,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
         );
       },
       onCheckChanged: (val) {
-        final updated = task.copyWith(isDone: val);
-        context.read<TasksCubit>().updateTask(updated);
+        context.read<TasksCubit>().completeTask(task.id);
       },
     );
   }

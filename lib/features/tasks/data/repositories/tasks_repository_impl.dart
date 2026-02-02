@@ -119,6 +119,16 @@ class TaskRepositoryImpl implements TaskRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, void>> completeTask(String taskId) async {
+    try {
+      await remoteDataSource.completeTask(taskId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
   // Subtasks
   @override
   Future<Either<Failure, List<SubtaskEntity>>> getSubtasks(

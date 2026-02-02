@@ -6,6 +6,7 @@ class AuthRequestModel extends AuthRequest {
     required super.password,
     super.fullName,
     super.phoneNumber,
+    super.otp,
   });
 
   factory AuthRequestModel.fromJson(Map<String, dynamic> json) {
@@ -14,6 +15,7 @@ class AuthRequestModel extends AuthRequest {
       password: json['password'] as String,
       fullName: json['name'] as String?,
       phoneNumber: json['phone_number'] as String?,
+      otp: json['otp'] as String?,
     );
   }
 
@@ -21,8 +23,12 @@ class AuthRequestModel extends AuthRequest {
     return {
       'email': email,
       'password': password,
+      'password_confirmation': password,
       if (fullName != null) 'name': fullName,
+      if (fullName != null) 'full_name': fullName,
       if (phoneNumber != null) 'phone_number': phoneNumber,
+      if (otp != null) 'otp': otp,
+      if (otp != null) 'otp_code': otp,
     };
   }
 
@@ -32,6 +38,7 @@ class AuthRequestModel extends AuthRequest {
       password: request.password,
       fullName: request.fullName,
       phoneNumber: request.phoneNumber,
+      otp: request.otp,
     );
   }
 }

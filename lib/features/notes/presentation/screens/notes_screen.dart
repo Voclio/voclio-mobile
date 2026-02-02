@@ -42,12 +42,11 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          padding: EdgeInsets.all(20.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 20.h),
-
+              SizedBox(height: 10.h),
               // 1. Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -159,147 +158,153 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
 
               // 4. Notes List/Grid
               Expanded(
-                child: BlocBuilder<NotesCubit, NotesState>(
-                  builder: (context, state) {
-                    if (state.status == NotesStatus.loading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                child: RefreshIndicator(
+                  onRefresh: () => context.read<NotesCubit>().getNotes(),
+                  child: BlocBuilder<NotesCubit, NotesState>(
+                    builder: (context, state) {
+                      if (state.status == NotesStatus.loading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                    // Filter Logic
-                    final filteredNotes =
-                        state.notes.where((note) {
-                          final matchesSearch =
-                              note.title.toLowerCase().contains(
-                                _searchQuery.toLowerCase(),
-                              ) ||
-                              note.content.toLowerCase().contains(
-                                _searchQuery.toLowerCase(),
-                              );
-                          final matchesTag =
-                              _selectedTag == null ||
-                              note.tags.contains(_selectedTag);
-                          return matchesSearch && matchesTag;
-                        }).toList();
+                      // Filter Logic
+                      final filteredNotes =
+                          state.notes.where((note) {
+                            final matchesSearch =
+                                note.title.toLowerCase().contains(
+                                  _searchQuery.toLowerCase(),
+                                ) ||
+                                note.content.toLowerCase().contains(
+                                  _searchQuery.toLowerCase(),
+                                );
+                            final matchesTag =
+                                _selectedTag == null ||
+                                note.tags.contains(_selectedTag);
+                            return matchesSearch && matchesTag;
+                          }).toList();
 
-                    if (filteredNotes.isEmpty) {
-                      return Center(
-                        child: Text(
-                          "No notes found",
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      );
-                    }
-
-                    return _isGridMode
-                        ? Builder(
-                          builder: (context) {
-                            // 1. Calculate dynamic aspect ratio
-                            // We want the card to have a fixed height (e.g., 200.h) regardless of width
-                            // Formula: Ratio = Width / DesiredHeight
-
-                            final double screenWidth =
-                                MediaQuery.of(context).size.width;
-                            // Total Horizontal Padding = 20.w (left) + 20.w (right) + 16.w (middle gap)
-                            final double totalPadding = 56.w;
-                            final double cardWidth =
-                                (screenWidth - totalPadding) / 2;
-
-                            // Adjust this value (210.h) until your content fits perfectly
-                            final double desiredCardHeight = 210.h;
-                            final double childAspectRatio =
-                                cardWidth / desiredCardHeight;
-
-                            return GridView.builder(
-                              physics: const BouncingScrollPhysics(),
-                              padding: EdgeInsets.only(bottom: 100.h),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 16.w,
-                                    mainAxisSpacing: 16.h,
-                                    // 2. Use the calculated ratio
-                                    childAspectRatio: childAspectRatio,
-                                  ),
-                              itemCount: filteredNotes.length,
-                              itemBuilder:
-                                  (context, index) => NoteCard(
-                                        note: filteredNotes[index],
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) => BlocProvider.value(
-                                                    value:
-                                                        context
-                                                            .read<NotesCubit>(),
-                                                    child: NoteDetailScreen(
-                                                      note:
-                                                          filteredNotes[index],
-                                                    ),
-                                                  ),
-                                            ),
-                                          );
-                                        },
-                                      )
-                                      .animate()
-                                      .fadeIn(
-                                        duration: 400.ms,
-                                        delay: Duration(
-                                          milliseconds: 50 * index,
-                                        ),
-                                      )
-                                      .slideY(
-                                        begin: 0.2,
-                                        end: 0,
-                                        duration: 400.ms,
-                                        delay: Duration(
-                                          milliseconds: 50 * index,
-                                        ),
-                                      ),
-                            );
-                          },
-                        )
-                        // ... existing list view code ...
-                        : ListView.separated(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: filteredNotes.length,
-                          padding: EdgeInsets.only(bottom: 100.h),
-
-                          separatorBuilder: (_, __) => SizedBox(height: 16.h),
-                          itemBuilder:
-                              (context, index) => NoteCard(
-                                    note: filteredNotes[index],
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) => BlocProvider.value(
-                                                value:
-                                                    context.read<NotesCubit>(),
-
-                                                child: NoteDetailScreen(
-                                                  note: filteredNotes[index],
-                                                ),
-                                              ),
-                                        ),
-                                      );
-                                    }, // Todo: Navigate to details
-                                  )
-                                  .animate()
-                                  .fadeIn(
-                                    duration: 400.ms,
-                                    delay: Duration(milliseconds: 50 * index),
-                                  )
-                                  .slideY(
-                                    begin: 0.2,
-                                    end: 0,
-                                    duration: 400.ms,
-                                    delay: Duration(milliseconds: 50 * index),
-                                  ),
+                      if (filteredNotes.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "No notes found",
+                            style: theme.textTheme.bodyMedium,
+                          ),
                         );
-                  },
+                      }
+
+                      return _isGridMode
+                          ? Builder(
+                            builder: (context) {
+                              // 1. Calculate dynamic aspect ratio
+                              // We want the card to have a fixed height (e.g., 200.h) regardless of width
+                              // Formula: Ratio = Width / DesiredHeight
+
+                              final double screenWidth =
+                                  MediaQuery.of(context).size.width;
+                              // Total Horizontal Padding = 20.w (left) + 20.w (right) + 16.w (middle gap)
+                              final double totalPadding = 56.w;
+                              final double cardWidth =
+                                  (screenWidth - totalPadding) / 2;
+
+                              // Adjust this value (210.h) until your content fits perfectly
+                              final double desiredCardHeight = 210.h;
+                              final double childAspectRatio =
+                                  cardWidth / desiredCardHeight;
+
+                              return GridView.builder(
+                                physics: const BouncingScrollPhysics(),
+                                padding: EdgeInsets.only(bottom: 100.h),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 16.w,
+                                      mainAxisSpacing: 16.h,
+                                      // 2. Use the calculated ratio
+                                      childAspectRatio: childAspectRatio,
+                                    ),
+                                itemCount: filteredNotes.length,
+                                itemBuilder:
+                                    (context, index) => NoteCard(
+                                          note: filteredNotes[index],
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => BlocProvider.value(
+                                                      value:
+                                                          context
+                                                              .read<
+                                                                NotesCubit
+                                                              >(),
+                                                      child: NoteDetailScreen(
+                                                        note:
+                                                            filteredNotes[index],
+                                                      ),
+                                                    ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                        .animate()
+                                        .fadeIn(
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * index,
+                                          ),
+                                        )
+                                        .slideY(
+                                          begin: 0.2,
+                                          end: 0,
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * index,
+                                          ),
+                                        ),
+                              );
+                            },
+                          )
+                          // ... existing list view code ...
+                          : ListView.separated(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: filteredNotes.length,
+                            padding: EdgeInsets.only(bottom: 100.h),
+
+                            separatorBuilder: (_, __) => SizedBox(height: 16.h),
+                            itemBuilder:
+                                (context, index) => NoteCard(
+                                      note: filteredNotes[index],
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => BlocProvider.value(
+                                                  value:
+                                                      context
+                                                          .read<NotesCubit>(),
+
+                                                  child: NoteDetailScreen(
+                                                    note: filteredNotes[index],
+                                                  ),
+                                                ),
+                                          ),
+                                        );
+                                      }, // Todo: Navigate to details
+                                    )
+                                    .animate()
+                                    .fadeIn(
+                                      duration: 400.ms,
+                                      delay: Duration(milliseconds: 50 * index),
+                                    )
+                                    .slideY(
+                                      begin: 0.2,
+                                      end: 0,
+                                      duration: 400.ms,
+                                      delay: Duration(milliseconds: 50 * index),
+                                    ),
+                          );
+                    },
+                  ),
                 ),
               ),
             ],

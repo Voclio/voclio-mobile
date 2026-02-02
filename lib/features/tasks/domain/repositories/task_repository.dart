@@ -4,13 +4,15 @@ import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import '../entities/task_extensions.dart';
 
 abstract class TaskRepository {
-  Future<void> createTask(TaskEntity task);
+  Future<Either<Failure, TaskEntity>> createTask(TaskEntity task);
 
-  Future<void> updateTask(TaskEntity task);
+  Future<Either<Failure, TaskEntity>> updateTask(TaskEntity task);
 
-  Future<void> deleteTask(String taskId);
+  Future<Either<Failure, void>> deleteTask(String taskId);
 
   Future<TaskEntity?> getTask(String taskId);
+
+  Future<Either<Failure, void>> completeTask(String taskId);
 
   Future<Either<Failure, List<TaskEntity>>> getTasks();
 

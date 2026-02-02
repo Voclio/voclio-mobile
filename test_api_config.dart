@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
 
 void main() {

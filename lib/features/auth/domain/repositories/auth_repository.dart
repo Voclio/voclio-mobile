@@ -6,16 +6,16 @@ import '../entities/otp_request.dart';
 import '../entities/otp_response.dart';
 
 abstract class AuthRepository {
-  Future<AuthResponse> login(AuthRequest request);
-  Future<AuthResponse> register(AuthRequest request);
-  Future<OTPResponse> sendOTP(String email, OTPType type);
-  Future<OTPResponse> verifyOTP(OTPRequest request);
-  Future<void> forgotPassword(String email);
-  Future<void> resetPassword(String token, String newPassword);
-  Future<void> logout();
-  Future<AuthResponse> refreshToken(String refreshToken);
-  Future<Either<Failure, String>> googleSignIn();
-  Future<Either<Failure, String>> facebookSignIn();
+  Future<Either<Failure, AuthResponse>> login(AuthRequest request);
+  Future<Either<Failure, AuthResponse>> register(AuthRequest request);
+  Future<Either<Failure, OTPResponse>> sendOTP(String email, OTPType type);
+  Future<Either<Failure, OTPResponse>> verifyOTP(OTPRequest request);
+  Future<Either<Failure, void>> forgotPassword(String email);
+  Future<Either<Failure, void>> resetPassword(String token, String newPassword);
+  Future<Either<Failure, void>> logout();
+  Future<Either<Failure, AuthResponse>> refreshToken(String refreshToken);
+  Future<Either<Failure, AuthResponse>> googleSignIn();
+  Future<Either<Failure, AuthResponse>> facebookSignIn();
   Future<Either<Failure, void>> changePassword(
     String currentPassword,
     String newPassword,

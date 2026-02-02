@@ -29,8 +29,19 @@ class OTPRequest {
   }
 }
 
-enum OTPType {
-  registration,
-  forgotPassword,
-  login,
+enum OTPType { registration, forgotPassword, resetPassword, login }
+
+extension OTPTypeExtension on OTPType {
+  String get toShortString {
+    switch (this) {
+      case OTPType.registration:
+        return 'registration';
+      case OTPType.forgotPassword:
+        return 'forgotPassword';
+      case OTPType.resetPassword:
+        return 'resetPassword';
+      case OTPType.login:
+        return 'login';
+    }
+  }
 }

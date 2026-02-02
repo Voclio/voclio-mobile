@@ -21,7 +21,8 @@ class OTPRequestModel extends OTPRequest {
     return {
       'email': email,
       'otp': otp,
-      'type': type.toString().split('.').last,
+      'otp_code': otp,
+      'type': type.toShortString,
     };
   }
 

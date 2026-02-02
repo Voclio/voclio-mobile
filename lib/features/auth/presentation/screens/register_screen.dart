@@ -15,6 +15,7 @@ import '../widgets/auth_link_button.dart';
 import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
+import '../../domain/entities/otp_request.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -50,33 +51,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthLoading) {
+        if (state is AuthLoading || state is OTPLoading) {
           showDialog(
             context: context,
             barrierDismissible: false,
             builder:
                 (context) =>
-                    const AuthLoadingDialog(message: 'Creating account...'),
+                    const AuthLoadingDialog(message: 'Processing...'),
+          );
+        } else if (state is OTPSent) {
+          Navigator.of(context).pop(); // Dismiss loading
+          
+          final request = AuthRequest(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            fullName: _nameController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
+          );
+          
+          context.pushRoute(
+            '${AppRouter.otp}?email=${_emailController.text.trim()}&type=registration',
+            extra: request,
           );
         } else if (state is AuthSuccess) {
           Navigator.of(context).pop(); // Dismiss loading
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Account created successfully!'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        context.goRoute(AppRouter.home);
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-          );
+          context.goRoute(AppRouter.home);
         } else if (state is AuthError) {
           Navigator.of(context).pop(); // Dismiss loading
           showDialog(
@@ -291,13 +290,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
-      final request = AuthRequest(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        fullName: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-      );
-      context.read<AuthBloc>().add(RegisterEvent(request));
+      context.read<AuthBloc>().add(SendOTPEvent(
+        _emailController.text.trim(),
+        OTPType.registration,
+      ));
     }
   }
 

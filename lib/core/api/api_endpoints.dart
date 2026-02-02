@@ -59,6 +59,7 @@ class ApiEndpoints {
   static const String voiceRecordings = '/voice';
   static const String uploadVoice = '/voice/upload';
   static const String transcribe = '/voice/transcribe';
+  static String completeProcess = '/voice/process-complete';
 
   static String createNoteFromVoice(String id) => '/voice/$id/create-note';
   static String createTasksFromVoice(String id) => '/voice/$id/create-tasks';

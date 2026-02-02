@@ -26,6 +26,7 @@ class NotesCubit extends Cubit<NotesState> {
   Future<void> getNotes() async {
     emit(state.copyWith(status: NotesStatus.loading));
     final result = await getAllNotesUseCase();
+    // if (isClosed) return;
     result.fold(
       (failure) => emit(
         state.copyWith(
@@ -48,9 +49,8 @@ class NotesCubit extends Cubit<NotesState> {
         ),
       ),
       (newNote) {
-        final updatedList = List<NoteEntity>.from(state.notes)
-          ..insert(0, newNote); // Add to top
-        emit(state.copyWith(status: NotesStatus.success, notes: updatedList));
+        // Refresh from server to get real ID and formatting
+        getNotes();
       },
     );
   }
@@ -65,7 +65,9 @@ class NotesCubit extends Cubit<NotesState> {
       }
 
       final result = await updateNoteUseCase(note);
-      result.fold((failure) => getNotes(), (_) {});
+      result.fold((failure) => getNotes(), (_) {
+        getNotes(); // Refresh to sync
+      });
     } catch (e) {
       getNotes(); // Revert on error
     }

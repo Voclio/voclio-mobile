@@ -14,35 +14,45 @@ class NoteModel extends NoteEntity {
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      content: json['content'] as String,
-      lastEditDate: DateTime.parse(json['lastEditDate']),
-      creationDate: DateTime.parse(json['creationDate']),
+      id: (json['note_id'] ?? json['id'] ?? '').toString(),
+      title: json['title'] ?? '',
+      content: json['content'] ?? '',
+      lastEditDate: DateTime.parse(
+        json['updated_at'] ??
+            json['lastEditDate'] ??
+            json['last_edit_date'] ??
+            DateTime.now().toIso8601String(),
+      ),
+      creationDate: DateTime.parse(
+        json['created_at'] ??
+            json['creationDate'] ??
+            json['creation_date'] ??
+            DateTime.now().toIso8601String(),
+      ),
       tags:
           (json['tags'] as List<dynamic>?)
               ?.map((e) => _parseTag(e.toString()))
               .toList() ??
           [],
-      voiceToTextDuration: json['voiceToTextDuration'] as String?,
+      voiceToTextDuration:
+          (json['voice_to_text_duration'] ?? json['voiceToTextDuration'])
+              ?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'title': title,
       'content': content,
-      'lastEditDate': lastEditDate.toIso8601String(),
-      'creationDate': creationDate.toIso8601String(),
       'tags': tags.map((e) => e.name).toList(),
-      'voiceToTextDuration': voiceToTextDuration,
+      // 'voice_to_text_duration': voiceToTextDuration, // usually server set
     };
   }
 
   static AppTag _parseTag(String t) {
+    final lowerT = t.toLowerCase();
     return AppTag.values.firstWhere(
-      (e) => e.name == t,
+      (e) => e.name.toLowerCase() == lowerT || e.label.toLowerCase() == lowerT,
       orElse: () => AppTag.personal, // Default tag
     );
   }

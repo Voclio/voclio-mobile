@@ -15,15 +15,18 @@ import '../widgets/auth_link_button.dart';
 import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/otp_request.dart';
+import '../../domain/entities/auth_request.dart';
 
 class OTPScreen extends StatefulWidget {
   final String email;
   final OTPType type;
+  final AuthRequest? registrationData;
 
   const OTPScreen({
     super.key,
     required this.email,
     required this.type,
+    this.registrationData,
   });
 
   @override
@@ -74,12 +77,28 @@ class _OTPScreenState extends State<OTPScreen> {
 
   void _onVerifyOTP() {
     if (_formKey.currentState?.validate() ?? false) {
-      final request = OTPRequest(
-        email: widget.email,
-        otp: _otpController.text.trim(),
-        type: widget.type,
-      );
-      context.read<AuthBloc>().add(VerifyOTPEvent(request));
+      final otp = _otpController.text.trim();
+
+      if (widget.type == OTPType.registration &&
+          widget.registrationData != null) {
+        // Complete registration with OTP
+        final request = AuthRequest(
+          email: widget.registrationData!.email,
+          password: widget.registrationData!.password,
+          fullName: widget.registrationData!.fullName,
+          phoneNumber: widget.registrationData!.phoneNumber,
+          otp: otp,
+        );
+        context.read<AuthBloc>().add(RegisterEvent(request));
+      } else {
+        // Standard verification (e.g. Forgot Password)
+        final request = OTPRequest(
+          email: widget.email,
+          otp: otp,
+          type: widget.type,
+        );
+        context.read<AuthBloc>().add(VerifyOTPEvent(request));
+      }
     }
   }
 
@@ -106,14 +125,17 @@ class _OTPScreenState extends State<OTPScreen> {
     
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is OTPLoading) {
+        if (state is OTPLoading || state is AuthLoading) {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => const AuthLoadingDialog(message: 'Verifying code...'),
+            builder: (context) => AuthLoadingDialog(
+              message: state is OTPLoading ? 'Verifying code...' : 'Completing registration...',
+            ),
           );
         } else if (state is OTPVerified) {
           Navigator.of(context).pop(); // Dismiss loading
+          
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -128,10 +150,28 @@ class _OTPScreenState extends State<OTPScreen> {
                         '${AppRouter.resetPassword}?email=${widget.email}&token=${state.response.sessionId ?? ""}',
                       );
                     } else {
-                       context.goRoute(AppRouter.login); // Or home
+                       context.goRoute(AppRouter.login);
                     }
                   },
                   child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        } else if (state is AuthSuccess) {
+          Navigator.of(context).pop(); // Dismiss loading
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Success'),
+              content: const Text('Account created and signed in successfully!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.goRoute(AppRouter.home);
+                  },
+                  child: const Text('Get Started'),
                 ),
               ],
             ),
@@ -146,7 +186,7 @@ class _OTPScreenState extends State<OTPScreen> {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Verification Failed'),
+              title: const Text('Action Failed'),
               content: Text(state.message),
               actions: [
                 TextButton(

@@ -15,7 +15,10 @@ class AuthResponseModel extends AuthResponse {
         json['data'] != null ? json['data'] as Map<String, dynamic> : json;
 
     // Extract user
-    final userMap = data['user'] as Map<String, dynamic>;
+    final userMap =
+        data['user'] != null
+            ? data['user'] as Map<String, dynamic>
+            : <String, dynamic>{};
 
     // Extract tokens
     final tokensMap =
@@ -24,15 +27,18 @@ class AuthResponseModel extends AuthResponse {
             : data; // Fallback if flat
 
     final accessToken =
-        (tokensMap['access_token'] ?? tokensMap['token']) as String;
+        (tokensMap['access_token'] ?? tokensMap['token'] ?? '') as String;
     final refreshToken =
-        (tokensMap['refresh_token'] ?? tokensMap['refreshToken']) as String;
+        (tokensMap['refresh_token'] ?? tokensMap['refreshToken'] ?? '')
+            as String;
 
     // Calculate expiration
     // Default to 24 hours if not provided
     final expiresIn = tokensMap['expires_in'] as int? ?? 86400;
     final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
 
+    // Handle case where userMap might be empty if API response structure is unexpected
+    // If userMap is empty, UserModel.fromJson will use the default values we just added.
     return AuthResponseModel(
       user: UserModel.fromJson(userMap),
       token: accessToken,

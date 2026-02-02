@@ -10,6 +10,7 @@ abstract class TaskRemoteDataSource {
   Future<TaskModel> updateTask(TaskModel task);
   Future<void> deleteTask(String id);
   Future<TaskModel?> getTask(String taskId);
+  Future<void> completeTask(String id);
 
   // Subtasks methods
   Future<List<SubtaskModel>> getSubtasks(String taskId);
@@ -46,7 +47,9 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskModel>> getTasks() async {
     try {
       final response = await apiClient.get(ApiEndpoints.tasks);
-      return (response.data['data'] as List)
+      // The response structure is { data: { tasks: [...] } }
+      final List<dynamic> tasksData = response.data['data']['tasks'] ?? [];
+      return tasksData
           .map((e) => TaskModel.fromJson(e))
           .toList();
     } catch (e) {
@@ -83,6 +86,15 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
     return TaskModel.fromJson(response.data['data']);
   }
 
+  @override
+  Future<void> completeTask(String id) async {
+    try {
+      await apiClient.post(ApiEndpoints.completeTask(id));
+    } catch (e) {
+      throw Exception('Failed to complete task: $e');
+    }
+  }
+
   // ========== Subtasks ==========
   @override
   Future<List<SubtaskModel>> getSubtasks(String taskId) async {
@@ -103,7 +115,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   ) async {
     try {
       final response = await apiClient.post(
-        ApiEndpoints.subtasks(taskId),
+        ApiEndpoints.taskSubtasks(taskId),
         data: {'title': title, 'order': order},
       );
       return SubtaskModel.fromJson(response.data['data']);
