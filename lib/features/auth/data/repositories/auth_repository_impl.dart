@@ -50,7 +50,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, OTPResponse>> sendOTP(String email, OTPType type) async {
+  Future<Either<Failure, OTPResponse>> sendOTP(
+    String email,
+    OTPType type,
+  ) async {
     try {
       final responseModel = await _remoteDataSource.sendOTP(email, type);
       return Right(responseModel);
@@ -87,7 +90,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> resetPassword(String token, String newPassword) async {
+  Future<Either<Failure, void>> resetPassword(
+    String token,
+    String newPassword,
+  ) async {
     try {
       await _remoteDataSource.resetPassword(token, newPassword);
       return const Right(null);
@@ -109,13 +115,15 @@ class AuthRepositoryImpl implements AuthRepository {
       await _localDataSource.clearAuthData();
       return Left(ServerFailure(e.message));
     } catch (e) {
-       await _localDataSource.clearAuthData();
+      await _localDataSource.clearAuthData();
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, AuthResponse>> refreshToken(String refreshToken) async {
+  Future<Either<Failure, AuthResponse>> refreshToken(
+    String refreshToken,
+  ) async {
     try {
       final responseModel = await _remoteDataSource.refreshToken(refreshToken);
       await _localDataSource.saveAuthData(responseModel);
@@ -180,12 +188,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-<<<<<<< HEAD
-      return Left(ServerFailure());
-
-=======
       return Left(ServerFailure(e.toString()));
->>>>>>> origin/feat/api-integration
     }
   }
 }

@@ -85,7 +85,6 @@ import 'package:voclio_app/features/calendar/data/datasources/calendar_remote_da
 import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 
 // Domain
-<<<<<<< HEAD
 import 'package:voclio_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:voclio_app/features/auth/domain/usecases/login_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/register_usecase.dart';
@@ -493,4 +492,3 @@ Future<void> setupDependencies() async {
     ),
   );
 }
-
