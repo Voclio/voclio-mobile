@@ -10,6 +10,6 @@ class GetAllNotesUseCase {
   GetAllNotesUseCase(this.repository);
 
   Future<Either<Failure, List<NoteEntity>>> call() async {
-    return await Right(List<NoteEntity>.from(mockNotes));
+    return await repository.getNotes();
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:voclio_app/features/notes/data/repositories/fake_note_repo.dart';
+import 'package:voclio_app/features/notes/data/datasources/note_remote_data_source.dart';
+import 'package:voclio_app/features/notes/data/repositories/notes_repository_impl.dart';
 import 'package:voclio_app/features/notes/domain/repositories/note_repository.dart';
 import 'package:voclio_app/features/notes/domain/usecases/add_note_use_case.dart';
 import 'package:voclio_app/features/notes/domain/usecases/delete_note_use_case.dart';
@@ -10,10 +11,13 @@ import 'package:voclio_app/features/notes/domain/usecases/get_note_use_case.dart
 import 'package:voclio_app/features/notes/domain/usecases/update_note_use_case.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/tasks/data/datasources/task_remote_data_source.dart';
-import 'package:voclio_app/features/tasks/data/repositories/fake_repo.dart';
+import 'package:voclio_app/features/tasks/data/repositories/tasks_repository_impl.dart';
 import 'package:voclio_app/features/tasks/domain/repositories/task_repository.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/create_task_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/create_subtask_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/update_subtask_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/delete_task_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/complete_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_all_tasks_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_task_use_case.dart';
@@ -198,33 +202,49 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerLazySingleton<TaskRemoteDataSource>(
-    () => TaskRemoteDataSourceImpl(getIt(), apiClient: getIt<ApiClient>()),
+    () => TaskRemoteDataSourceImpl(
+      getIt<ApiClient>().dio,
+      apiClient: getIt<ApiClient>(),
+    ),
   );
 
-  getIt.registerLazySingleton<TaskRepository>(() => FakeRepo());
+  getIt.registerLazySingleton<TaskRepository>(
+    () => TaskRepositoryImpl(remoteDataSource: getIt<TaskRemoteDataSource>()),
+  );
 
   getIt.registerLazySingleton(() => GetAllTasksUseCase(getIt()));
   getIt.registerLazySingleton(() => GetTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => CreateTaskUseCase(getIt()));
+  getIt.registerLazySingleton(() => CreateSubtaskUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateSubtaskUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteTaskUseCase(getIt()));
+  getIt.registerLazySingleton(() => CompleteTaskUseCase(getIt()));
 
-  getIt.registerFactory(
+  getIt.registerLazySingleton(
     () => TasksCubit(
       deletaTaskUseCase: getIt(),
       updateTaskUseCase: getIt(),
+      completeTaskUseCase: getIt(),
+      createSubtaskUseCase: getIt(),
+      updateSubtaskUseCase: getIt(),
       getAllTasksUseCase: getIt(),
       getTaskUseCase: getIt(),
       createTaskUseCase: getIt(),
     ),
   );
-  getIt.registerLazySingleton<NoteRepository>(() => FakeNoteRepository());
+  getIt.registerLazySingleton<NoteRemoteDataSource>(
+    () => NoteRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<NoteRepository>(
+    () => NoteRepositoryImpl(remoteDataSource: getIt<NoteRemoteDataSource>()),
+  );
   getIt.registerLazySingleton(() => GetAllNotesUseCase(getIt()));
   getIt.registerLazySingleton(() => GetNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => AddNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteNoteUseCase(getIt()));
-  getIt.registerFactory(
+  getIt.registerLazySingleton(
     () => NotesCubit(
       addNoteUseCase: getIt(),
       getAllNotesUseCase: getIt(),

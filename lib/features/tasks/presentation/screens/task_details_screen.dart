@@ -296,22 +296,11 @@ class TaskDetailScreen extends StatelessWidget {
                       contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
                       leading: InkWell(
                         onTap: () {
-                          // LOGIC: Toggle Subtask
-                          final updatedSubtasks =
-                              task.subtasks.map((s) {
-                                if (s.id == subtask.id) {
-                                  return SubTask(
-                                    id: s.id,
-                                    title: s.title,
-                                    isDone: !s.isDone,
-                                  );
-                                }
-                                return s;
-                              }).toList();
-
-                          context.read<TasksCubit>().updateTask(
-                            task.copyWith(subtasks: updatedSubtasks),
-                          );
+                          // Use dedicated toggleSubtask method
+                          context.read<TasksCubit>().toggleSubtask(
+                                task.id,
+                                subtask,
+                              );
                         },
                         child: Container(
                           width: 20.w,
@@ -519,9 +508,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () {
               // Logic to mark as complete
-              context.read<TasksCubit>().updateTask(
-                task.copyWith(isDone: !task.isDone),
-              );
+              context.read<TasksCubit>().completeTask(task.id);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -616,24 +603,8 @@ void _showAddSubtaskDialog(BuildContext context, TaskEntity currentTask) {
             onPressed: () {
               final text = controller.text.trim();
               if (text.isNotEmpty) {
-                // 1. Create new Subtask object
-                final newSubTask = SubTask(
-                  id:
-                      DateTime.now().millisecondsSinceEpoch
-                          .toString(), // Simple Unique ID
-                  title: text,
-                  isDone: false,
-                );
-
-                // 2. Create a NEW list with the added item (Immutability is key!)
-                final updatedSubtaskList = List<SubTask>.from(
-                  currentTask.subtasks,
-                )..add(newSubTask);
-
-                // 3. Update the Task via Cubit
-                cubit.updateTask(
-                  currentTask.copyWith(subtasks: updatedSubtaskList),
-                );
+                // Use the dedicated addSubtask method
+                cubit.addSubtask(currentTask.id, text);
 
                 // 4. Close dialog
                 Navigator.pop(dialogContext);

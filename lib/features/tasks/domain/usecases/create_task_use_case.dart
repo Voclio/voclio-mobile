@@ -9,11 +9,6 @@ class CreateTaskUseCase {
   CreateTaskUseCase(this.taskRepository);
 
   Future<Either<Failure, TaskEntity>> call(TaskEntity task) async {
-    try {
-      await taskRepository.createTask(task);
-      return Right(task);
-    } catch (e) {
-      return Left(ServerFailure());
-    }
+    return await taskRepository.createTask(task);
   }
 }

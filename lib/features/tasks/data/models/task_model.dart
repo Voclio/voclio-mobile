@@ -18,12 +18,16 @@ class TaskModel extends TaskEntity {
   // --- FROM JSON ---
   factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String?,
-      date: DateTime.parse(json['date']),
-      createdAt: DateTime.parse(json['createdAt']),
-      isDone: json['isDone'] ?? false,
+      id: (json['task_id'] ?? json['id'] ?? '').toString(),
+      title: json['title'] ?? '',
+      description: json['description'],
+      date: json['due_date'] != null 
+          ? DateTime.parse(json['due_date']) 
+          : (json['date'] != null ? DateTime.parse(json['date']) : DateTime.now()),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : (json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now()),
+      isDone: json['status'] == 'completed' || json['completed'] == true || json['is_done'] == true || json['isDone'] == true,
       priority: _parsePriority(json['priority']),
       tags:
           (json['tags'] as List<dynamic>?)
@@ -35,37 +39,37 @@ class TaskModel extends TaskEntity {
               ?.map((e) => SubTaskModel.fromJson(e))
               .toList() ??
           [],
-      relatedNoteId: json['relatedNoteId'] as String?,
+      relatedNoteId: (json['note_id'] ?? json['related_note_id'] ?? json['relatedNoteId'])?.toString(),
     );
   }
 
   // --- TO JSON ---
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'title': title,
       'description': description,
-      'date': date.toIso8601String(),
-      'createdAt': createdAt.toIso8601String(),
-      'isDone': isDone,
+      'due_date': date.toIso8601String(),
       'priority': priority.name,
       'tags': tags.map((e) => e.name).toList(),
-      'subtasks': subtasks.map((e) => (e as SubTaskModel).toJson()).toList(),
-      'relatedNoteId': relatedNoteId,
+      'completed': isDone,
+      'note_id': relatedNoteId,
     };
   }
 
   // Helper Methods
   static TaskPriority _parsePriority(String? p) {
+    if (p == null) return TaskPriority.medium;
+    final lowerP = p.toLowerCase();
     return TaskPriority.values.firstWhere(
-      (e) => e.name == p,
+      (e) => e.name.toLowerCase() == lowerP,
       orElse: () => TaskPriority.medium,
     );
   }
 
   static AppTag _parseTag(String t) {
+    final lowerT = t.toLowerCase();
     return AppTag.values.firstWhere(
-      (e) => e.name == t,
+      (e) => e.name.toLowerCase() == lowerT || e.label.toLowerCase() == lowerT,
       orElse: () => AppTag.personal, // Default tag
     );
   }
@@ -76,13 +80,13 @@ class SubTaskModel extends SubTask {
 
   factory SubTaskModel.fromJson(Map<String, dynamic> json) {
     return SubTaskModel(
-      id: json['id'],
-      title: json['title'],
-      isDone: json['isDone'] ?? false,
+      id: (json['subtask_id'] ?? json['id'] ?? '').toString(),
+      title: json['title'] ?? '',
+      isDone: json['status'] == 'completed' || json['completed'] == true || json['is_done'] == true || json['isDone'] == true,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'title': title, 'isDone': isDone};
+    return {'title': title, 'completed': isDone};
   }
 }

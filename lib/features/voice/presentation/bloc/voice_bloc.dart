@@ -5,6 +5,8 @@ import '../../domain/usecases/delete_voice_usecase.dart';
 import '../../domain/usecases/create_note_from_voice_usecase.dart';
 import '../../domain/usecases/create_tasks_from_voice_usecase.dart';
 import '../../domain/usecases/transcribe_voice_usecase.dart';
+import 'package:get_it/get_it.dart';
+import '../../../tasks/presentation/bloc/tasks_cubit.dart';
 import 'voice_event.dart';
 import 'voice_state.dart';
 
@@ -126,6 +128,8 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
     final result = await createTasksFromVoiceUseCase(event.id);
     result.fold((failure) => emit(VoiceError(failure.message)), (_) {
       emit(const VoiceOperationSuccess('Tasks created from voice'));
+      // Trigger tasks refresh automatically
+      GetIt.I<TasksCubit>().getTasks();
       add(LoadVoiceRecordings());
     });
   }
