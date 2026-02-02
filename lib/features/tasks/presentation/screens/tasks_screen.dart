@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
+import 'package:voclio_app/core/domain/entities/tag_entity.dart';
 
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
@@ -32,9 +33,6 @@ class _TasksDashboardView extends StatefulWidget {
 }
 
 class _TasksDashboardViewState extends State<_TasksDashboardView> {
-  // We track selection by ID. null means 'All'.
-  String? _selectedCategoryId;
-
   @override
   void initState() {
     super.initState();
@@ -65,10 +63,6 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
         final todayTasks = _filterTasksByDate(visibleTasks, 0);
         final tomorrowTasks = _filterTasksByDate(visibleTasks, 1);
         final laterTasks = _filterTasksByDate(visibleTasks, 2);
-
-        // Prepare Filter Tabs: [All, ...SeverCategories]
-        // We use a helper object to represent "All"
-        final categories = state.categories;
 
         return Scaffold(
           // 1. Use Theme Background
@@ -173,49 +167,45 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
                     SizedBox(height: 24.h),
 
-                    // Filter Chips
-                    SizedBox(
-                          height: 40.h,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
-                              // "All" Chip
-                              _buildFilterChip(
-                                context,
-                                label: 'All',
-                                isSelected: _selectedCategoryId == null,
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCategoryId = null;
-                                  });
-                                  context.read<TasksCubit>().filterByCategory(
-                                    null,
-                                  );
-                                },
-                              ),
-                              SizedBox(width: 10.w),
-                              // Dynamic Category Chips
-                              ...categories.map((cat) {
-                                return Padding(
-                                  padding: EdgeInsets.only(right: 10.w),
-                                  child: _buildFilterChip(
+                    // Tag Filter Chips (Like Notes Screen)
+                    BlocBuilder<TasksCubit, TasksState>(
+                          builder: (context, state) {
+                            return SizedBox(
+                              height: 40.h,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  // "All" Chip
+                                  _buildFilterChip(
                                     context,
-                                    label: cat.name,
-                                    isSelected: _selectedCategoryId == cat.id,
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedCategoryId = cat.id;
-                                      });
-                                      context
-                                          .read<TasksCubit>()
-                                          .filterByCategory(cat.id);
-                                    },
-                                    // You can use cat.color here if you want colorful chips
+                                    label: 'All',
+                                    isSelected: state.selectedTagName == null,
+                                    onTap:
+                                        () => context
+                                            .read<TasksCubit>()
+                                            .filterByTag(null),
                                   ),
-                                );
-                              }),
-                            ],
-                          ),
+                                  SizedBox(width: 10.w),
+                                  // Dynamic Tag Chips
+                                  ...state.availableTags.map((tag) {
+                                    return Padding(
+                                      padding: EdgeInsets.only(right: 10.w),
+                                      child: _buildFilterChip(
+                                        context,
+                                        label: tag.name,
+                                        isSelected:
+                                            state.selectedTagName == tag.name,
+                                        onTap:
+                                            () => context
+                                                .read<TasksCubit>()
+                                                .filterByTag(tag.name),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            );
+                          },
                         )
                         .animate()
                         .fadeIn(duration: 600.ms, delay: 300.ms)
@@ -276,69 +266,78 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                 if (todayTasks.isNotEmpty) ...[
                                   _buildSectionHeader(context, "Today"),
                                   ...todayTasks.asMap().entries.map(
-                                    (entry) =>
-                                        _buildTaskItem(context, entry.value)
-                                            .animate()
-                                            .fadeIn(
-                                              duration: 400.ms,
-                                              delay: Duration(
-                                                milliseconds: 50 * entry.key,
-                                              ),
-                                            )
-                                            .slideX(
-                                              begin: -0.2,
-                                              end: 0,
-                                              duration: 400.ms,
-                                              delay: Duration(
-                                                milliseconds: 50 * entry.key,
-                                              ),
-                                            ),
+                                    (entry) => _buildTaskItem(
+                                          context,
+                                          entry.value,
+                                          state.availableTags,
+                                        )
+                                        .animate()
+                                        .fadeIn(
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * entry.key,
+                                          ),
+                                        )
+                                        .slideX(
+                                          begin: -0.2,
+                                          end: 0,
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * entry.key,
+                                          ),
+                                        ),
                                   ),
                                 ],
                                 if (tomorrowTasks.isNotEmpty) ...[
                                   SizedBox(height: 20.h),
                                   _buildSectionHeader(context, "Tomorrow"),
                                   ...tomorrowTasks.asMap().entries.map(
-                                    (entry) =>
-                                        _buildTaskItem(context, entry.value)
-                                            .animate()
-                                            .fadeIn(
-                                              duration: 400.ms,
-                                              delay: Duration(
-                                                milliseconds: 50 * entry.key,
-                                              ),
-                                            )
-                                            .slideX(
-                                              begin: -0.2,
-                                              end: 0,
-                                              duration: 400.ms,
-                                              delay: Duration(
-                                                milliseconds: 50 * entry.key,
-                                              ),
-                                            ),
+                                    (entry) => _buildTaskItem(
+                                          context,
+                                          entry.value,
+                                          state.availableTags,
+                                        )
+                                        .animate()
+                                        .fadeIn(
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * entry.key,
+                                          ),
+                                        )
+                                        .slideX(
+                                          begin: -0.2,
+                                          end: 0,
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * entry.key,
+                                          ),
+                                        ),
                                   ),
                                 ],
                                 if (laterTasks.isNotEmpty) ...[
                                   SizedBox(height: 20.h),
                                   _buildSectionHeader(context, "Later"),
                                   ...laterTasks.asMap().entries.map(
-                                    (entry) =>
-                                        _buildTaskItem(context, entry.value)
-                                            .animate()
-                                            .fadeIn(
-                                              duration: 400.ms,
-                                              delay: Duration(
-                                                milliseconds: 50 * entry.key,
-                                              ),
-                                            )
-                                            .slideX(
-                                              begin: -0.2,
-                                              end: 0,
-                                              duration: 400.ms,
-                                              delay: Duration(
-                                                milliseconds: 50 * entry.key,
-                                              ),
-                                            ),
+                                    (entry) => _buildTaskItem(
+                                          context,
+                                          entry.value,
+                                          state.availableTags,
+                                        )
+                                        .animate()
+                                        .fadeIn(
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * entry.key,
+                                          ),
+                                        )
+                                        .slideX(
+                                          begin: -0.2,
+                                          end: 0,
+                                          duration: 400.ms,
+                                          delay: Duration(
+                                            milliseconds: 50 * entry.key,
+                                          ),
+                                        ),
                                   ),
                                 ],
                               ],
@@ -385,8 +384,8 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
             isDark
                 ? LinearGradient(
                   colors: [
-                    AppColors.darkCard,
-                    AppColors.darkCard.withOpacity(0.8),
+                    theme.colorScheme.secondary.withOpacity(0.1),
+                    theme.colorScheme.secondary.withOpacity(0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -417,9 +416,14 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
     );
   }
 
-  Widget _buildTaskItem(BuildContext context, TaskEntity task) {
+  Widget _buildTaskItem(
+    BuildContext context,
+    TaskEntity task,
+    List<TagEntity> availableTags,
+  ) {
     return TaskTile(
       task: task,
+      availableTags: availableTags,
       onTap: () {
         Navigator.push(
           context,

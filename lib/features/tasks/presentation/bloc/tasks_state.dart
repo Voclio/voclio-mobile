@@ -11,6 +11,7 @@ class TasksState extends Equatable {
   final String errorMessage;
   final List<TaskCategoryEntity> categories;
   final String? selectedCategoryId;
+  final String? selectedTagName;
   final List<TagEntity> availableTags;
 
   const TasksState({
@@ -19,6 +20,7 @@ class TasksState extends Equatable {
     this.errorMessage = '',
     this.categories = const [],
     this.selectedCategoryId,
+    this.selectedTagName,
     this.availableTags = const [],
   });
 
@@ -27,7 +29,8 @@ class TasksState extends Equatable {
     List<TaskEntity>? tasks,
     String? errorMessage,
     List<TaskCategoryEntity>? categories,
-    String? selectedCategoryId,
+    String? Function()? selectedCategoryId,
+    String? Function()? selectedTagName,
     List<TagEntity>? availableTags,
   }) {
     return TasksState(
@@ -35,7 +38,12 @@ class TasksState extends Equatable {
       tasks: tasks ?? this.tasks,
       errorMessage: errorMessage ?? this.errorMessage,
       categories: categories ?? this.categories,
-      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      selectedCategoryId:
+          selectedCategoryId != null
+              ? selectedCategoryId()
+              : this.selectedCategoryId,
+      selectedTagName:
+          selectedTagName != null ? selectedTagName() : this.selectedTagName,
       availableTags: availableTags ?? this.availableTags,
     );
   }
@@ -47,6 +55,7 @@ class TasksState extends Equatable {
     errorMessage,
     categories,
     selectedCategoryId,
+    selectedTagName,
     availableTags,
   ];
 }

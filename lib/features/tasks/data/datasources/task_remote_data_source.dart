@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
 import '../models/task_model.dart';
@@ -69,6 +70,9 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   }
 
   List<TaskModel> _parseTasksResponse(dynamic rawData) {
+    // Debug log to see what the server is actually returning
+    debugPrint('DEBUG: Tasks raw data: $rawData');
+
     // Try multiple possible paths for the tasks list
     List<dynamic>? tasksList;
 
@@ -76,12 +80,14 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       if (rawData['data'] != null) {
         final dataMap = rawData['data'];
         if (dataMap is Map) {
-          tasksList = dataMap['tasks'] ?? dataMap['data'];
+          tasksList = dataMap['tasks'] ?? dataMap['data'] ?? dataMap['items'];
         } else if (dataMap is List) {
           tasksList = dataMap;
         }
       } else if (rawData['tasks'] != null) {
         tasksList = rawData['tasks'];
+      } else if (rawData['items'] != null) {
+        tasksList = rawData['items'];
       }
     } else if (rawData is List) {
       tasksList = rawData;
@@ -89,7 +95,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
     tasksList ??= [];
 
-    return tasksList.map((e) => TaskModel.fromJson(e)).toList();
+    return tasksList.map((e) => TaskModel.fromRawData(e)).toList();
   }
 
   @override
@@ -98,14 +104,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       ApiEndpoints.tasks,
       data: task.toJson(),
     );
-    final rawData = response.data;
-
-    if (rawData is Map && rawData['data'] != null) {
-      return TaskModel.fromJson(Map<String, dynamic>.from(rawData['data']));
-    } else if (rawData is Map) {
-      return TaskModel.fromJson(Map<String, dynamic>.from(rawData));
-    }
-    throw Exception('Unexpected response format during addTask');
+    return TaskModel.fromRawData(response.data);
   }
 
   @override

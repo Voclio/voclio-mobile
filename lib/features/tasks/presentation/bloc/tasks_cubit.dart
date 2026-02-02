@@ -65,6 +65,12 @@ class TasksCubit extends Cubit<TasksState> {
   Future<void> getTasks() async {
     emit(state.copyWith(status: TasksStatus.loading));
 
+    // If a tag is selected, fetch all and filter client-side (or refresh filter)
+    if (state.selectedTagName != null) {
+      await filterByTag(state.selectedTagName);
+      return;
+    }
+
     // If a category is selected, fetch by category
     if (state.selectedCategoryId != null) {
       await filterByCategory(state.selectedCategoryId);
@@ -92,7 +98,12 @@ class TasksCubit extends Cubit<TasksState> {
   }
 
   Future<void> filterByCategory(String? categoryId) async {
-    emit(state.copyWith(selectedCategoryId: categoryId));
+    emit(
+      state.copyWith(
+        selectedCategoryId: () => categoryId,
+        selectedTagName: () => null,
+      ),
+    );
 
     if (categoryId == null) {
       // Fetch all tasks
@@ -126,6 +137,38 @@ class TasksCubit extends Cubit<TasksState> {
     }
   }
 
+  Future<void> filterByTag(String? tagName) async {
+    emit(
+      state.copyWith(
+        selectedTagName: () => tagName,
+        selectedCategoryId: () => null,
+      ),
+    );
+
+    emit(state.copyWith(status: TasksStatus.loading));
+    final result = await getAllTasksUseCase();
+
+    result.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: TasksStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (tasks) {
+        if (tagName == null) {
+          emit(state.copyWith(status: TasksStatus.success, tasks: tasks));
+        } else {
+          final filteredTasks =
+              tasks.where((t) => t.tags.contains(tagName)).toList();
+          emit(
+            state.copyWith(status: TasksStatus.success, tasks: filteredTasks),
+          );
+        }
+      },
+    );
+  }
+
   Future<void> addTask(TaskEntity task) async {
     // 1. Optimistic Update
     final currentTasks = state.tasks;
@@ -147,8 +190,40 @@ class TasksCubit extends Cubit<TasksState> {
         );
       },
       (newTask) {
-        // We refresh from server to get the real ID and proper formatting
-        getTasks();
+        // Find the optimistic task and replace it.
+        // We check by ID first, then by Title and Date if ID changed (server-assigned ID).
+        final int index = state.tasks.indexWhere(
+          (t) =>
+              t.id == task.id ||
+              (t.title == task.title &&
+                  t.date.year == task.date.year &&
+                  t.date.month == task.date.month &&
+                  t.date.day == task.date.day),
+        );
+
+        if (index != -1) {
+          final updatedList = List<TaskEntity>.from(state.tasks);
+
+          // CRITICAL: Merge data to prevent flickering if server returns incomplete fields.
+          // We prioritize server data but fallback to optimistic data for tags/title if server returns empty.
+          final mergedTask = newTask.copyWith(
+            tags: newTask.tags.isEmpty ? task.tags : newTask.tags,
+            title:
+                (newTask.title.isEmpty && task.title.isNotEmpty)
+                    ? task.title
+                    : newTask.title,
+            description:
+                (newTask.description == null || newTask.description!.isEmpty)
+                    ? task.description
+                    : newTask.description,
+          );
+
+          updatedList[index] = mergedTask;
+          emit(state.copyWith(tasks: updatedList, status: TasksStatus.success));
+        } else {
+          // Fallback if not found
+          getTasks();
+        }
       },
     );
   }

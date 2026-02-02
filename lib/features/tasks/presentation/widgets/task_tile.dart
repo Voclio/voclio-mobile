@@ -2,35 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
-
-class AppColors {
-  // --- Common ---
-  static const Color primary = Color(0xFF9575CD); // Light Purple
-  static const Color accent = Color(0xFF64B5F6); // Soft Blue
-
-  // --- Dark Theme ---
-  static const Color darkBackground = Color(0xFF1E1E2C);
-  static const Color darkCard = Color(0xFF2D2D44);
-  static const Color darkTextPrimary = Colors.white;
-  static const Color darkTextSecondary = Colors.white54;
-
-  // --- Light Theme ---
-  static const Color lightBackground = Color(0xFFF5F5F7); // Off-white gray
-  static const Color lightCard = Colors.white;
-  static const Color lightTextPrimary = Color(0xFF1E1E2C); // Dark Navy for text
-  static const Color lightTextSecondary = Color(0xFF8A8A8A); // Medium Grey
-}
+import 'package:voclio_app/core/domain/entities/tag_entity.dart';
 
 class TaskTile extends StatelessWidget {
   final TaskEntity task;
   final VoidCallback onTap;
   final Function(bool?) onCheckChanged;
+  final List<TagEntity> availableTags;
 
   const TaskTile({
     super.key,
     required this.task,
     required this.onTap,
     required this.onCheckChanged,
+    this.availableTags = const [],
   });
 
   @override
@@ -45,25 +30,41 @@ class TaskTile extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: AppColors.lightBackground.withOpacity(opacity),
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.black.withOpacity(0.05)),
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withOpacity(0.05),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            // 2. Checkbox (Custom Circle)
+            // 1. Checkbox (Custom Circle)
             InkWell(
               onTap: () => onCheckChanged(!task.isDone),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 width: 24.w,
                 height: 24.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: task.isDone ? AppColors.primary : Colors.black26,
+                    color:
+                        task.isDone
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.secondary.withOpacity(0.3),
                     width: 2,
                   ),
-                  color: task.isDone ? AppColors.primary : Colors.transparent,
+                  color:
+                      task.isDone
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
                 ),
                 child:
                     task.isDone
@@ -73,107 +74,107 @@ class TaskTile extends StatelessWidget {
             ),
             SizedBox(width: 12.w),
 
-            // 1. Colored Strip (based on category or priority)
+            // 2. Colored Strip (Priority)
             Container(
               width: 3.w,
-              height: 45.h,
+              height: 40.h,
               decoration: BoxDecoration(
-                color: task.priority.color, // Uses the Enum extension we made
+                color: task.priority.color.withOpacity(opacity),
                 borderRadius: BorderRadius.circular(4.r),
               ),
             ),
 
             SizedBox(width: 16.w),
 
-            // 3. Title and Time
+            // 3. Title, Time, and Tags
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.title,
-                    style: TextStyle(
-                      color: AppColors.lightTextPrimary.withOpacity(opacity),
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
+                    task.title.isEmpty ? "[No Title]" : task.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(opacity),
+                      fontWeight: FontWeight.bold,
                       decoration:
-                          task.isDone
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                      decorationColor: AppColors.lightTextPrimary,
+                          task.isDone ? TextDecoration.lineThrough : null,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
                   Row(
                     children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 12.sp,
-                        color: AppColors.lightTextSecondary,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        _formatDate(task.date),
-                        style: TextStyle(
-                          color: AppColors.lightTextSecondary.withOpacity(
-                            opacity,
-                          ),
-                          fontSize: 12.sp,
+                      Flexible(
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 14.sp,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              _formatDate(task.date),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.secondary.withOpacity(
+                                  opacity,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (task.tags.isNotEmpty) ...[
+                        SizedBox(width: 8.w),
+                        Wrap(
+                          spacing: 4.w,
+                          children:
+                              task.tags.take(2).map((tagName) {
+                                final tagColor = _getTagColor(tagName, theme);
+                                return Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 8.w,
+                                    vertical: 2.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: tagColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  child: Text(
+                                    tagName,
+                                    style: TextStyle(
+                                      color: tagColor,
+                                      fontSize: 10.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ],
                     ],
                   ),
                 ],
               ),
             ),
-
-            // 4. Tag Pill
-            if (task.tags.isNotEmpty)
-              Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      task.tags.first,
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10.w),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: task.priority.color.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      task.priority.name, // Uses Enum extension
-                      style: TextStyle(color: Colors.black, fontSize: 10.sp),
-                    ),
-                  ),
-                ],
-              ),
           ],
         ),
       ),
     );
   }
 
+  Color _getTagColor(String tagName, ThemeData theme) {
+    try {
+      final tag = availableTags.firstWhere((t) => t.name == tagName);
+      final hex = tag.color.replaceAll('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (_) {
+      return theme.colorScheme.primary;
+    }
+  }
+
   String _formatDate(DateTime date) {
-    // Simple logic for "Today", otherwise date
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final checkDate = DateTime(date.year, date.month, date.day);

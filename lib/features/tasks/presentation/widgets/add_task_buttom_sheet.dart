@@ -33,8 +33,31 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
   }
 
   void _createTask() async {
-    if (_titleController.text.trim().isEmpty) return;
+    final title = _titleController.text.trim();
+    if (title.isEmpty) return;
     if (_isLoading) return;
+
+    // Get the current tags from state to handle default selection if needed
+    final state = context.read<TasksCubit>().state;
+    final effectiveTag =
+        _selectedTagName ??
+        (state.availableTags.isNotEmpty
+            ? state.availableTags.first.name
+            : null);
+
+    final uniqueId =
+        '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(10000)}';
+    final newTask = TaskEntity(
+      id: uniqueId,
+      title: title,
+      description: _descController.text.trim(),
+      date: _selectedDate,
+      createdAt: DateTime.now(),
+      isDone: false,
+      priority: _selectedPriority,
+      tags: effectiveTag != null ? [effectiveTag] : [],
+      subtasks: const [],
+    );
 
     setState(() => _isLoading = true);
 
@@ -42,33 +65,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
     FocusManager.instance.primaryFocus?.unfocus();
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
-    final uniqueId =
-        '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(10000)}';
-    final newTask = TaskEntity(
-      id: uniqueId,
-      title: _titleController.text.trim(),
-      description: _descController.text.trim(),
-      date: _selectedDate,
-      createdAt: DateTime.now(),
-      isDone: false,
-      priority: _selectedPriority,
-      tags: _selectedTagName != null ? [_selectedTagName!] : [],
-      subtasks: const [],
-    );
 
-    // 2. Capture the Cubit reference before any async gaps
-    // final cubit = context.read<TasksCubit>();
-
-    // // 3. SAFER POP LOGIC:
-    // // We wait for the "unfocus" layout rebuilding to finish before popping.
-    // // This prevents the 'Scaffold.geometryOf' crash by ensuring the
-    // // parent Scaffold is stable before the exit animation starts.
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   if (mounted) {
-    //     cubit.addTask(newTask);
-    //     Navigator.pop(context);
-    //   }
-    // });
     context.read<TasksCubit>().addTask(newTask);
     Navigator.pop(context);
   }
@@ -306,11 +303,12 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                   SizedBox(height: 8.h),
                   BlocBuilder<TasksCubit, TasksState>(
                     builder: (context, state) {
-                      // Set default tag if none selected and tags are available
-                      if (_selectedTagName == null &&
-                          state.availableTags.isNotEmpty) {
-                        _selectedTagName = state.availableTags.first.name;
-                      }
+
+                      final effectiveSelection =
+                          _selectedTagName ??
+                          (state.availableTags.isNotEmpty
+                              ? state.availableTags.first.name
+                              : null);
 
                       return Wrap(
                         spacing: 10.w,
@@ -318,7 +316,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                         children:
                             state.availableTags.map((tagEntity) {
                               final isSelected =
-                                  _selectedTagName == tagEntity.name;
+                                  effectiveSelection == tagEntity.name;
                               final tagColor = _parseColor(
                                 tagEntity.color,
                                 context,
