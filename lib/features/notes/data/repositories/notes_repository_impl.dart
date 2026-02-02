@@ -21,6 +21,7 @@ class NoteRepositoryImpl implements NoteRepository {
         creationDate: note.creationDate,
         tags: note.tags,
         voiceToTextDuration: note.voiceToTextDuration,
+        categoryId: note.categoryId,
       );
       final result = await remoteDataSource.addNote(noteModel);
       return Right(result);
@@ -50,9 +51,9 @@ class NoteRepositoryImpl implements NoteRepository {
   }
 
   @override
-  Future<Either<Failure, List<NoteEntity>>> getNotes() async {
+  Future<Either<Failure, List<NoteEntity>>> getNotes({String? search}) async {
     try {
-      final result = await remoteDataSource.getNotes();
+      final result = await remoteDataSource.getNotes(search: search);
       return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -70,6 +71,7 @@ class NoteRepositoryImpl implements NoteRepository {
         creationDate: note.creationDate,
         tags: note.tags,
         voiceToTextDuration: note.voiceToTextDuration,
+        categoryId: note.categoryId,
       );
       await remoteDataSource.updateNote(noteModel);
       return const Right(null);

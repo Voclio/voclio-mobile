@@ -48,6 +48,7 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
       lastEditDate: DateTime.now(),
       creationDate: DateTime.now(),
       tags: _selectedTags,
+      categoryId: 1, // Default category as per API requirements
     );
 
     // 2. Capture Cubit

@@ -9,6 +9,7 @@ class NoteModel extends NoteEntity {
     required super.creationDate,
     super.tags,
     super.voiceToTextDuration,
+    super.categoryId,
   });
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +40,7 @@ class NoteModel extends NoteEntity {
       voiceToTextDuration:
           (json['voice_to_text_duration'] ?? json['voiceToTextDuration'])
               ?.toString(),
+      categoryId: json['category_id'] as int?,
     );
   }
 
@@ -46,8 +48,8 @@ class NoteModel extends NoteEntity {
     return {
       'title': title,
       'content': content,
-      'tags': tags, // Already List<String>
-      // 'voice_to_text_duration': voiceToTextDuration, // usually server set
+      if (tags.isNotEmpty) 'tags': tags,
+      if (categoryId != null) 'category_id': categoryId,
     };
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:voclio_app/core/app/app_cubit.dart';
 import 'package:voclio_app/features/notes/data/datasources/note_remote_data_source.dart';
 import 'package:voclio_app/features/notes/data/repositories/notes_repository_impl.dart';
 import 'package:voclio_app/features/notes/domain/repositories/note_repository.dart';
@@ -118,8 +119,21 @@ import 'package:voclio_app/features/auth/data/repositories/auth_repository_impl.
 // Presentation
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 
-import 'package:voclio_app/core/app/app_cubit.dart';
 import 'package:voclio_app/core/api/api_client.dart';
+
+// Feature Tags
+import 'package:voclio_app/features/tags/data/repositories/tag_repository_impl.dart'
+    as tags_repo_impl;
+import 'package:voclio_app/features/tags/domain/repositories/tag_repository.dart'
+    as tags_repo;
+import 'package:voclio_app/features/tags/domain/usecases/create_tag_usecase.dart';
+import 'package:voclio_app/features/tags/domain/usecases/delete_tag_usecase.dart';
+import 'package:voclio_app/features/tags/domain/usecases/get_tags_usecase.dart'
+    as tags_usecase;
+import 'package:voclio_app/features/tags/domain/usecases/update_tag_usecase.dart';
+import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
+import 'package:voclio_app/features/tags/data/datasources/tag_remote_datasource.dart'
+    as tags_ds;
 
 final GetIt getIt = GetIt.instance;
 
@@ -231,7 +245,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetTasksByCategoryUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
 
-  getIt.registerLazySingleton(
+  getIt.registerFactory(
     () => TasksCubit(
       deletaTaskUseCase: getIt(),
       updateTaskUseCase: getIt(),
@@ -257,7 +271,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => AddNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteNoteUseCase(getIt()));
-  getIt.registerLazySingleton(
+  getIt.registerFactory(
     () => NotesCubit(
       addNoteUseCase: getIt(),
       getAllNotesUseCase: getIt(),
@@ -276,6 +290,29 @@ Future<void> setupDependencies() async {
     () => TagRepositoryImpl(remoteDataSource: getIt<TagRemoteDataSource>()),
   );
   getIt.registerLazySingleton(() => GetTagsUseCase(getIt()));
+
+  // Feature Tags
+  getIt.registerLazySingleton<tags_ds.TagRemoteDataSource>(
+    () => tags_ds.TagRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<tags_repo.TagRepository>(
+    () => tags_repo_impl.TagRepositoryImpl(
+      remoteDataSource: getIt<tags_ds.TagRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(() => tags_usecase.GetTagsUseCase(getIt()));
+  getIt.registerLazySingleton(() => CreateTagUseCase(getIt()));
+  getIt.registerLazySingleton(() => UpdateTagUseCase(getIt()));
+  getIt.registerLazySingleton(() => DeleteTagUseCase(getIt()));
+
+  getIt.registerFactory(
+    () => TagsCubit(
+      getTagsUseCase: getIt<tags_usecase.GetTagsUseCase>(),
+      createTagUseCase: getIt(),
+      updateTagUseCase: getIt(),
+      deleteTagUseCase: getIt(),
+    ),
+  );
 
   // Settings
   getIt.registerLazySingleton<SettingsRemoteDataSource>(
@@ -476,7 +513,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(
     () => GetCalendarMonthUseCase(repository: getIt<CalendarRepository>()),
   );
-  getIt.registerLazySingleton<CalendarCubit>(
+  getIt.registerFactory<CalendarCubit>(
     () => CalendarCubit(
       getCalendarMonthUseCase: getIt<GetCalendarMonthUseCase>(),
     ),

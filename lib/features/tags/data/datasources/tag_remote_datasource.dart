@@ -19,8 +19,21 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
   Future<List<TagModel>> getTags() async {
     try {
       final response = await apiClient.get(ApiEndpoints.tags);
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => TagModel.fromJson(json)).toList();
+      final rawData = response.data;
+      List<dynamic> dataList = [];
+
+      // Structure: { "data": { "tags": [...] } }
+      if (rawData is Map && rawData['data'] is Map && rawData['data']['tags'] is List) {
+        dataList = rawData['data']['tags'];
+      } else if (rawData is Map && rawData['data'] is List) {
+        // Fallback: { "data": [...] }
+        dataList = rawData['data'];
+      } else if (rawData is List) {
+        // Fallback: [...]
+        dataList = rawData;
+      }
+
+      return dataList.map((json) => TagModel.fromJson(json)).toList();
     } catch (e) {
       throw Exception('Failed to fetch tags: $e');
     }
@@ -30,7 +43,11 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
   Future<TagModel> getTag(String id) async {
     try {
       final response = await apiClient.get(ApiEndpoints.tagById(id));
-      return TagModel.fromJson(response.data['data']);
+      final data = response.data['data'];
+      if (data is Map<String, dynamic> && data.containsKey('tag')) {
+        return TagModel.fromJson(data['tag']);
+      }
+      return TagModel.fromJson(data);
     } catch (e) {
       throw Exception('Failed to fetch tag: $e');
     }
@@ -43,7 +60,15 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
         ApiEndpoints.tags,
         data: tag.toJson(),
       );
-      return TagModel.fromJson(response.data['data']);
+      final rawData = response.data;
+      
+      // Structure: { "data": { "tag": {...} } }
+      if (rawData is Map && rawData['data'] is Map && rawData['data']['tag'] != null) {
+        return TagModel.fromJson(rawData['data']['tag']);
+      }
+      
+      final data = rawData['data'];
+      return TagModel.fromJson(data);
     } catch (e) {
       throw Exception('Failed to create tag: $e');
     }
@@ -56,7 +81,15 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
         ApiEndpoints.tagById(id),
         data: tag.toJson(),
       );
-      return TagModel.fromJson(response.data['data']);
+      final rawData = response.data;
+      
+      // Structure: { "data": { "tag": {...} } }
+      if (rawData is Map && rawData['data'] is Map && rawData['data']['tag'] != null) {
+        return TagModel.fromJson(rawData['data']['tag']);
+      }
+
+      final data = rawData['data'];
+      return TagModel.fromJson(data);
     } catch (e) {
       throw Exception('Failed to update tag: $e');
     }

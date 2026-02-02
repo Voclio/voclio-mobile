@@ -17,12 +17,12 @@ class TagModel {
 
   factory TagModel.fromJson(Map<String, dynamic> json) {
     return TagModel(
-      id: json['tag_id'] ?? json['id'] ?? '',
+      id: (json['tag_id'] ?? json['id'] ?? '').toString(),
       name: json['name'] ?? '',
       color: json['color'] ?? '#6B46C1',
       description: json['description'],
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
     );
   }
