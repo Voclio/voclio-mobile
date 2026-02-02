@@ -42,7 +42,7 @@ class TasksCubit extends Cubit<TasksState> {
 
   Future<void> init() async {
     await fetchTags();
-    await fetchCategories();
+    // await fetchCategories(); // Endpoint seems broken/missing on backend
     await getTasks();
   }
 

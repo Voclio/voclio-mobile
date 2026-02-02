@@ -94,7 +94,7 @@ class TaskModel extends TaskEntity {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
       'title': title,
-      'status': isDone ? 'completed' : 'pending',
+      'status': isDone ? 'completed' : 'todo',
       'priority': priority.name.toLowerCase(),
       'due_date': date.toIso8601String().split('.').first, // Clean ISO format
     };
@@ -196,7 +196,7 @@ class SubTaskModel extends SubTask {
   factory SubTaskModel.fromJson(Map<String, dynamic> json) {
     return SubTaskModel(
       id: (json['subtask_id'] ?? json['id'] ?? '').toString(),
-      title: json['title'] ?? '',
+      title: (json['title'] ?? '').toString(),
       isDone:
           json['status'] == 'completed' ||
           json['completed'] == true ||

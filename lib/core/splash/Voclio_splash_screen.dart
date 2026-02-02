@@ -155,10 +155,11 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     final colors = context.colors;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Container(
         width: size.width,
         height: size.height,
-        color: colors.background,
+        color: Colors.white,
         child: Stack(
           children: [
             _buildSoundWaves(size, colors),
