@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
@@ -40,10 +39,9 @@ abstract class TaskRemoteDataSource {
 }
 
 class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
-  final Dio dio;
   final ApiClient apiClient;
 
-  TaskRemoteDataSourceImpl(this.dio, {required this.apiClient});
+  TaskRemoteDataSourceImpl({required this.apiClient});
 
   @override
   Future<List<TaskModel>> getTasks() async {
@@ -109,18 +107,17 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   @override
   Future<TaskModel> updateTask(TaskModel task) async {
-    final response = await apiClient.put(
-      ApiEndpoints.taskById(task.id),
-      data: task.toJson(),
-    );
-    final rawData = response.data;
-
-    if (rawData is Map && rawData['data'] != null) {
-      return TaskModel.fromJson(Map<String, dynamic>.from(rawData['data']));
-    } else if (rawData is Map) {
-      return TaskModel.fromJson(Map<String, dynamic>.from(rawData));
+    try {
+      final response = await apiClient.put(
+        ApiEndpoints.taskById(task.id),
+        data: task.toJson(),
+      );
+      return TaskModel.fromRawData(response.data);
+    } catch (e) {
+      // If update fails, we might still want to return the original task
+      // or rethrow. For now, we rethrow for the UI to handle.
+      rethrow;
     }
-    return task; // Fallback
   }
 
   @override
@@ -130,8 +127,12 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   @override
   Future<TaskModel?> getTask(String taskId) async {
-    final response = await apiClient.get(ApiEndpoints.taskById(taskId));
-    return TaskModel.fromJson(response.data['data']);
+    try {
+      final response = await apiClient.get(ApiEndpoints.taskById(taskId));
+      return TaskModel.fromRawData(response.data);
+    } catch (e) {
+      return null;
+    }
   }
 
   @override

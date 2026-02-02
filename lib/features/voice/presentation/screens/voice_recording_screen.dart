@@ -6,7 +6,6 @@ import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p;
 import 'package:voclio_app/core/di/injection_container.dart';
 import '../bloc/voice_bloc.dart';
@@ -40,12 +39,11 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
   String? recordingId;
   final TextEditingController _transcriptController = TextEditingController();
   late AnimationController _pulseController;
-  late final AudioRecorder _audioRecorder;
+  AudioRecorder? _audioRecorder;
 
   @override
   void initState() {
     super.initState();
-    _audioRecorder = AudioRecorder();
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -54,7 +52,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
 
   @override
   void dispose() {
-    _audioRecorder.dispose();
+    _audioRecorder?.dispose();
     _pulseController.dispose();
     _transcriptController.dispose();
     super.dispose();
@@ -62,17 +60,11 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
 
   Future<void> _startRecording() async {
     try {
-      final status = await Permission.microphone.request();
-      if (status != PermissionStatus.granted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Microphone permission not granted')),
-          );
-        }
-        return;
-      }
+      // Initialize recorder on demand
+      _audioRecorder ??= AudioRecorder();
 
-      if (await _audioRecorder.hasPermission()) {
+      // Check and request permission using the recorder's own method
+      if (await _audioRecorder!.hasPermission()) {
         final Directory appDocumentsDir =
             await getApplicationDocumentsDirectory();
         final String filePath = p.join(
@@ -80,7 +72,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
           'recording_${DateTime.now().millisecondsSinceEpoch}.m4a',
         );
 
-        await _audioRecorder.start(
+        await _audioRecorder!.start(
           const RecordConfig(
             encoder: AudioEncoder.aacLc,
             numChannels: 1,
@@ -113,7 +105,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
 
   Future<void> _stopRecording() async {
     try {
-      if (!await _audioRecorder.isRecording()) {
+      if (_audioRecorder == null || !await _audioRecorder!.isRecording()) {
         setState(() {
           isRecording = false;
           isListening = false;
@@ -121,7 +113,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
         return;
       }
 
-      final path = await _audioRecorder.stop();
+      final path = await _audioRecorder!.stop();
       setState(() {
         isRecording = false;
         isListening = false;

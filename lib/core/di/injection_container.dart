@@ -213,10 +213,7 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerLazySingleton<TaskRemoteDataSource>(
-    () => TaskRemoteDataSourceImpl(
-      getIt<ApiClient>().dio,
-      apiClient: getIt<ApiClient>(),
-    ),
+    () => TaskRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
   );
 
   getIt.registerLazySingleton<TaskRepository>(
