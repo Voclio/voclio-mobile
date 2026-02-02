@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:voclio_app/core/enums/enums.dart';
 
 class NoteEntity extends Equatable {
   final String id;
@@ -7,7 +6,7 @@ class NoteEntity extends Equatable {
   final String content; // The actual note body
   final DateTime lastEditDate;
   final DateTime creationDate;
-  final List<AppTag> tags;
+  final List<String> tags;
   final String? voiceToTextDuration; // e.g. "02:15"
 
   const NoteEntity({
@@ -26,7 +25,7 @@ class NoteEntity extends Equatable {
     String? content,
     DateTime? lastEditDate,
     DateTime? creationDate,
-    List<AppTag>? tags,
+    List<String>? tags,
     String? voiceToTextDuration,
   }) {
     return NoteEntity(

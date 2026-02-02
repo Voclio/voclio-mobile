@@ -25,7 +25,7 @@ class NoteRepositoryImpl implements NoteRepository {
       final result = await remoteDataSource.addNote(noteModel);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -35,7 +35,7 @@ class NoteRepositoryImpl implements NoteRepository {
       await remoteDataSource.deleteNote(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -45,7 +45,7 @@ class NoteRepositoryImpl implements NoteRepository {
       final result = await remoteDataSource.getNote(id);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -55,7 +55,7 @@ class NoteRepositoryImpl implements NoteRepository {
       final result = await remoteDataSource.getNotes();
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -74,7 +74,7 @@ class NoteRepositoryImpl implements NoteRepository {
       await remoteDataSource.updateNote(noteModel);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

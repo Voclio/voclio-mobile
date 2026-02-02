@@ -31,7 +31,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final result = await remoteDataSource.addTask(taskModel);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -56,7 +56,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final result = await remoteDataSource.updateTask(taskModel);
       return Right(result);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -66,7 +66,7 @@ class TaskRepositoryImpl implements TaskRepository {
       await remoteDataSource.deleteTask(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -93,7 +93,36 @@ class TaskRepositoryImpl implements TaskRepository {
               .toList();
       return Right(taskEntities);
     } catch (e) {
-      return Left(ServerFailure()); // Defined in core/error/failures.dart
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<TaskEntity>>> getTasksByCategory(
+    String categoryId,
+  ) async {
+    try {
+      final remoteTasks = await remoteDataSource.getTasksByCategory(categoryId);
+      final taskEntities =
+          remoteTasks
+              .map(
+                (taskModel) => TaskEntity(
+                  id: taskModel.id,
+                  title: taskModel.title,
+                  date: taskModel.date,
+                  createdAt: taskModel.createdAt,
+                  description: taskModel.description,
+                  isDone: taskModel.isDone,
+                  priority: taskModel.priority,
+                  subtasks: taskModel.subtasks,
+                  tags: taskModel.tags,
+                  relatedNoteId: taskModel.relatedNoteId,
+                ),
+              )
+              .toList();
+      return Right(taskEntities);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -125,7 +154,7 @@ class TaskRepositoryImpl implements TaskRepository {
       await remoteDataSource.completeTask(taskId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -138,7 +167,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final subtasks = await remoteDataSource.getSubtasks(taskId);
       return Right(subtasks.map((model) => model.toEntity()).toList());
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -156,7 +185,7 @@ class TaskRepositoryImpl implements TaskRepository {
       );
       return Right(subtask.toEntity());
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -170,7 +199,7 @@ class TaskRepositoryImpl implements TaskRepository {
       await remoteDataSource.updateSubtask(subtaskId, title, completed);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -180,7 +209,7 @@ class TaskRepositoryImpl implements TaskRepository {
       await remoteDataSource.deleteSubtask(subtaskId);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -191,7 +220,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final categories = await remoteDataSource.getCategories();
       return Right(categories.map((model) => model.toEntity()).toList());
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -205,7 +234,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final category = await remoteDataSource.createCategory(name, color, icon);
       return Right(category.toEntity());
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -220,7 +249,7 @@ class TaskRepositoryImpl implements TaskRepository {
       await remoteDataSource.updateCategory(id, name, color, icon);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -230,7 +259,7 @@ class TaskRepositoryImpl implements TaskRepository {
       await remoteDataSource.deleteCategory(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -241,7 +270,7 @@ class TaskRepositoryImpl implements TaskRepository {
       final stats = await remoteDataSource.getTaskStatistics();
       return Right(stats.toEntity());
     } catch (e) {
-      return Left(ServerFailure());
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

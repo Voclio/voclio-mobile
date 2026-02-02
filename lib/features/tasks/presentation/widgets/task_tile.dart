@@ -35,6 +35,7 @@ class TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     // Opacity for completed tasks
     final double opacity = task.isDone ? 0.5 : 1.0;
 
@@ -140,8 +141,12 @@ class TaskTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Text(
-                      task.tags.first.label, // Uses Enum extension
-                      style: TextStyle(color: Colors.black, fontSize: 10.sp),
+                      task.tags.first,
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   SizedBox(height: 10.w),

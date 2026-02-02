@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:voclio_app/core/enums/enums.dart'; // Adjust path
 import '../../domain/entities/note_entity.dart'; // Adjust path
 
 class NoteCard extends StatelessWidget {
@@ -120,20 +119,20 @@ class NoteCard extends StatelessWidget {
     );
   }
 
-  Widget _buildMiniTag(BuildContext context, AppTag tag) {
+  Widget _buildMiniTag(BuildContext context, String tagName) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: tag.color.withOpacity(isDark ? 0.2 : 0.5), // Use enum color
+        color: theme.colorScheme.primary.withOpacity(isDark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Text(
-        tag.label,
+        tagName,
         style: TextStyle(
-          color: isDark ? tag.color : Colors.black87,
+          color: theme.colorScheme.primary,
           fontSize: 10.sp,
           fontWeight: FontWeight.w500,
         ),

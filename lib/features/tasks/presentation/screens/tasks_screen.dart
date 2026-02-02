@@ -17,8 +17,8 @@ class TasksScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => GetIt.I<TasksCubit>()..getTasks(),
+    return BlocProvider.value(
+      value: GetIt.I<TasksCubit>(),
       child: const _TasksDashboardView(),
     );
   }
@@ -32,42 +32,43 @@ class _TasksDashboardView extends StatefulWidget {
 }
 
 class _TasksDashboardViewState extends State<_TasksDashboardView> {
-  int _selectedTagIndex = 0;
-  final List<String> _filterTags = [
-    'All',
-    'Study',
-    'Work',
-    'Health',
-    'Personal',
-  ];
+  // We track selection by ID. null means 'All'.
+  String? _selectedCategoryId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize data when screen mounts
+    context.read<TasksCubit>().init();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return BlocBuilder<TasksCubit, TasksState>(
       builder: (context, state) {
         // --- CALCULATIONS ---
-        final totalTasks = state.tasks.length;
+        final totalTasks =
+            state
+                .tasks
+                .length; // This is now the filtered count if a filter is active
         final completedTasks = state.tasks.where((t) => t.isDone).length;
         final double progressValue =
             totalTasks == 0 ? 0 : completedTasks / totalTasks;
         final int progressPercent = (progressValue * 100).toInt();
 
         // --- FILTERING ---
-        List<TaskEntity> visibleTasks = state.tasks;
-        if (_selectedTagIndex != 0) {
-          final selectedTagLabel = _filterTags[_selectedTagIndex];
-          visibleTasks =
-              visibleTasks.where((task) {
-                return task.tags.any((tag) => tag.label == selectedTagLabel);
-              }).toList();
-        }
+        // Tasks are already filtered by the Cubit/Server
+        final visibleTasks = state.tasks;
 
         final todayTasks = _filterTasksByDate(visibleTasks, 0);
         final tomorrowTasks = _filterTasksByDate(visibleTasks, 1);
         final laterTasks = _filterTasksByDate(visibleTasks, 2);
+
+        // Prepare Filter Tabs: [All, ...SeverCategories]
+        // We use a helper object to represent "All"
+        final categories = state.categories;
 
         return Scaffold(
           // 1. Use Theme Background
@@ -142,213 +143,212 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
             ),
           ),
 
-          body: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10.h), // Reduced top spacing slightly
-                  // Progress Card
-                  _buildProgressCard(context, progressValue, progressPercent)
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 200.ms)
-                      .slideY(begin: 0.2, end: 0),
+          body: BlocListener<TasksCubit, TasksState>(
+            listenWhen:
+                (previous, current) => previous.status != current.status,
+            listener: (context, state) {
+              if (state.status == TasksStatus.failure) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.errorMessage),
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
+              }
+            },
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10.h), // Reduced top spacing slightly
+                    // Progress Card
+                    // Only show progress card if viewing "All" (optional decision)
+                    // or show progress for the current filter
+                    _buildProgressCard(context, progressValue, progressPercent)
+                        .animate()
+                        .fadeIn(duration: 600.ms, delay: 200.ms)
+                        .slideY(begin: 0.2, end: 0),
 
-                  SizedBox(height: 24.h),
+                    SizedBox(height: 24.h),
 
-                  // Filter Chips
-                  SizedBox(
-                        height: 40.h,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _filterTags.length,
-                          separatorBuilder: (_, __) => SizedBox(width: 10.w),
-                          itemBuilder: (context, index) {
-                            final isSelected = _selectedTagIndex == index;
-                            return GestureDetector(
-                              onTap:
-                                  () =>
-                                      setState(() => _selectedTagIndex = index),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 20.w,
-                                  vertical: 8.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      isSelected
-                                          ? theme.colorScheme.primary
-                                          : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(20.r),
-                                  border: Border.all(
-                                    color:
-                                        isSelected
-                                            ? theme.colorScheme.primary
-                                            : (isDark
-                                                ? Colors.white24
-                                                : Colors.black12),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    _filterTags[index],
-                                    style: TextStyle(
-                                      color:
-                                          isSelected
-                                              ? Colors.white
-                                              : theme.colorScheme.onSurface,
-                                      fontSize: 14.sp,
-                                      fontWeight:
-                                          isSelected
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 300.ms)
-                      .slideX(begin: -0.2, end: 0),
-
-                  SizedBox(height: 24.h),
-
-                  // Top Loading Indicator
-                  if (state.status == TasksStatus.loading)
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 12.h),
-                      child:
-                          LinearProgressIndicator(
-                            minHeight: 2.h,
-                            backgroundColor: theme.colorScheme.primary
-                                .withOpacity(0.1),
-                            color: theme.colorScheme.primary,
-                          ).animate().fadeIn(),
-                    ),
-
-                  // Task List
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        if (state.status == TasksStatus.loading) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        } else if (state.status == TasksStatus.failure) {
-                          return Center(
-                            child: Text(
-                              state.errorMessage,
-                              style: TextStyle(color: theme.colorScheme.error),
-                            ),
-                          );
-                        } else if (visibleTasks.isEmpty) {
-                          return RefreshIndicator(
-                            onRefresh:
-                                () => context.read<TasksCubit>().getTasks(),
-                            child: ListView(
-                              children: [
-                                SizedBox(height: 200.h),
-                                Center(
-                                  child: Text(
-                                    "No tasks found",
-                                    style: TextStyle(
-                                      color: theme.colorScheme.secondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return RefreshIndicator(
-                          onRefresh:
-                              () => context.read<TasksCubit>().getTasks(),
+                    // Filter Chips
+                    SizedBox(
+                          height: 40.h,
                           child: ListView(
-                            physics: const AlwaysScrollableScrollPhysics(
-                              parent: BouncingScrollPhysics(),
-                            ),
-                            padding: EdgeInsets.only(bottom: 100.h),
+                            scrollDirection: Axis.horizontal,
                             children: [
-                              if (todayTasks.isNotEmpty) ...[
-                                _buildSectionHeader(context, "Today"),
-                                ...todayTasks.asMap().entries.map(
-                                  (entry) =>
-                                      _buildTaskItem(context, entry.value)
-                                          .animate()
-                                          .fadeIn(
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * entry.key,
-                                            ),
-                                          )
-                                          .slideX(
-                                            begin: -0.2,
-                                            end: 0,
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * entry.key,
-                                            ),
-                                          ),
-                                ),
-                              ],
-                              if (tomorrowTasks.isNotEmpty) ...[
-                                SizedBox(height: 20.h),
-                                _buildSectionHeader(context, "Tomorrow"),
-                                ...tomorrowTasks.asMap().entries.map(
-                                  (entry) =>
-                                      _buildTaskItem(context, entry.value)
-                                          .animate()
-                                          .fadeIn(
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * entry.key,
-                                            ),
-                                          )
-                                          .slideX(
-                                            begin: -0.2,
-                                            end: 0,
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * entry.key,
-                                            ),
-                                          ),
-                                ),
-                              ],
-                              if (laterTasks.isNotEmpty) ...[
-                                SizedBox(height: 20.h),
-                                _buildSectionHeader(context, "Later"),
-                                ...laterTasks.asMap().entries.map(
-                                  (entry) =>
-                                      _buildTaskItem(context, entry.value)
-                                          .animate()
-                                          .fadeIn(
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * entry.key,
-                                            ),
-                                          )
-                                          .slideX(
-                                            begin: -0.2,
-                                            end: 0,
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * entry.key,
-                                            ),
-                                          ),
-                                ),
-                              ],
+                              // "All" Chip
+                              _buildFilterChip(
+                                context,
+                                label: 'All',
+                                isSelected: _selectedCategoryId == null,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCategoryId = null;
+                                  });
+                                  context.read<TasksCubit>().filterByCategory(
+                                    null,
+                                  );
+                                },
+                              ),
+                              SizedBox(width: 10.w),
+                              // Dynamic Category Chips
+                              ...categories.map((cat) {
+                                return Padding(
+                                  padding: EdgeInsets.only(right: 10.w),
+                                  child: _buildFilterChip(
+                                    context,
+                                    label: cat.name,
+                                    isSelected: _selectedCategoryId == cat.id,
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCategoryId = cat.id;
+                                      });
+                                      context
+                                          .read<TasksCubit>()
+                                          .filterByCategory(cat.id);
+                                    },
+                                    // You can use cat.color here if you want colorful chips
+                                  ),
+                                );
+                              }),
                             ],
                           ),
-                        );
-                      },
+                        )
+                        .animate()
+                        .fadeIn(duration: 600.ms, delay: 300.ms)
+                        .slideX(begin: -0.2, end: 0),
+
+                    SizedBox(height: 24.h),
+
+                    // Top Loading Indicator
+                    if (state.status == TasksStatus.loading)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child:
+                            LinearProgressIndicator(
+                              minHeight: 2.h,
+                              backgroundColor: theme.colorScheme.primary
+                                  .withOpacity(0.1),
+                              color: theme.colorScheme.primary,
+                            ).animate().fadeIn(),
+                      ),
+
+                    // Task List
+                    Expanded(
+                      child: Builder(
+                        builder: (context) {
+                          if (state.status == TasksStatus.loading &&
+                              state.tasks.isEmpty) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (visibleTasks.isEmpty) {
+                            return RefreshIndicator(
+                              onRefresh:
+                                  () => context.read<TasksCubit>().init(),
+                              child: ListView(
+                                children: [
+                                  SizedBox(height: 200.h),
+                                  Center(
+                                    child: Text(
+                                      "No tasks found",
+                                      style: TextStyle(
+                                        color: theme.colorScheme.secondary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return RefreshIndicator(
+                            onRefresh: () => context.read<TasksCubit>().init(),
+                            child: ListView(
+                              physics: const AlwaysScrollableScrollPhysics(
+                                parent: BouncingScrollPhysics(),
+                              ),
+                              padding: EdgeInsets.only(bottom: 100.h),
+                              children: [
+                                if (todayTasks.isNotEmpty) ...[
+                                  _buildSectionHeader(context, "Today"),
+                                  ...todayTasks.asMap().entries.map(
+                                    (entry) =>
+                                        _buildTaskItem(context, entry.value)
+                                            .animate()
+                                            .fadeIn(
+                                              duration: 400.ms,
+                                              delay: Duration(
+                                                milliseconds: 50 * entry.key,
+                                              ),
+                                            )
+                                            .slideX(
+                                              begin: -0.2,
+                                              end: 0,
+                                              duration: 400.ms,
+                                              delay: Duration(
+                                                milliseconds: 50 * entry.key,
+                                              ),
+                                            ),
+                                  ),
+                                ],
+                                if (tomorrowTasks.isNotEmpty) ...[
+                                  SizedBox(height: 20.h),
+                                  _buildSectionHeader(context, "Tomorrow"),
+                                  ...tomorrowTasks.asMap().entries.map(
+                                    (entry) =>
+                                        _buildTaskItem(context, entry.value)
+                                            .animate()
+                                            .fadeIn(
+                                              duration: 400.ms,
+                                              delay: Duration(
+                                                milliseconds: 50 * entry.key,
+                                              ),
+                                            )
+                                            .slideX(
+                                              begin: -0.2,
+                                              end: 0,
+                                              duration: 400.ms,
+                                              delay: Duration(
+                                                milliseconds: 50 * entry.key,
+                                              ),
+                                            ),
+                                  ),
+                                ],
+                                if (laterTasks.isNotEmpty) ...[
+                                  SizedBox(height: 20.h),
+                                  _buildSectionHeader(context, "Later"),
+                                  ...laterTasks.asMap().entries.map(
+                                    (entry) =>
+                                        _buildTaskItem(context, entry.value)
+                                            .animate()
+                                            .fadeIn(
+                                              duration: 400.ms,
+                                              delay: Duration(
+                                                milliseconds: 50 * entry.key,
+                                              ),
+                                            )
+                                            .slideX(
+                                              begin: -0.2,
+                                              end: 0,
+                                              duration: 400.ms,
+                                              delay: Duration(
+                                                milliseconds: 50 * entry.key,
+                                              ),
+                                            ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -433,7 +433,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
         );
       },
       onCheckChanged: (val) {
-        context.read<TasksCubit>().completeTask(task.id);
+        context.read<TasksCubit>().toggleTaskStatus(task);
       },
     );
   }
@@ -465,5 +465,42 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
       if (type == 1) return tDate.isAtSameMomentAs(tomorrow);
       return tDate.isAfter(tomorrow);
     }).toList();
+  }
+
+  Widget _buildFilterChip(
+    BuildContext context, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(
+            color:
+                isSelected
+                    ? theme.colorScheme.primary
+                    : (isDark ? Colors.white24 : Colors.black12),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+              fontSize: 14.sp,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

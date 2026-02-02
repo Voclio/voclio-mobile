@@ -15,6 +15,9 @@ abstract class TaskRepository {
   Future<Either<Failure, void>> completeTask(String taskId);
 
   Future<Either<Failure, List<TaskEntity>>> getTasks();
+  Future<Either<Failure, List<TaskEntity>>> getTasksByCategory(
+    String categoryId,
+  );
 
   // Subtasks
   Future<Either<Failure, List<SubtaskEntity>>> getSubtasks(String taskId);

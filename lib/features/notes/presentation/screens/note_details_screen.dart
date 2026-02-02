@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:voclio_app/core/enums/enums.dart'; // Adjust path
-import 'package:voclio_app/features/notes/presentation/widgets/tag_selection_sheet.dart';
-import '../../domain/entities/note_entity.dart'; // Adjust path
-import '../bloc/notes_cubit.dart';
+import 'package:voclio_app/features/notes/domain/entities/note_entity.dart';
+import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
+import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
+import '../widgets/tag_selection_sheet.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final NoteEntity? note; // Null implies "Create New Note"
@@ -18,7 +18,7 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
-  late List<AppTag> _selectedTags;
+  late List<String> _selectedTags;
   late NotesCubit cubit;
 
   bool _isModified = false;
@@ -219,61 +219,63 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     // ... inside Wrap ...
 
                     // Add Tag Button
-                    GestureDetector(
-                      onTap: () async {
-                        // 1. Show Bottom Sheet and wait for result
-                        final List<AppTag>? result = await showModalBottomSheet(
-                          context: context,
-                          isScrollControlled:
-                              true, // Allows sheet to be taller if needed
-                          backgroundColor:
-                              Colors
-                                  .transparent, // Important for rounded corners
-                          builder:
-                              (context) => TagSelectionSheet(
-                                selectedTags: _selectedTags,
-                              ),
-                        );
+                    BlocBuilder<NotesCubit, NotesState>(
+                      builder: (context, state) {
+                        return GestureDetector(
+                          onTap: () async {
+                            final List<String>? result =
+                                await showModalBottomSheet<List<String>>(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder:
+                                      (context) => TagSelectionSheet(
+                                        selectedTags: _selectedTags,
+                                        availableTags: state.availableTags,
+                                      ),
+                                );
 
-                        // 2. If user clicked "Done" (result is not null), update state
-                        if (result != null) {
-                          setState(() {
-                            _selectedTags = result;
-                            _isModified = true;
-                          });
-                        }
-                      },
-                      child: Container(
-                        // ... (Container styling remains the same as before)
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 6.h,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: theme.colorScheme.secondary.withOpacity(0.3),
-                          ),
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.add,
-                              size: 14.sp,
-                              color: theme.colorScheme.secondary,
+                            if (result != null) {
+                              setState(() {
+                                _selectedTags = result;
+                                _isModified = true;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12.w,
+                              vertical: 6.h,
                             ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              "Manage tags", // Changed text slightly to indicate full management
-                              style: TextStyle(
-                                color: theme.colorScheme.secondary,
-                                fontSize: 12.sp,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: theme.colorScheme.secondary.withOpacity(
+                                  0.3,
+                                ),
                               ),
+                              borderRadius: BorderRadius.circular(20.r),
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.add,
+                                  size: 14.sp,
+                                  color: theme.colorScheme.secondary,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  "Manage tags",
+                                  style: TextStyle(
+                                    color: theme.colorScheme.secondary,
+                                    fontSize: 12.sp,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -323,17 +325,19 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
   }
 
-  Widget _buildTagChip(BuildContext context, AppTag tag) {
+  Widget _buildTagChip(BuildContext context, String tagName) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Chip(
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      backgroundColor: tag.color.withOpacity(isDark ? 0.2 : 0.5),
+      backgroundColor: theme.colorScheme.primary.withOpacity(
+        isDark ? 0.2 : 0.1,
+      ),
       label: Text(
-        tag.label,
+        tagName,
         style: TextStyle(
-          color: isDark ? tag.color : Colors.black87,
+          color: theme.colorScheme.primary,
           fontSize: 12.sp,
           fontWeight: FontWeight.w500,
         ),

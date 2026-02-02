@@ -6,6 +6,7 @@ import '../models/task_extensions_models.dart';
 
 abstract class TaskRemoteDataSource {
   Future<List<TaskModel>> getTasks();
+  Future<List<TaskModel>> getTasksByCategory(String categoryId);
   Future<TaskModel> addTask(TaskModel task);
   Future<TaskModel> updateTask(TaskModel task);
   Future<void> deleteTask(String id);
@@ -47,14 +48,48 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskModel>> getTasks() async {
     try {
       final response = await apiClient.get(ApiEndpoints.tasks);
-      // The response structure is { data: { tasks: [...] } }
-      final List<dynamic> tasksData = response.data['data']['tasks'] ?? [];
-      return tasksData
-          .map((e) => TaskModel.fromJson(e))
-          .toList();
+      return _parseTasksResponse(response.data);
     } catch (e) {
       throw Exception('Failed to fetch tasks: $e');
     }
+  }
+
+  @override
+  Future<List<TaskModel>> getTasksByCategory(String categoryId) async {
+    try {
+      // Endpoint: {{baseUrl}}/tasks/by-category?category_id={{categoryId}}
+      final response = await apiClient.get(
+        ApiEndpoints.tasksByCategory,
+        queryParameters: {'category_id': categoryId},
+      );
+      return _parseTasksResponse(response.data);
+    } catch (e) {
+      throw Exception('Failed to fetch tasks by category: $e');
+    }
+  }
+
+  List<TaskModel> _parseTasksResponse(dynamic rawData) {
+    // Try multiple possible paths for the tasks list
+    List<dynamic>? tasksList;
+
+    if (rawData is Map) {
+      if (rawData['data'] != null) {
+        final dataMap = rawData['data'];
+        if (dataMap is Map) {
+          tasksList = dataMap['tasks'] ?? dataMap['data'];
+        } else if (dataMap is List) {
+          tasksList = dataMap;
+        }
+      } else if (rawData['tasks'] != null) {
+        tasksList = rawData['tasks'];
+      }
+    } else if (rawData is List) {
+      tasksList = rawData;
+    }
+
+    tasksList ??= [];
+
+    return tasksList.map((e) => TaskModel.fromJson(e)).toList();
   }
 
   @override
@@ -63,7 +98,14 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       ApiEndpoints.tasks,
       data: task.toJson(),
     );
-    return TaskModel.fromJson(response.data['data']);
+    final rawData = response.data;
+
+    if (rawData is Map && rawData['data'] != null) {
+      return TaskModel.fromJson(Map<String, dynamic>.from(rawData['data']));
+    } else if (rawData is Map) {
+      return TaskModel.fromJson(Map<String, dynamic>.from(rawData));
+    }
+    throw Exception('Unexpected response format during addTask');
   }
 
   @override
@@ -72,7 +114,14 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       ApiEndpoints.taskById(task.id),
       data: task.toJson(),
     );
-    return TaskModel.fromJson(response.data['data']);
+    final rawData = response.data;
+
+    if (rawData is Map && rawData['data'] != null) {
+      return TaskModel.fromJson(Map<String, dynamic>.from(rawData['data']));
+    } else if (rawData is Map) {
+      return TaskModel.fromJson(Map<String, dynamic>.from(rawData));
+    }
+    return task; // Fallback
   }
 
   @override
@@ -89,7 +138,10 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   @override
   Future<void> completeTask(String id) async {
     try {
-      await apiClient.post(ApiEndpoints.completeTask(id));
+      await apiClient.put(
+        ApiEndpoints.completeTask(id),
+        data: {'status': 'completed'},
+      );
     } catch (e) {
       throw Exception('Failed to complete task: $e');
     }
@@ -154,11 +206,32 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskCategoryModel>> getCategories() async {
     try {
       final response = await apiClient.get(ApiEndpoints.taskCategories);
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => TaskCategoryModel.fromJson(json)).toList();
+      return _parseCategoriesResponse(response.data);
     } catch (e) {
       throw Exception('Failed to fetch categories: $e');
     }
+  }
+
+  List<TaskCategoryModel> _parseCategoriesResponse(dynamic rawData) {
+    List<dynamic>? list;
+
+    if (rawData is Map) {
+      if (rawData['data'] != null) {
+        final data = rawData['data'];
+        if (data is List) {
+          list = data;
+        } else if (data is Map && data['categories'] != null) {
+          list = data['categories'];
+        }
+      } else if (rawData['categories'] != null) {
+        list = rawData['categories'];
+      }
+    } else if (rawData is List) {
+      list = rawData;
+    }
+
+    list ??= [];
+    return list.map((json) => TaskCategoryModel.fromJson(json)).toList();
   }
 
   @override

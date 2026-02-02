@@ -8,6 +8,9 @@ import 'package:voclio_app/features/tasks/domain/usecases/complete_task_use_case
 import 'package:voclio_app/features/tasks/domain/usecases/get_all_tasks_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_task_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/get_tasks_by_category_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/get_categories_use_case.dart';
+import 'package:voclio_app/core/domain/usecases/get_tags_use_case.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
 
 class TasksCubit extends Cubit<TasksState> {
@@ -19,6 +22,9 @@ class TasksCubit extends Cubit<TasksState> {
   final CompleteTaskUseCase completeTaskUseCase;
   final CreateSubtaskUseCase createSubtaskUseCase;
   final UpdateSubtaskUseCase updateSubtaskUseCase;
+  final GetTasksByCategoryUseCase getTasksByCategoryUseCase;
+  final GetCategoriesUseCase getCategoriesUseCase;
+  final GetTagsUseCase getTagsUseCase;
 
   TasksCubit({
     required this.deletaTaskUseCase,
@@ -29,10 +35,41 @@ class TasksCubit extends Cubit<TasksState> {
     required this.getAllTasksUseCase,
     required this.getTaskUseCase,
     required this.createTaskUseCase,
+    required this.getTasksByCategoryUseCase,
+    required this.getCategoriesUseCase,
+    required this.getTagsUseCase,
   }) : super(const TasksState());
+
+  Future<void> init() async {
+    await fetchTags();
+    await fetchCategories();
+    await getTasks();
+  }
+
+  Future<void> fetchCategories() async {
+    final result = await getCategoriesUseCase();
+    result.fold(
+      (failure) => print('Failed to fetch categories: ${failure.message}'),
+      (categories) => emit(state.copyWith(categories: categories)),
+    );
+  }
+
+  Future<void> fetchTags() async {
+    final result = await getTagsUseCase();
+    result.fold(
+      (failure) => print('Failed to fetch tags: ${failure.message}'),
+      (tags) => emit(state.copyWith(availableTags: tags)),
+    );
+  }
 
   Future<void> getTasks() async {
     emit(state.copyWith(status: TasksStatus.loading));
+
+    // If a category is selected, fetch by category
+    if (state.selectedCategoryId != null) {
+      await filterByCategory(state.selectedCategoryId);
+      return;
+    }
 
     final result = await getAllTasksUseCase();
     if (isClosed) return;
@@ -54,18 +91,61 @@ class TasksCubit extends Cubit<TasksState> {
     );
   }
 
+  Future<void> filterByCategory(String? categoryId) async {
+    emit(state.copyWith(selectedCategoryId: categoryId));
+
+    if (categoryId == null) {
+      // Fetch all tasks
+      // We manually call getAllTasksUseCase here to avoid infinite recursion since getTasks() checks selectedCategoryId
+      emit(state.copyWith(status: TasksStatus.loading));
+      final result = await getAllTasksUseCase();
+      result.fold(
+        (failure) => emit(
+          state.copyWith(
+            status: TasksStatus.failure,
+            errorMessage: failure.message,
+          ),
+        ),
+        (tasks) =>
+            emit(state.copyWith(status: TasksStatus.success, tasks: tasks)),
+      );
+    } else {
+      // Fetch specific category
+      emit(state.copyWith(status: TasksStatus.loading));
+      final result = await getTasksByCategoryUseCase(categoryId);
+      result.fold(
+        (failure) => emit(
+          state.copyWith(
+            status: TasksStatus.failure,
+            errorMessage: failure.message,
+          ),
+        ),
+        (tasks) =>
+            emit(state.copyWith(status: TasksStatus.success, tasks: tasks)),
+      );
+    }
+  }
+
   Future<void> addTask(TaskEntity task) async {
-    emit(state.copyWith(status: TasksStatus.loading));
+    // 1. Optimistic Update
+    final currentTasks = state.tasks;
+    // Add to top of list immediately
+    emit(state.copyWith(tasks: [task, ...currentTasks]));
+
     final result = await createTaskUseCase(task);
     if (isClosed) return;
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: TasksStatus.failure,
-          errorMessage: failure.message,
-        ),
-      ),
+      (failure) {
+        // Revert on failure
+        emit(
+          state.copyWith(
+            status: TasksStatus.failure,
+            errorMessage: failure.message,
+            tasks: currentTasks, // Revert to original list
+          ),
+        );
+      },
       (newTask) {
         // We refresh from server to get the real ID and proper formatting
         getTasks();
@@ -202,18 +282,19 @@ class TasksCubit extends Cubit<TasksState> {
     );
   }
 
-  Future<void> completeTask(String taskId) async {
+  Future<void> toggleTaskStatus(TaskEntity task) async {
     // 1. Optimistic UI Update
-    final int index = state.tasks.indexWhere((t) => t.id == taskId);
+    final int index = state.tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       final updatedList = List<TaskEntity>.from(state.tasks);
-      final task = updatedList[index];
-      updatedList[index] = task.copyWith(isDone: !task.isDone);
+      // Toggle status
+      final newTask = task.copyWith(isDone: !task.isDone);
+      updatedList[index] = newTask;
       emit(state.copyWith(tasks: updatedList));
     }
 
-    // 2. Call API
-    final result = await completeTaskUseCase(taskId);
+    // 2. Call API using updateTask to persist the new isDone status
+    final result = await updateTaskUseCase(task.copyWith(isDone: !task.isDone));
 
     result.fold((failure) {
       emit(

@@ -40,9 +40,12 @@ class TaskModel extends TaskEntity {
           json['isDone'] == true,
       priority: _parsePriority(json['priority']),
       tags:
-          (json['tags'] as List<dynamic>?)
-              ?.map((e) => _parseTag(e.toString()))
-              .toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) {
+            if (e is Map) {
+              return (e['name'] ?? e['label'] ?? '').toString();
+            }
+            return e.toString();
+          }).toList() ??
           [],
       subtasks:
           (json['subtasks'] as List<dynamic>?)
@@ -74,7 +77,7 @@ class TaskModel extends TaskEntity {
 
     // Only send tags if not empty
     if (tags.isNotEmpty) {
-      data['tags'] = tags.map((e) => e.name).toList();
+      data['tags'] = tags; // Already List<String>
     }
 
     return data;
@@ -87,14 +90,6 @@ class TaskModel extends TaskEntity {
     return TaskPriority.values.firstWhere(
       (e) => e.name.toLowerCase() == lowerP,
       orElse: () => TaskPriority.medium,
-    );
-  }
-
-  static AppTag _parseTag(String t) {
-    final lowerT = t.toLowerCase();
-    return AppTag.values.firstWhere(
-      (e) => e.name.toLowerCase() == lowerT || e.label.toLowerCase() == lowerT,
-      orElse: () => AppTag.personal, // Default tag
     );
   }
 }

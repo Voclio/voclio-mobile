@@ -435,14 +435,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           vertical: 2.h,
                         ),
                         decoration: BoxDecoration(
-                          color: task.tags.first.color.withOpacity(0.2),
+                          color: theme.colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Text(
-                          task.tags.first.label,
+                          task.tags.first,
                           style: TextStyle(
                             fontSize: 10.sp,
-                            color: task.tags.first.color,
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

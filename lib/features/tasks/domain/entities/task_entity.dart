@@ -10,7 +10,7 @@ class TaskEntity extends Equatable {
   final bool isDone;
   final TaskPriority priority;
   final List<SubTask> subtasks;
-  final List<AppTag> tags;
+  final List<String> tags;
   final String? relatedNoteId; // Links to a Note
 
   const TaskEntity({
@@ -35,7 +35,7 @@ class TaskEntity extends Equatable {
     bool? isDone,
     TaskPriority? priority,
     List<SubTask>? subtasks,
-    List<AppTag>? tags,
+    List<String>? tags,
     String? relatedNoteId,
   }) {
     return TaskEntity(

@@ -5,6 +5,7 @@ import 'package:voclio_app/features/notes/domain/usecases/delete_note_use_case.d
 import 'package:voclio_app/features/notes/domain/usecases/get_all_notes_use_case.dart';
 import 'package:voclio_app/features/notes/domain/usecases/get_note_use_case.dart';
 import 'package:voclio_app/features/notes/domain/usecases/update_note_use_case.dart';
+import 'package:voclio_app/core/domain/usecases/get_tags_use_case.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
 
 // --- CUBIT ---
@@ -14,6 +15,7 @@ class NotesCubit extends Cubit<NotesState> {
   final GetNoteUseCase getNoteUseCase;
   final UpdateNoteUseCase updateNoteUseCase;
   final DeleteNoteUseCase deleteNoteUseCase;
+  final GetTagsUseCase getTagsUseCase;
 
   NotesCubit({
     required this.addNoteUseCase,
@@ -21,7 +23,21 @@ class NotesCubit extends Cubit<NotesState> {
     required this.getNoteUseCase,
     required this.updateNoteUseCase,
     required this.deleteNoteUseCase,
+    required this.getTagsUseCase,
   }) : super(const NotesState());
+
+  Future<void> init() async {
+    await fetchTags();
+    await getNotes();
+  }
+
+  Future<void> fetchTags() async {
+    final result = await getTagsUseCase();
+    result.fold(
+      (failure) => print('Failed to fetch tags: ${failure.message}'),
+      (tags) => emit(state.copyWith(availableTags: tags)),
+    );
+  }
 
   Future<void> getNotes() async {
     emit(state.copyWith(status: NotesStatus.loading));
@@ -74,13 +90,27 @@ class NotesCubit extends Cubit<NotesState> {
   }
 
   Future<void> deleteNote(String id) async {
+    // Optimistic update
+    final initialNotes = state.notes;
     final updatedList = state.notes.where((n) => n.id != id).toList();
     emit(state.copyWith(notes: updatedList));
 
     final result = await deleteNoteUseCase(id);
     result.fold(
-      (failure) => getNotes(), // Revert
-      (_) {},
+      (failure) {
+        // Revert on failure
+        emit(
+          state.copyWith(
+            notes: initialNotes,
+            status: NotesStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+      },
+      (_) {
+        // success - refresh from server to be sure
+        getNotes();
+      },
     );
   }
 }

@@ -37,7 +37,7 @@ class ApiEndpoints {
   static String taskById(String id) => '/tasks/$id';
   static String taskSubtasks(String id) => '/tasks/$id/subtasks';
   static String taskWithSubtasks(String id) => '/tasks/$id/with-subtasks';
-  static String completeTask(String id) => '/tasks/$id/complete';
+  static String completeTask(String id) => taskById(id);
   static String subtasks(String taskId) => '/tasks/$taskId/subtasks';
   static String subtaskById(String id) => '/tasks/subtasks/$id';
   static String taskCategoryById(String id) => '/tasks/categories/$id';

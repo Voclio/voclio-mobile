@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../core/enums/enums.dart';
+import 'package:voclio_app/core/domain/entities/tag_entity.dart';
 
 class TagSelectionSheet extends StatefulWidget {
-  final List<AppTag> selectedTags;
+  final List<String> selectedTags;
+  final List<TagEntity> availableTags;
 
-  const TagSelectionSheet({super.key, required this.selectedTags});
+  const TagSelectionSheet({
+    super.key,
+    required this.selectedTags,
+    required this.availableTags,
+  });
 
   @override
   State<TagSelectionSheet> createState() => _TagSelectionSheetState();
@@ -13,7 +18,7 @@ class TagSelectionSheet extends StatefulWidget {
 
 class _TagSelectionSheetState extends State<TagSelectionSheet> {
   // We create a local copy to modify, so we don't change the parent state until "Done" is clicked
-  late List<AppTag> _tempSelectedTags;
+  late List<String> _tempSelectedTags;
 
   @override
   void initState() {
@@ -21,12 +26,12 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
     _tempSelectedTags = List.from(widget.selectedTags);
   }
 
-  void _toggleTag(AppTag tag) {
+  void _toggleTag(String tagName) {
     setState(() {
-      if (_tempSelectedTags.contains(tag)) {
-        _tempSelectedTags.remove(tag);
+      if (_tempSelectedTags.contains(tagName)) {
+        _tempSelectedTags.remove(tagName);
       } else {
-        _tempSelectedTags.add(tag);
+        _tempSelectedTags.add(tagName);
       }
     });
   }
@@ -67,13 +72,12 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
             spacing: 12.w,
             runSpacing: 12.h,
             children:
-                AppTag.values.map((tag) {
-                  if (tag == AppTag.all)
-                    return const SizedBox.shrink(); // Skip 'All'
+                widget.availableTags.map((tagEntity) {
+                  final isSelected = _tempSelectedTags.contains(tagEntity.name);
+                  final tagColor = _parseColor(tagEntity.color, context);
 
-                  final isSelected = _tempSelectedTags.contains(tag);
                   return GestureDetector(
-                    onTap: () => _toggleTag(tag),
+                    onTap: () => _toggleTag(tagEntity.name),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: EdgeInsets.symmetric(
@@ -82,23 +86,19 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
                       ),
                       decoration: BoxDecoration(
                         color:
-                            isSelected
-                                ? theme.colorScheme.primary
-                                : (isDark
-                                    ? Colors.white.withOpacity(0.05)
-                                    : Colors.grey.shade100),
+                            isSelected ? tagColor : tagColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20.r),
                         border: Border.all(
                           color:
                               isSelected
-                                  ? theme.colorScheme.primary
-                                  : (isDark
-                                      ? Colors.white10
-                                      : Colors.grey.shade300),
+                                  ? tagColor
+                                  : theme.colorScheme.secondary.withOpacity(
+                                    0.3,
+                                  ),
                         ),
                       ),
                       child: Text(
-                        tag.label,
+                        tagEntity.name,
                         style: TextStyle(
                           color:
                               isSelected
@@ -114,33 +114,39 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
                 }).toList(),
           ),
 
-          SizedBox(height: 30.h),
+          SizedBox(height: 32.h),
 
-          // 3. Done Button
+          // 3. Confirm Button
           SizedBox(
             width: double.infinity,
-            height: 50.h,
+            height: 54.h,
             child: ElevatedButton(
-              onPressed: () {
-                // Return the new list to the previous screen
-                Navigator.pop(context, _tempSelectedTags);
-              },
+              onPressed: () => Navigator.pop(context, _tempSelectedTags),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16.r),
                 ),
+                elevation: 0,
               ),
-              child: Text(
-                "Done",
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              child: const Text(
+                "Apply Tags",
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),
-          SizedBox(height: 10.h),
         ],
       ),
     );
+  }
+
+  Color _parseColor(String hexColor, BuildContext context) {
+    try {
+      final hex = hexColor.replaceAll('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (e) {
+      return Theme.of(context).colorScheme.primary;
+    }
   }
 }

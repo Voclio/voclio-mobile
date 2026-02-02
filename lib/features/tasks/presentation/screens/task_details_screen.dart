@@ -58,7 +58,7 @@ class TaskDetailScreen extends StatelessWidget {
                 SizedBox(height: 10.h),
 
                 // 1. Header (Title & Tags)
-                _buildHeader(context, currentTask),
+                _buildHeader(context, currentTask, state),
 
                 SizedBox(height: 24.h),
 
@@ -111,31 +111,39 @@ class TaskDetailScreen extends StatelessWidget {
 
   // --- Helper Widgets ---
 
-  Widget _buildHeader(BuildContext context, TaskEntity task) {
+  Widget _buildHeader(BuildContext context, TaskEntity task, TasksState state) {
     final theme = Theme.of(context);
+
+    // Find tag entity for color
+    Color? tagBgColor;
+    String tagLabel = "";
+
+    if (task.tags.isNotEmpty) {
+      tagLabel = task.tags.first;
+      try {
+        final tagEntity = state.availableTags.firstWhere(
+          (t) => t.name == tagLabel,
+        );
+        final hex = tagEntity.color.replaceAll('#', '');
+        tagBgColor = Color(int.parse('FF$hex', radix: 16)).withOpacity(0.2);
+      } catch (_) {
+        tagBgColor = theme.colorScheme.primary.withOpacity(0.1);
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Status Icon
-            Container(
-              padding: EdgeInsets.all(8.r),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: theme.colorScheme.primary, width: 2),
-              ),
-              child: Icon(
-                Icons.check,
-                size: 16.sp,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            SizedBox(width: 12.w),
             Expanded(
               child: Text(
                 task.title,
-                style: theme.textTheme.headlineSmall?.copyWith(fontSize: 20.sp),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 26.sp,
+                ),
               ),
             ),
           ],
@@ -144,12 +152,7 @@ class TaskDetailScreen extends StatelessWidget {
         Row(
           children: [
             if (task.tags.isNotEmpty)
-              _buildTagChip(
-                context,
-                Icons.label_outline,
-                task.tags.first.label,
-                null,
-              ),
+              _buildTagChip(context, Icons.label_outline, tagLabel, tagBgColor),
             SizedBox(width: 10.w),
             _buildTagChip(
               context,
@@ -298,9 +301,9 @@ class TaskDetailScreen extends StatelessWidget {
                         onTap: () {
                           // Use dedicated toggleSubtask method
                           context.read<TasksCubit>().toggleSubtask(
-                                task.id,
-                                subtask,
-                              );
+                            task.id,
+                            subtask,
+                          );
                         },
                         child: Container(
                           width: 20.w,
@@ -508,7 +511,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () {
               // Logic to mark as complete
-              context.read<TasksCubit>().completeTask(task.id);
+              context.read<TasksCubit>().toggleTaskStatus(task);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(

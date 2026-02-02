@@ -1,4 +1,3 @@
-import 'package:voclio_app/core/enums/enums.dart';
 import 'package:voclio_app/features/notes/domain/entities/note_entity.dart';
 
 class NoteModel extends NoteEntity {
@@ -30,9 +29,12 @@ class NoteModel extends NoteEntity {
             DateTime.now().toIso8601String(),
       ),
       tags:
-          (json['tags'] as List<dynamic>?)
-              ?.map((e) => _parseTag(e.toString()))
-              .toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) {
+            if (e is Map) {
+              return (e['name'] ?? e['label'] ?? '').toString();
+            }
+            return e.toString();
+          }).toList() ??
           [],
       voiceToTextDuration:
           (json['voice_to_text_duration'] ?? json['voiceToTextDuration'])
@@ -44,16 +46,8 @@ class NoteModel extends NoteEntity {
     return {
       'title': title,
       'content': content,
-      'tags': tags.map((e) => e.name).toList(),
+      'tags': tags, // Already List<String>
       // 'voice_to_text_duration': voiceToTextDuration, // usually server set
     };
-  }
-
-  static AppTag _parseTag(String t) {
-    final lowerT = t.toLowerCase();
-    return AppTag.values.firstWhere(
-      (e) => e.name.toLowerCase() == lowerT || e.label.toLowerCase() == lowerT,
-      orElse: () => AppTag.personal, // Default tag
-    );
   }
 }

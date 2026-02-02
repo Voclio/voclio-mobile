@@ -19,8 +19,29 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
   Future<List<NoteModel>> getNotes() async {
     try {
       final response = await apiClient.get(ApiEndpoints.notes);
-      final List<dynamic> notesData = response.data['data']['notes'] ?? [];
-      return notesData.map((e) => NoteModel.fromJson(e)).toList();
+      final rawData = response.data;
+
+      List<dynamic> notesList = [];
+
+      if (rawData is Map) {
+        if (rawData['data'] != null) {
+          final data = rawData['data'];
+          if (data is Map && data['notes'] != null) {
+            notesList = data['notes'];
+          } else if (data is List) {
+            notesList = data;
+          } else if (data is Map) {
+            // Check if it's a map that might contain notes but isn't a list
+            // Or if data itself is the note list but typed as Map (unlikely but safe)
+          }
+        } else if (rawData['notes'] != null) {
+          notesList = rawData['notes'];
+        }
+      } else if (rawData is List) {
+        notesList = rawData;
+      }
+
+      return notesList.map((e) => NoteModel.fromJson(e)).toList();
     } catch (e) {
       throw Exception('Failed to fetch notes: $e');
     }
@@ -28,8 +49,18 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
 
   @override
   Future<NoteModel> addNote(NoteModel note) async {
-    final response = await apiClient.post(ApiEndpoints.notes, data: note.toJson());
-    return NoteModel.fromJson(response.data['data']);
+    final response = await apiClient.post(
+      ApiEndpoints.notes,
+      data: note.toJson(),
+    );
+    final rawData = response.data;
+
+    if (rawData is Map && rawData['data'] != null) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']));
+    } else if (rawData is Map) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData));
+    }
+    throw Exception('Unexpected response format during addNote');
   }
 
   @override
@@ -38,7 +69,14 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
       ApiEndpoints.noteById(note.id),
       data: note.toJson(),
     );
-    return NoteModel.fromJson(response.data['data']);
+    final rawData = response.data;
+
+    if (rawData is Map && rawData['data'] != null) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']));
+    } else if (rawData is Map) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData));
+    }
+    return note; // Fallback to current note if update success but response is weird
   }
 
   @override

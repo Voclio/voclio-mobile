@@ -20,6 +20,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/calendar/presentation/screens/monthly_calendar_screen.dart';
 import '../../features/voice/presentation/screens/voice_recordings_list_screen.dart';
 import '../../features/voice/presentation/screens/voice_recording_screen.dart';
+import '../di/injection_container.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../splash/Voclio_splash_screen.dart';
 

@@ -21,6 +21,8 @@ import 'package:voclio_app/features/tasks/domain/usecases/complete_task_use_case
 import 'package:voclio_app/features/tasks/domain/usecases/get_all_tasks_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_task_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/get_tasks_by_category_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/get_categories_use_case.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
 import 'package:voclio_app/features/auth/data/datasources/auth_remote_datasource_impl.dart'
     as auth_impl;
@@ -32,15 +34,11 @@ import 'package:voclio_app/features/settings/data/repositories/settings_reposito
 import 'package:voclio_app/features/settings/domain/repositories/settings_repository.dart';
 import 'package:voclio_app/features/settings/domain/usecases/settings_usecases.dart';
 
-// Tags
-import 'package:voclio_app/features/tags/domain/repositories/tag_repository.dart';
-import 'package:voclio_app/features/tags/domain/usecases/create_tag_usecase.dart';
-import 'package:voclio_app/features/tags/domain/usecases/delete_tag_usecase.dart';
-import 'package:voclio_app/features/tags/domain/usecases/get_tags_usecase.dart';
-import 'package:voclio_app/features/tags/domain/usecases/update_tag_usecase.dart';
-import 'package:voclio_app/features/tags/data/repositories/tag_repository_impl.dart';
-import 'package:voclio_app/features/tags/data/datasources/tag_remote_datasource.dart';
-import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
+// Core Tags
+import 'package:voclio_app/core/domain/repositories/tag_repository.dart';
+import 'package:voclio_app/core/domain/usecases/get_tags_use_case.dart';
+import 'package:voclio_app/core/data/repositories/tag_repository_impl.dart';
+import 'package:voclio_app/core/data/datasources/tag_remote_data_source.dart';
 
 // Reminders
 import 'package:voclio_app/features/reminders/domain/repositories/reminder_repository.dart';
@@ -233,6 +231,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => UpdateTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => CompleteTaskUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetTasksByCategoryUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
 
   getIt.registerLazySingleton(
     () => TasksCubit(
@@ -244,6 +244,9 @@ Future<void> setupDependencies() async {
       getAllTasksUseCase: getIt(),
       getTaskUseCase: getIt(),
       createTaskUseCase: getIt(),
+      getTasksByCategoryUseCase: getIt(),
+      getCategoriesUseCase: getIt(),
+      getTagsUseCase: getIt(),
     ),
   );
   getIt.registerLazySingleton<NoteRemoteDataSource>(
@@ -264,8 +267,18 @@ Future<void> setupDependencies() async {
       getNoteUseCase: getIt(),
       updateNoteUseCase: getIt(),
       deleteNoteUseCase: getIt(),
+      getTagsUseCase: getIt(),
     ),
   );
+
+  // Core Tags
+  getIt.registerLazySingleton<TagRemoteDataSource>(
+    () => TagRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TagRepository>(
+    () => TagRepositoryImpl(remoteDataSource: getIt<TagRemoteDataSource>()),
+  );
+  getIt.registerLazySingleton(() => GetTagsUseCase(getIt()));
 
   // Settings
   getIt.registerLazySingleton<SettingsRemoteDataSource>(
@@ -287,26 +300,6 @@ Future<void> setupDependencies() async {
       getSettingsUseCase: getIt<GetSettingsUseCase>(),
       updateSettingsUseCase: getIt<UpdateSettingsUseCase>(),
       prefs: getIt<SharedPreferences>(),
-    ),
-  );
-
-  // Tags
-  getIt.registerLazySingleton<TagRemoteDataSource>(
-    () => TagRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<TagRepository>(
-    () => TagRepositoryImpl(remoteDataSource: getIt<TagRemoteDataSource>()),
-  );
-  getIt.registerLazySingleton(() => GetTagsUseCase(getIt<TagRepository>()));
-  getIt.registerLazySingleton(() => CreateTagUseCase(getIt<TagRepository>()));
-  getIt.registerLazySingleton(() => UpdateTagUseCase(getIt<TagRepository>()));
-  getIt.registerLazySingleton(() => DeleteTagUseCase(getIt<TagRepository>()));
-  getIt.registerFactory<TagsCubit>(
-    () => TagsCubit(
-      getTagsUseCase: getIt(),
-      createTagUseCase: getIt(),
-      updateTagUseCase: getIt(),
-      deleteTagUseCase: getIt(),
     ),
   );
 

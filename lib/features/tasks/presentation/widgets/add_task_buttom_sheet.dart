@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:voclio_app/core/enums/enums.dart';
 import '../../domain/entities/task_entity.dart';
 import '../bloc/tasks_cubit.dart';
+import '../bloc/tasks_state.dart';
 
 class AddTaskBottomSheet extends StatefulWidget {
   const AddTaskBottomSheet({super.key});
@@ -21,7 +22,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
 
   DateTime _selectedDate = DateTime.now().add(const Duration(hours: 1));
   TaskPriority _selectedPriority = TaskPriority.medium;
-  AppTag _selectedTag = AppTag.personal;
+  String? _selectedTagName;
   bool _isLoading = false;
 
   @override
@@ -51,7 +52,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
       createdAt: DateTime.now(),
       isDone: false,
       priority: _selectedPriority,
-      tags: [_selectedTag],
+      tags: _selectedTagName != null ? [_selectedTagName!] : [],
       subtasks: const [],
     );
 
@@ -295,54 +296,77 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                   ),
                   SizedBox(height: 24.h),
 
-                  // Category
+                  // Category (using dynamic tags)
                   Text(
-                    "Category",
+                    "Tags",
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  Wrap(
-                    spacing: 10.w,
-                    runSpacing: 10.h,
-                    children:
-                        AppTag.values.map((tag) {
-                          if (tag == AppTag.all) return const SizedBox.shrink();
-                          final isSelected = _selectedTag == tag;
-                          return GestureDetector(
-                            onTap: () => setState(() => _selectedTag = tag),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 8.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? theme.colorScheme.primary
-                                        : Colors.transparent,
-                                borderRadius: BorderRadius.circular(20.r),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.secondary
-                                              .withOpacity(0.3),
+                  BlocBuilder<TasksCubit, TasksState>(
+                    builder: (context, state) {
+                      // Set default tag if none selected and tags are available
+                      if (_selectedTagName == null &&
+                          state.availableTags.isNotEmpty) {
+                        _selectedTagName = state.availableTags.first.name;
+                      }
+
+                      return Wrap(
+                        spacing: 10.w,
+                        runSpacing: 10.h,
+                        children:
+                            state.availableTags.map((tagEntity) {
+                              final isSelected =
+                                  _selectedTagName == tagEntity.name;
+                              final tagColor = _parseColor(
+                                tagEntity.color,
+                                context,
+                              );
+
+                              return GestureDetector(
+                                onTap:
+                                    () => setState(
+                                      () => _selectedTagName = tagEntity.name,
+                                    ),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w,
+                                    vertical: 8.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isSelected
+                                            ? tagColor
+                                            : tagColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20.r),
+                                    border: Border.all(
+                                      color:
+                                          isSelected
+                                              ? tagColor
+                                              : theme.colorScheme.secondary
+                                                  .withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    tagEntity.name,
+                                    style: TextStyle(
+                                      color:
+                                          isSelected
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurface,
+                                      fontWeight:
+                                          isSelected
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                tag.label,
-                                style: TextStyle(
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
+                      );
+                    },
                   ),
                   SizedBox(height: 24.h),
 
@@ -409,6 +433,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                               ),
                     ),
                   ),
+                  SizedBox(height: 20.h),
                 ],
               ),
             ),
@@ -416,5 +441,14 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
         ],
       ),
     );
+  }
+
+  Color _parseColor(String hexColor, BuildContext context) {
+    try {
+      final hex = hexColor.replaceAll('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (e) {
+      return Theme.of(context).colorScheme.primary;
+    }
   }
 }
