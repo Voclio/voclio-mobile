@@ -82,6 +82,19 @@ import '../../features/auth/domain/usecases/google_sign_in_usecase.dart';
 import '../../features/auth/domain/usecases/facebook_sign_in_usecase.dart';
 import '../../features/auth/domain/usecases/change_password_usecase.dart';
 
+// Voice
+import '../../features/voice/domain/repositories/voice_repository.dart';
+import '../../features/voice/domain/usecases/get_voice_recordings_usecase.dart';
+import '../../features/voice/domain/usecases/upload_voice_usecase.dart';
+import '../../features/voice/domain/usecases/delete_voice_usecase.dart';
+import '../../features/voice/domain/usecases/create_note_from_voice_usecase.dart';
+import '../../features/voice/domain/usecases/create_tasks_from_voice_usecase.dart';
+import '../../features/voice/domain/usecases/transcribe_voice_usecase.dart';
+import '../../features/voice/data/datasources/voice_remote_datasource.dart';
+import '../../features/voice/data/datasources/voice_remote_datasource_impl.dart';
+import '../../features/voice/data/repositories/voice_repository_impl.dart';
+import '../../features/voice/presentation/bloc/voice_bloc.dart';
+
 // Data
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -332,6 +345,42 @@ Future<void> setupDependencies() async {
     ),
   );
 
+  // Voice
+  getIt.registerLazySingleton<VoiceRemoteDataSource>(
+    () => VoiceRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<VoiceRepository>(
+    () => VoiceRepositoryImpl(remoteDataSource: getIt<VoiceRemoteDataSource>()),
+  );
+  getIt.registerLazySingleton(
+    () => GetVoiceRecordingsUseCase(getIt<VoiceRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => UploadVoiceUseCase(getIt<VoiceRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => DeleteVoiceUseCase(getIt<VoiceRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => CreateNoteFromVoiceUseCase(getIt<VoiceRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => CreateTasksFromVoiceUseCase(getIt<VoiceRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => TranscribeVoiceUseCase(getIt<VoiceRepository>()),
+  );
+  getIt.registerFactory<VoiceBloc>(
+    () => VoiceBloc(
+      getVoiceRecordingsUseCase: getIt(),
+      uploadVoiceUseCase: getIt(),
+      deleteVoiceUseCase: getIt(),
+      createNoteFromVoiceUseCase: getIt(),
+      createTasksFromVoiceUseCase: getIt(),
+      transcribeVoiceUseCase: getIt(),
+    ),
+  );
+
   // Dashboard
   getIt.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
@@ -354,3 +403,4 @@ Future<void> setupDependencies() async {
     ),
   );
 }
+

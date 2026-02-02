@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:voclio_app/features/voice/presentation/bloc/voice_bloc.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
@@ -19,7 +20,8 @@ import '../../features/notifications/presentation/screens/notifications_screen.d
 import '../../features/tags/presentation/screens/tags_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/calendar/presentation/screens/monthly_calendar_screen.dart';
-import '../../features/voice/presentation/screens/voice_recorder_screen.dart';
+import '../../features/voice/presentation/screens/voice_recordings_list_screen.dart';
+import '../../features/voice/presentation/screens/voice_recording_screen.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../splash/Voclio_splash_screen.dart';
 
@@ -41,7 +43,8 @@ class AppRouter {
   static const String tags = '/tags';
   static const String settings = '/settings';
   static const String calendar = '/calendar';
-  static const String voiceRecorder = '/voice-recorder';
+  static const String voice = '/voice';
+  static const String voiceRecorder = '/voice/record';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -128,9 +131,19 @@ class AppRouter {
         path: calendar,
         builder: (context, state) => const MonthlyCalendarScreen(),
       ),
+
+      // ... imports
+      GoRoute(
+        path: voice,
+        builder: (context, state) => const VoiceRecordingsListScreen(),
+      ),
       GoRoute(
         path: voiceRecorder,
-        builder: (context, state) => const VoiceRecorderScreen(),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => getIt<VoiceBloc>(),
+              child: const VoiceRecordingScreen(),
+            ),
       ),
     ],
   );
