@@ -21,13 +21,23 @@ class TaskModel extends TaskEntity {
       id: (json['task_id'] ?? json['id'] ?? '').toString(),
       title: json['title'] ?? '',
       description: json['description'],
-      date: json['due_date'] != null 
-          ? DateTime.parse(json['due_date']) 
-          : (json['date'] != null ? DateTime.parse(json['date']) : DateTime.now()),
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
-          : (json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now()),
-      isDone: json['status'] == 'completed' || json['completed'] == true || json['is_done'] == true || json['isDone'] == true,
+      date:
+          json['due_date'] != null
+              ? DateTime.parse(json['due_date'])
+              : (json['date'] != null
+                  ? DateTime.parse(json['date'])
+                  : DateTime.now()),
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : (json['createdAt'] != null
+                  ? DateTime.parse(json['createdAt'])
+                  : DateTime.now()),
+      isDone:
+          json['status'] == 'completed' ||
+          json['completed'] == true ||
+          json['is_done'] == true ||
+          json['isDone'] == true,
       priority: _parsePriority(json['priority']),
       tags:
           (json['tags'] as List<dynamic>?)
@@ -39,21 +49,35 @@ class TaskModel extends TaskEntity {
               ?.map((e) => SubTaskModel.fromJson(e))
               .toList() ??
           [],
-      relatedNoteId: (json['note_id'] ?? json['related_note_id'] ?? json['relatedNoteId'])?.toString(),
+      relatedNoteId:
+          (json['note_id'] ?? json['related_note_id'] ?? json['relatedNoteId'])
+              ?.toString(),
     );
   }
 
   // --- TO JSON ---
   Map<String, dynamic> toJson() {
-    return {
+    final Map<String, dynamic> data = {
       'title': title,
-      'description': description,
-      'due_date': date.toIso8601String(),
-      'priority': priority.name,
-      'tags': tags.map((e) => e.name).toList(),
-      'completed': isDone,
-      'note_id': relatedNoteId,
+      'status': isDone ? 'completed' : 'pending',
+      'priority': priority.name.toLowerCase(),
+      'due_date': date.toIso8601String().split('.').first, // Clean ISO format
     };
+
+    if (description != null && description!.isNotEmpty) {
+      data['description'] = description;
+    }
+
+    if (relatedNoteId != null && relatedNoteId!.isNotEmpty) {
+      data['note_id'] = relatedNoteId;
+    }
+
+    // Only send tags if not empty
+    if (tags.isNotEmpty) {
+      data['tags'] = tags.map((e) => e.name).toList();
+    }
+
+    return data;
   }
 
   // Helper Methods
@@ -82,7 +106,11 @@ class SubTaskModel extends SubTask {
     return SubTaskModel(
       id: (json['subtask_id'] ?? json['id'] ?? '').toString(),
       title: json['title'] ?? '',
-      isDone: json['status'] == 'completed' || json['completed'] == true || json['is_done'] == true || json['isDone'] == true,
+      isDone:
+          json['status'] == 'completed' ||
+          json['completed'] == true ||
+          json['is_done'] == true ||
+          json['isDone'] == true,
     );
   }
 

@@ -217,6 +217,19 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
                   SizedBox(height: 24.h),
 
+                  // Top Loading Indicator
+                  if (state.status == TasksStatus.loading)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child:
+                          LinearProgressIndicator(
+                            minHeight: 2.h,
+                            backgroundColor: theme.colorScheme.primary
+                                .withOpacity(0.1),
+                            color: theme.colorScheme.primary,
+                          ).animate().fadeIn(),
+                    ),
+
                   // Task List
                   Expanded(
                     child: Builder(
@@ -445,7 +458,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
     return tasks.where((t) {
       final tDate = DateTime(t.date.year, t.date.month, t.date.day);
-      if (type == 0) return tDate.isAtSameMomentAs(today);
+      if (type == 0) {
+        // Today section: include current day AND everything in the past (overdue)
+        return tDate.isAtSameMomentAs(today) || tDate.isBefore(today);
+      }
       if (type == 1) return tDate.isAtSameMomentAs(tomorrow);
       return tDate.isAfter(tomorrow);
     }).toList();

@@ -35,22 +35,29 @@ class TasksCubit extends Cubit<TasksState> {
     emit(state.copyWith(status: TasksStatus.loading));
 
     final result = await getAllTasksUseCase();
-    // if (isClosed) return;
+    if (isClosed) return;
 
     result.fold(
-      (failure) => emit(
-        state.copyWith(
-          status: TasksStatus.failure,
-          errorMessage: failure.message,
-        ),
-      ),
-      (tasks) =>
-          emit(state.copyWith(status: TasksStatus.success, tasks: tasks)),
+      (failure) {
+        print('Error fetching tasks: ${failure.message}');
+        emit(
+          state.copyWith(
+            status: TasksStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+      },
+      (tasks) {
+        print('Successfully fetched ${tasks.length} tasks');
+        emit(state.copyWith(status: TasksStatus.success, tasks: tasks));
+      },
     );
   }
 
   Future<void> addTask(TaskEntity task) async {
+    emit(state.copyWith(status: TasksStatus.loading));
     final result = await createTaskUseCase(task);
+    if (isClosed) return;
 
     result.fold(
       (failure) => emit(
