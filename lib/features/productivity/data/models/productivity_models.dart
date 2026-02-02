@@ -21,11 +21,11 @@ class FocusSessionModel {
 
   factory FocusSessionModel.fromJson(Map<String, dynamic> json) {
     return FocusSessionModel(
-      id: json['session_id'] ?? json['id'] ?? '',
+      id: (json['session_id'] ?? json['id'] ?? '').toString(),
       timerDuration: json['timer_duration'] ?? 25,
       ambientSound: json['ambient_sound'],
       soundVolume: json['sound_volume'],
-      completed: json['completed'] ?? false,
+      completed: (json['completed'] ?? false) || json['status'] == 'completed',
       actualDuration: json['actual_duration'],
       createdAt:
           json['created_at'] != null
@@ -71,8 +71,10 @@ class StreakModel {
       currentStreak: json['current_streak'] ?? 0,
       longestStreak: json['longest_streak'] ?? 0,
       lastActivityDate:
-          json['last_activity_date'] != null
-              ? DateTime.parse(json['last_activity_date'])
+          (json['last_activity_date'] ?? json['streak_date']) != null
+              ? DateTime.parse(
+                json['last_activity_date'] ?? json['streak_date'],
+              )
               : null,
     );
   }

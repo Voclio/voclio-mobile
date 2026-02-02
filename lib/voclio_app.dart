@@ -13,8 +13,9 @@ import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
+import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestions_cubit.dart';
 
-import 'core/common/screens/no_network_screen.dart';
+import 'package:voclio_app/core/common/screens/no_network_screen.dart';
 
 class VoclioApp extends StatelessWidget {
   const VoclioApp({super.key});
@@ -59,6 +60,12 @@ class VoclioApp extends StatelessWidget {
                           ),
                           BlocProvider<DashboardCubit>(
                             create: (context) => getIt<DashboardCubit>(),
+                          ),
+                          BlocProvider<AiSuggestionsCubit>(
+                            create:
+                                (context) =>
+                                    getIt<AiSuggestionsCubit>()
+                                      ..loadAiSuggestions(),
                           ),
                         ],
                         child: MaterialApp.router(

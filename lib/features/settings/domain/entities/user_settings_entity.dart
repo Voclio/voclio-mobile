@@ -23,16 +23,29 @@ class UserSettingsEntity extends Equatable {
 }
 
 class NotificationPreferences extends Equatable {
-  final bool taskReminders;
-  final bool achievements;
-  final bool productivityTips;
+  final bool pushEnabled;
+  final bool emailEnabled;
+  final bool whatsappEnabled;
+  final bool emailForReminders;
+  final bool emailForTasks;
+  final bool whatsappForReminders;
 
   const NotificationPreferences({
-    required this.taskReminders,
-    required this.achievements,
-    required this.productivityTips,
+    required this.pushEnabled,
+    required this.emailEnabled,
+    required this.whatsappEnabled,
+    required this.emailForReminders,
+    required this.emailForTasks,
+    required this.whatsappForReminders,
   });
 
   @override
-  List<Object?> get props => [taskReminders, achievements, productivityTips];
+  List<Object?> get props => [
+    pushEnabled,
+    emailEnabled,
+    whatsappEnabled,
+    emailForReminders,
+    emailForTasks,
+    whatsappForReminders,
+  ];
 }

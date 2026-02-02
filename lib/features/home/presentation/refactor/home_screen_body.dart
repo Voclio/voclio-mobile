@@ -8,6 +8,7 @@ import 'package:voclio_app/features/home/presentation/widgets/home_list_tile.dar
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_state.dart';
 import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart';
+import 'package:voclio_app/features/productivity/presentation/widgets/ai_suggestions_widget.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -131,6 +132,14 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                     ),
                   );
                 },
+              ),
+
+              SizedBox(height: 20.h),
+
+              // AI Suggestions Section
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: const AiSuggestionsWidget(),
               ),
 
               SizedBox(height: 32.h),

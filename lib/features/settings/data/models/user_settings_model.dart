@@ -14,20 +14,16 @@ class UserSettingsModel {
   });
 
   factory UserSettingsModel.fromJson(Map<String, dynamic> json) {
+    // Check if nested in 'settings' or direct
+    final settingsMap = json['settings'] ?? json;
+
     return UserSettingsModel(
-      theme: json['theme'] ?? 'light',
-      language: json['language'] ?? 'en',
-      timezone: json['timezone'] ?? 'UTC',
-      notificationPreferences:
-          json['notification_preferences'] != null
-              ? NotificationPreferencesModel.fromJson(
-                json['notification_preferences'],
-              )
-              : NotificationPreferencesModel(
-                taskReminders: true,
-                achievements: true,
-                productivityTips: true,
-              ),
+      theme: settingsMap['theme'] ?? 'light',
+      language: settingsMap['language'] ?? 'en',
+      timezone: settingsMap['timezone'] ?? 'UTC',
+      notificationPreferences: NotificationPreferencesModel.fromJson(
+        settingsMap,
+      ),
     );
   }
 
@@ -36,7 +32,7 @@ class UserSettingsModel {
       'theme': theme,
       'language': language,
       'timezone': timezone,
-      'notification_preferences': notificationPreferences.toJson(),
+      ...notificationPreferences.toJson(),
     };
   }
 
@@ -51,37 +47,52 @@ class UserSettingsModel {
 }
 
 class NotificationPreferencesModel {
-  final bool taskReminders;
-  final bool achievements;
-  final bool productivityTips;
+  final bool pushEnabled;
+  final bool emailEnabled;
+  final bool whatsappEnabled;
+  final bool emailForReminders;
+  final bool emailForTasks;
+  final bool whatsappForReminders;
 
   NotificationPreferencesModel({
-    required this.taskReminders,
-    required this.achievements,
-    required this.productivityTips,
+    required this.pushEnabled,
+    required this.emailEnabled,
+    required this.whatsappEnabled,
+    required this.emailForReminders,
+    required this.emailForTasks,
+    required this.whatsappForReminders,
   });
 
   factory NotificationPreferencesModel.fromJson(Map<String, dynamic> json) {
     return NotificationPreferencesModel(
-      taskReminders: json['task_reminders'] ?? true,
-      achievements: json['achievements'] ?? true,
-      productivityTips: json['productivity_tips'] ?? true,
+      pushEnabled: json['push_enabled'] ?? true,
+      emailEnabled: json['email_enabled'] ?? true,
+      whatsappEnabled: json['whatsapp_enabled'] ?? false,
+      emailForReminders: json['email_for_reminders'] ?? true,
+      emailForTasks: json['email_for_tasks'] ?? true,
+      whatsappForReminders: json['whatsapp_for_reminders'] ?? false,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'task_reminders': taskReminders,
-      'achievements': achievements,
-      'productivity_tips': productivityTips,
+      'push_enabled': pushEnabled,
+      'email_enabled': emailEnabled,
+      'whatsapp_enabled': whatsappEnabled,
+      'email_for_reminders': emailForReminders,
+      'email_for_tasks': emailForTasks,
+      'whatsapp_for_reminders': whatsappForReminders,
     };
   }
 
   NotificationPreferences toEntity() {
     return NotificationPreferences(
-      taskReminders: taskReminders,
-      achievements: achievements,
-      productivityTips: productivityTips,
+      pushEnabled: pushEnabled,
+      emailEnabled: emailEnabled,
+      whatsappEnabled: whatsappEnabled,
+      emailForReminders: emailForReminders,
+      emailForTasks: emailForTasks,
+      whatsappForReminders: whatsappForReminders,
     );
   }
 }

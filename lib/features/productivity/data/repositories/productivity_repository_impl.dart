@@ -1,8 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:voclio_app/core/errors/failures.dart';
 import 'package:voclio_app/features/productivity/domain/entities/productivity_entities.dart';
-import '../../domain/repositories/productivity_repository.dart';
-import '../datasources/productivity_remote_datasource.dart';
+import 'package:voclio_app/features/productivity/domain/entities/ai_suggestion_entity.dart';
+import 'package:voclio_app/features/productivity/domain/repositories/productivity_repository.dart';
+import 'package:voclio_app/features/productivity/data/datasources/productivity_remote_datasource.dart';
 
 class ProductivityRepositoryImpl implements ProductivityRepository {
   final ProductivityRemoteDataSource remoteDataSource;
@@ -65,6 +66,16 @@ class ProductivityRepositoryImpl implements ProductivityRepository {
     try {
       final achievements = await remoteDataSource.getAchievements();
       return Right(achievements.map((a) => a.toEntity()).toList());
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions() async {
+    try {
+      final suggestions = await remoteDataSource.getAiSuggestions();
+      return Right(suggestions);
     } catch (e) {
       return Left(ServerFailure());
     }

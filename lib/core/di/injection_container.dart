@@ -21,79 +21,85 @@ import 'package:voclio_app/features/auth/data/datasources/auth_remote_datasource
     as auth_impl;
 
 // Settings
-import '../../features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:voclio_app/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:voclio_app/features/settings/data/datasources/settings_remote_datasource.dart';
+import 'package:voclio_app/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:voclio_app/features/settings/domain/repositories/settings_repository.dart';
+import 'package:voclio_app/features/settings/domain/usecases/settings_usecases.dart';
 
 // Tags
-import '../../features/tags/domain/repositories/tag_repository.dart';
-import '../../features/tags/domain/usecases/create_tag_usecase.dart';
-import '../../features/tags/domain/usecases/delete_tag_usecase.dart';
-import '../../features/tags/domain/usecases/get_tags_usecase.dart';
-import '../../features/tags/domain/usecases/update_tag_usecase.dart';
-import '../../features/tags/data/repositories/tag_repository_impl.dart';
-import '../../features/tags/data/datasources/tag_remote_datasource.dart';
-import '../../features/tags/presentation/bloc/tags_cubit.dart';
+import 'package:voclio_app/features/tags/domain/repositories/tag_repository.dart';
+import 'package:voclio_app/features/tags/domain/usecases/create_tag_usecase.dart';
+import 'package:voclio_app/features/tags/domain/usecases/delete_tag_usecase.dart';
+import 'package:voclio_app/features/tags/domain/usecases/get_tags_usecase.dart';
+import 'package:voclio_app/features/tags/domain/usecases/update_tag_usecase.dart';
+import 'package:voclio_app/features/tags/data/repositories/tag_repository_impl.dart';
+import 'package:voclio_app/features/tags/data/datasources/tag_remote_datasource.dart';
+import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
 
 // Reminders
-import '../../features/reminders/domain/repositories/reminder_repository.dart';
-import '../../features/reminders/domain/usecases/create_reminder_usecase.dart';
-import '../../features/reminders/domain/usecases/delete_reminder_usecase.dart';
-import '../../features/reminders/domain/usecases/get_reminders_usecase.dart';
-import '../../features/reminders/domain/usecases/snooze_reminder_usecase.dart';
-import '../../features/reminders/domain/usecases/update_reminder_usecase.dart';
-import '../../features/reminders/data/repositories/reminder_repository_impl.dart';
-import '../../features/reminders/data/datasources/reminder_remote_datasource.dart';
-import '../../features/reminders/presentation/cubit/reminders_cubit.dart';
+import 'package:voclio_app/features/reminders/domain/repositories/reminder_repository.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/create_reminder_usecase.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/delete_reminder_usecase.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/get_reminders_usecase.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/snooze_reminder_usecase.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/update_reminder_usecase.dart';
+import 'package:voclio_app/features/reminders/data/repositories/reminder_repository_impl.dart';
+import 'package:voclio_app/features/reminders/data/datasources/reminder_remote_datasource.dart';
+import 'package:voclio_app/features/reminders/presentation/cubit/reminders_cubit.dart';
 
 // Notifications
-import '../../features/notifications/domain/repositories/notification_repository.dart';
-import '../../features/notifications/domain/usecases/notification_usecases.dart';
-import '../../features/notifications/data/repositories/notification_repository_impl.dart';
-import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
-import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
+import 'package:voclio_app/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:voclio_app/features/notifications/domain/usecases/notification_usecases.dart';
+import 'package:voclio_app/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:voclio_app/features/notifications/data/datasources/notification_remote_datasource.dart';
+import 'package:voclio_app/features/notifications/presentation/cubit/notifications_cubit.dart';
 
 // Productivity
-import '../../features/productivity/domain/repositories/productivity_repository.dart';
-import '../../features/productivity/domain/usecases/productivity_usecases.dart';
-import '../../features/productivity/data/repositories/productivity_repository_impl.dart';
-import '../../features/productivity/data/datasources/productivity_remote_datasource.dart';
-import '../../features/productivity/presentation/bloc/productivity_cubit.dart';
+import 'package:voclio_app/features/productivity/domain/repositories/productivity_repository.dart';
+import 'package:voclio_app/features/productivity/domain/usecases/productivity_usecases.dart';
+import 'package:voclio_app/features/productivity/domain/usecases/get_ai_suggestions_usecase.dart';
+import 'package:voclio_app/features/productivity/data/repositories/productivity_repository_impl.dart';
+import 'package:voclio_app/features/productivity/data/datasources/productivity_remote_datasource.dart';
+import 'package:voclio_app/features/productivity/presentation/bloc/productivity_cubit.dart';
+import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestions_cubit.dart';
 
 // Dashboard
-import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
-import '../../features/dashboard/domain/usecases/get_dashboard_stats_usecase.dart';
-import '../../features/dashboard/domain/usecases/get_quick_stats_usecase.dart';
-import '../../features/dashboard/data/repositories/dashboard_repository_impl.dart';
-import '../../features/dashboard/data/datasources/dashboard_remote_datasource.dart';
-import '../../features/dashboard/presentation/bloc/dashboard_cubit.dart';
+import 'package:voclio_app/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:voclio_app/features/dashboard/domain/usecases/get_dashboard_stats_usecase.dart';
+import 'package:voclio_app/features/dashboard/domain/usecases/get_quick_stats_usecase.dart';
+import 'package:voclio_app/features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:voclio_app/features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 
 // Calendar
-import '../../features/calendar/domain/repositories/calendar_repository.dart';
-import '../../features/calendar/domain/usecases/calendar_usecases.dart';
-import '../../features/calendar/data/repositories/calendar_repository_impl.dart';
-import '../../features/calendar/data/datasources/calendar_remote_datasource.dart';
-import '../../features/calendar/presentation/bloc/calendar_cubit.dart';
+import 'package:voclio_app/features/calendar/domain/repositories/calendar_repository.dart';
+import 'package:voclio_app/features/calendar/domain/usecases/calendar_usecases.dart';
+import 'package:voclio_app/features/calendar/data/repositories/calendar_repository_impl.dart';
+import 'package:voclio_app/features/calendar/data/datasources/calendar_remote_datasource.dart';
+import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 
 // Domain
-import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/auth/domain/usecases/login_usecase.dart';
-import '../../features/auth/domain/usecases/register_usecase.dart';
-import '../../features/auth/domain/usecases/send_otp_usecase.dart';
-import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
-import '../../features/auth/domain/usecases/forgot_password_usecase.dart';
-import '../../features/auth/domain/usecases/reset_password_usecase.dart';
-import '../../features/auth/domain/usecases/update_profile_usecase.dart';
+import 'package:voclio_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:voclio_app/features/auth/domain/usecases/login_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/register_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/send_otp_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/verify_otp_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/forgot_password_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/reset_password_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/update_profile_usecase.dart';
 
 // Data
-import '../../features/auth/data/datasources/auth_local_datasource.dart';
-import '../../features/auth/data/datasources/auth_remote_datasource.dart';
-import '../../features/auth/data/datasources/auth_local_datasource_impl.dart';
-import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:voclio_app/features/auth/data/datasources/auth_local_datasource.dart';
+import 'package:voclio_app/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:voclio_app/features/auth/data/datasources/auth_local_datasource_impl.dart';
+import 'package:voclio_app/features/auth/data/repositories/auth_repository_impl.dart';
 
 // Presentation
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 
-import '../app/app_cubit.dart';
-import '../api/api_client.dart';
+import 'package:voclio_app/core/app/app_cubit.dart';
+import 'package:voclio_app/core/api/api_client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -209,8 +215,26 @@ Future<void> setupDependencies() async {
   );
 
   // Settings
+  getIt.registerLazySingleton<SettingsRemoteDataSource>(
+    () => SettingsRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(
+      remoteDataSource: getIt<SettingsRemoteDataSource>(),
+    ),
+  );
+  getIt.registerLazySingleton(
+    () => GetSettingsUseCase(getIt<SettingsRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => UpdateSettingsUseCase(getIt<SettingsRepository>()),
+  );
   getIt.registerFactory<SettingsCubit>(
-    () => SettingsCubit(prefs: getIt<SharedPreferences>()),
+    () => SettingsCubit(
+      getSettingsUseCase: getIt<GetSettingsUseCase>(),
+      updateSettingsUseCase: getIt<UpdateSettingsUseCase>(),
+      prefs: getIt<SharedPreferences>(),
+    ),
   );
 
   // Tags
@@ -310,24 +334,32 @@ Future<void> setupDependencies() async {
       remoteDataSource: getIt<ProductivityRemoteDataSource>(),
     ),
   );
-  getIt.registerLazySingleton(
+  getIt.registerLazySingleton<StartFocusSessionUseCase>(
     () => StartFocusSessionUseCase(getIt<ProductivityRepository>()),
   );
-  getIt.registerLazySingleton(
+  getIt.registerLazySingleton<EndFocusSessionUseCase>(
     () => EndFocusSessionUseCase(getIt<ProductivityRepository>()),
   );
-  getIt.registerLazySingleton(
+  getIt.registerLazySingleton<GetStreakUseCase>(
     () => GetStreakUseCase(getIt<ProductivityRepository>()),
   );
-  getIt.registerLazySingleton(
+  getIt.registerLazySingleton<GetAchievementsUseCase>(
     () => GetAchievementsUseCase(getIt<ProductivityRepository>()),
+  );
+  getIt.registerLazySingleton<GetAiSuggestionsUseCase>(
+    () => GetAiSuggestionsUseCase(getIt<ProductivityRepository>()),
   );
   getIt.registerFactory<ProductivityCubit>(
     () => ProductivityCubit(
-      startFocusSessionUseCase: getIt(),
-      endFocusSessionUseCase: getIt(),
-      getStreakUseCase: getIt(),
-      getAchievementsUseCase: getIt(),
+      startFocusSessionUseCase: getIt<StartFocusSessionUseCase>(),
+      endFocusSessionUseCase: getIt<EndFocusSessionUseCase>(),
+      getStreakUseCase: getIt<GetStreakUseCase>(),
+      getAchievementsUseCase: getIt<GetAchievementsUseCase>(),
+    ),
+  );
+  getIt.registerFactory<AiSuggestionsCubit>(
+    () => AiSuggestionsCubit(
+      getAiSuggestionsUseCase: getIt<GetAiSuggestionsUseCase>(),
     ),
   );
 

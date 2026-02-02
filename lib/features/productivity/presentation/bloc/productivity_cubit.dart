@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/usecases/productivity_usecases.dart';
-import 'productivity_state.dart';
+import 'package:dartz/dartz.dart';
+import 'package:voclio_app/features/productivity/domain/entities/productivity_entities.dart';
+import 'package:voclio_app/features/productivity/domain/usecases/productivity_usecases.dart';
+import 'package:voclio_app/features/productivity/presentation/bloc/productivity_state.dart';
 
 class ProductivityCubit extends Cubit<ProductivityState> {
   final StartFocusSessionUseCase startFocusSessionUseCase;
@@ -49,6 +51,29 @@ class ProductivityCubit extends Cubit<ProductivityState> {
     result.fold(
       (failure) => emit(ProductivityError('Failed to load achievements')),
       (achievements) => emit(AchievementsLoaded(achievements)),
+    );
+  }
+
+  Future<void> loadProductivityData() async {
+    emit(ProductivityLoading());
+
+    final results = await Future.wait([
+      getStreakUseCase(),
+      getAchievementsUseCase(),
+    ]);
+
+    final streakResult = results[0] as Either<dynamic, StreakEntity>;
+    final achievementsResult =
+        results[1] as Either<dynamic, List<AchievementEntity>>;
+
+    streakResult.fold(
+      (failure) => emit(ProductivityError('Failed to load streak data')),
+      (streak) => achievementsResult.fold(
+        (failure) => emit(ProductivityError('Failed to load achievements')),
+        (achievements) => emit(
+          ProductivityDataLoaded(streak: streak, achievements: achievements),
+        ),
+      ),
     );
   }
 

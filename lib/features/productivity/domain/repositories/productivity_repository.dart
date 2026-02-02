@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:voclio_app/core/errors/failures.dart';
-import '../entities/productivity_entities.dart';
+import 'package:voclio_app/features/productivity/domain/entities/productivity_entities.dart';
+import 'package:voclio_app/features/productivity/domain/entities/ai_suggestion_entity.dart';
 
 abstract class ProductivityRepository {
   Future<Either<Failure, FocusSessionEntity>> startFocusSession(
@@ -12,4 +13,5 @@ abstract class ProductivityRepository {
   Future<Either<Failure, void>> endFocusSession(String id, int actualDuration);
   Future<Either<Failure, StreakEntity>> getStreak();
   Future<Either<Failure, List<AchievementEntity>>> getAchievements();
+  Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions();
 }

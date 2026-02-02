@@ -1,6 +1,7 @@
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
-import '../models/productivity_models.dart';
+import 'package:voclio_app/features/productivity/data/models/productivity_models.dart';
+import 'package:voclio_app/features/productivity/data/models/ai_suggestion_model.dart';
 
 abstract class ProductivityRemoteDataSource {
   Future<FocusSessionModel> startFocusSession(
@@ -12,6 +13,7 @@ abstract class ProductivityRemoteDataSource {
   Future<void> endFocusSession(String id, int actualDuration);
   Future<StreakModel> getStreak();
   Future<List<AchievementModel>> getAchievements();
+  Future<AiSuggestionModel> getAiSuggestions();
 }
 
 class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
@@ -34,7 +36,7 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
           if (volume != null) 'sound_volume': volume,
         },
       );
-      return FocusSessionModel.fromJson(response.data['data']);
+      return FocusSessionModel.fromJson(response.data['data']['session']);
     } catch (e) {
       // Return mock focus session
       return FocusSessionModel(
@@ -80,7 +82,7 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
     try {
       await apiClient.put(
         ApiEndpoints.focusSessionById(id),
-        data: {'completed': true, 'actual_duration': actualDuration},
+        data: {'status': 'completed', 'actual_duration': actualDuration},
       );
     } catch (e) {
       // Mock success - do nothing
@@ -88,11 +90,10 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
     }
   }
 
-  @override
   Future<StreakModel> getStreak() async {
     try {
       final response = await apiClient.get(ApiEndpoints.streak);
-      return StreakModel.fromJson(response.data['data']);
+      return StreakModel.fromJson(response.data['data']['streak']);
     } catch (e) {
       // Return mock data if API fails
       return StreakModel(
@@ -107,7 +108,7 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
   Future<List<AchievementModel>> getAchievements() async {
     try {
       final response = await apiClient.get(ApiEndpoints.achievements);
-      final List<dynamic> data = response.data['data'];
+      final List<dynamic> data = response.data['data']['achievements'];
       return data.map((json) => AchievementModel.fromJson(json)).toList();
     } catch (e) {
       // Return mock data if API fails
@@ -155,6 +156,18 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
           isUnlocked: false,
         ),
       ];
+    }
+  }
+
+  @override
+  Future<AiSuggestionModel> getAiSuggestions() async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.productivitySuggestions,
+      );
+      return AiSuggestionModel.fromJson(response.data);
+    } catch (e) {
+      rethrow;
     }
   }
 }

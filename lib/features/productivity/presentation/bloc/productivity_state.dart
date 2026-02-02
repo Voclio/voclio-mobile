@@ -37,6 +37,16 @@ class AchievementsLoaded extends ProductivityState {
   List<Object?> get props => [achievements];
 }
 
+class ProductivityDataLoaded extends ProductivityState {
+  final StreakEntity streak;
+  final List<AchievementEntity> achievements;
+
+  ProductivityDataLoaded({required this.streak, required this.achievements});
+
+  @override
+  List<Object?> get props => [streak, achievements];
+}
+
 class ProductivityError extends ProductivityState {
   final String message;
 
