@@ -306,7 +306,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                         (screenWidth - totalPadding) / 2;
 
                                     // Adjust this value (210.h) until your content fits perfectly
-                                    final double desiredCardHeight = 210.h;
+                                    final double desiredCardHeight = 230.h;
                                     final double childAspectRatio =
                                         cardWidth / desiredCardHeight;
 
@@ -453,7 +453,9 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
   Widget _buildLoadingState(BuildContext context, ThemeData theme) {
     final isDark = theme.brightness == Brightness.dark;
     
-    return Column(
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
       children: [
         SizedBox(height: 40.h),
         // Shimmer-like loading cards
@@ -541,6 +543,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
               );
         }),
       ],
+      ),
     );
   }
 

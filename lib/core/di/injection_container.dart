@@ -108,8 +108,6 @@ import 'package:voclio_app/features/voice/domain/usecases/delete_voice_usecase.d
 import 'package:voclio_app/features/voice/domain/usecases/create_note_from_voice_usecase.dart';
 import 'package:voclio_app/features/voice/domain/usecases/create_tasks_from_voice_usecase.dart';
 import 'package:voclio_app/features/voice/domain/usecases/transcribe_voice_usecase.dart';
-import 'package:voclio_app/features/voice/domain/usecases/preview_extraction_usecase.dart';
-import 'package:voclio_app/features/voice/domain/usecases/create_from_preview_usecase.dart';
 import 'package:voclio_app/features/voice/data/datasources/voice_remote_datasource.dart';
 import 'package:voclio_app/features/voice/data/datasources/voice_remote_datasource_impl.dart';
 import 'package:voclio_app/features/voice/data/repositories/voice_repository_impl.dart';
@@ -486,12 +484,15 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(
     () => TranscribeVoiceUseCase(getIt<VoiceRepository>()),
   );
-  getIt.registerLazySingleton(
-    () => PreviewExtractionUseCase(getIt<VoiceRepository>()),
-  );
-  getIt.registerLazySingleton(
-    () => CreateFromPreviewUseCase(getIt<VoiceRepository>()),
-  );
+  // getIt.registerLazySingleton(
+  //   () => PreviewExtractionUseCase(getIt<VoiceRepository>()),
+  // );
+  // getIt.registerLazySingleton(
+  //   () => CreateFromPreviewUseCase(getIt<VoiceRepository>()),
+  // );
+  // getIt.registerLazySingleton(
+  //   () => ProcessVoiceUseCase(getIt<VoiceRepository>()),
+  // );
   getIt.registerFactory<VoiceBloc>(
     () => VoiceBloc(
       getVoiceRecordingsUseCase: getIt(),
@@ -500,8 +501,6 @@ Future<void> setupDependencies() async {
       createNoteFromVoiceUseCase: getIt(),
       createTasksFromVoiceUseCase: getIt(),
       transcribeVoiceUseCase: getIt(),
-      previewExtractionUseCase: getIt(),
-      createFromPreviewUseCase: getIt(),
     ),
   );
 

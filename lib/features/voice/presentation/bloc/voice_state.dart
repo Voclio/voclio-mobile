@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/voice_recording.dart';
-import '../../domain/entities/voice_extraction.dart';
 
 abstract class VoiceState extends Equatable {
   const VoiceState();
@@ -56,56 +55,3 @@ class VoiceError extends VoiceState {
   @override
   List<Object?> get props => [message];
 }
-
-// New state for extraction preview
-class VoiceExtractionLoaded extends VoiceState {
-  final String transcription;
-  final String recordingId;
-  final VoiceExtraction extraction;
-
-  const VoiceExtractionLoaded({
-    required this.transcription,
-    required this.recordingId,
-    required this.extraction,
-  });
-
-  VoiceExtractionLoaded copyWith({
-    String? transcription,
-    String? recordingId,
-    VoiceExtraction? extraction,
-  }) {
-    return VoiceExtractionLoaded(
-      transcription: transcription ?? this.transcription,
-      recordingId: recordingId ?? this.recordingId,
-      extraction: extraction ?? this.extraction,
-    );
-  }
-
-  @override
-  List<Object?> get props => [transcription, recordingId, extraction];
-}
-
-class VoiceExtractionLoading extends VoiceState {
-  final String transcription;
-  final String recordingId;
-  final String message;
-
-  const VoiceExtractionLoading({
-    required this.transcription,
-    required this.recordingId,
-    this.message = 'AI is analyzing your voice...',
-  });
-
-  @override
-  List<Object?> get props => [transcription, recordingId, message];
-}
-
-class VoiceCreatingFromPreview extends VoiceState {
-  final String message;
-
-  const VoiceCreatingFromPreview([this.message = 'Creating items...']);
-
-  @override
-  List<Object?> get props => [message];
-}
-
