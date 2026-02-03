@@ -29,9 +29,7 @@ class HomeListTile extends StatelessWidget {
         overlay.size.width - 200.w,
         0,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       elevation: 8,
       items: [
         _buildMenuItem(
@@ -81,7 +79,7 @@ class HomeListTile extends StatelessWidget {
       ],
     ).then((value) {
       if (value == null) return;
-      
+
       switch (value) {
         case 'profile':
           context.push(AppRouter.profile);
@@ -158,8 +156,27 @@ class HomeListTile extends StatelessWidget {
         final userName = user?.name.isNotEmpty == true ? user!.name : 'User';
         final avatarUrl = user?.avatar;
 
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white,
+                context.colors.primary!.withOpacity(0.03),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20.r),
+            boxShadow: [
+              BoxShadow(
+                color: context.colors.primary!.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               GestureDetector(
@@ -169,15 +186,23 @@ class HomeListTile extends StatelessWidget {
                   height: 56.r,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        context.colors.primary!.withOpacity(0.1),
+                        context.colors.primary!.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     border: Border.all(
                       color: context.colors.primary!.withOpacity(0.2),
-                      width: 2,
+                      width: 2.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: context.colors.primary!.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: context.colors.primary!.withOpacity(0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
@@ -189,46 +214,59 @@ class HomeListTile extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  color: Colors.grey.shade300,
+                                  color: context.colors.primary!.withOpacity(
+                                    0.1,
+                                  ),
                                   child: Icon(
-                                    Icons.person,
-                                    size: 30.sp,
-                                    color: Colors.grey.shade600,
+                                    Icons.person_rounded,
+                                    size: 28.sp,
+                                    color: context.colors.primary,
                                   ),
                                 );
                               },
                             )
                             : Container(
-                              color: Colors.grey.shade300,
+                              color: context.colors.primary!.withOpacity(0.05),
                               child: Icon(
-                                Icons.person,
-                                size: 30.sp,
-                                color: Colors.grey.shade600,
+                                Icons.person_rounded,
+                                size: 28.sp,
+                                color: context.colors.primary,
                               ),
                             ),
                   ),
                 ),
               ),
-              SizedBox(width: 12.w),
+              SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      context.translate(LangKeys.welcoming),
-                      style: context.textStyle.copyWith(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          context.translate(LangKeys.welcoming),
+                          style: context.textStyle.copyWith(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '👋',
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 2.h),
+                    SizedBox(height: 4.h),
                     Text(
                       userName,
                       style: context.textStyle.copyWith(
                         fontSize: 20.sp,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: const Color(0xFF1A1A2E),
+                        letterSpacing: -0.5,
                       ),
                     ),
                   ],

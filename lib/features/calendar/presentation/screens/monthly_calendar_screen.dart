@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:get_it/get_it.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../bloc/calendar_cubit.dart';
 import '../bloc/calendar_state.dart';
 import '../../../tasks/presentation/widgets/add_task_buttom_sheet.dart';
@@ -13,6 +14,7 @@ import '../../../tasks/presentation/bloc/tasks_cubit.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../../core/enums/enums.dart';
 import '../../domain/entities/calendar_month_entity.dart';
+import '../../domain/entities/google_calendar_entity.dart';
 
 class MonthlyCalendarScreen extends StatelessWidget {
   const MonthlyCalendarScreen({super.key});
@@ -38,11 +40,16 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   String _selectedFilter = 'all'; // all, pending, completed, overdue
+  bool _showGoogleEvents = true; // Toggle for showing Google Calendar events
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
+    // Check Google Calendar status on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CalendarCubit>().checkGoogleCalendarStatus();
+    });
   }
 
   void _showAddTaskSheet(BuildContext context) {
@@ -104,6 +111,276 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     }
   }
 
+  Future<void> _connectGoogleCalendar(BuildContext context) async {
+    final cubit = context.read<CalendarCubit>();
+    final urlEntity = await cubit.getGoogleConnectUrl();
+    
+    if (urlEntity != null && urlEntity.authUrl.isNotEmpty) {
+      final uri = Uri.parse(urlEntity.authUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open Google sign-in')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _disconnectGoogleCalendar(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disconnect Google Calendar?'),
+        content: const Text(
+          'This will remove the Google Calendar sync. Your Google events will no longer appear in the calendar.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<CalendarCubit>().disconnectGoogleCalendar();
+    }
+  }
+
+  Future<void> _connectWebex(BuildContext context) async {
+    final cubit = context.read<CalendarCubit>();
+    final urlEntity = await cubit.getWebexConnectUrl();
+    
+    if (urlEntity != null && urlEntity.authUrl.isNotEmpty) {
+      final uri = Uri.parse(urlEntity.authUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open Webex sign-in')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _disconnectWebex(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disconnect Webex?'),
+        content: const Text(
+          'This will remove the Webex sync. Your Webex meetings will no longer appear in the calendar.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<CalendarCubit>().disconnectWebex();
+    }
+  }
+
+  void _showGoogleCalendarMenu(BuildContext context, ThemeData theme, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.all(20.r),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.r),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.event_available,
+                    color: Colors.green,
+                    size: 24.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Google Calendar Connected',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Your events are syncing',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            // Toggle show Google events
+            ListTile(
+              leading: Icon(
+                _showGoogleEvents ? Icons.visibility : Icons.visibility_off,
+                color: theme.colorScheme.primary,
+              ),
+              title: Text(_showGoogleEvents ? 'Hide Google Events' : 'Show Google Events'),
+              onTap: () {
+                setState(() {
+                  _showGoogleEvents = !_showGoogleEvents;
+                });
+                Navigator.pop(ctx);
+              },
+            ),
+            // Refresh events
+            ListTile(
+              leading: Icon(Icons.refresh, color: theme.colorScheme.primary),
+              title: const Text('Refresh Events'),
+              onTap: () {
+                context.read<CalendarCubit>().loadMonth(
+                  _focusedDay.year,
+                  _focusedDay.month,
+                );
+                Navigator.pop(ctx);
+              },
+            ),
+            // Disconnect
+            ListTile(
+              leading: const Icon(Icons.link_off, color: Colors.red),
+              title: const Text(
+                'Disconnect Google Calendar',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _disconnectGoogleCalendar(context);
+              },
+            ),
+            SizedBox(height: 10.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showWebexMenu(BuildContext context, ThemeData theme, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.all(20.r),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.r),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.video_call,
+                    color: Colors.blue,
+                    size: 24.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Webex Connected',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'Your meetings are syncing',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            // Refresh meetings
+            ListTile(
+              leading: Icon(Icons.refresh, color: theme.colorScheme.primary),
+              title: const Text('Refresh Meetings'),
+              onTap: () {
+                context.read<CalendarCubit>().loadMonth(
+                  _focusedDay.year,
+                  _focusedDay.month,
+                );
+                Navigator.pop(ctx);
+              },
+            ),
+            // Disconnect
+            ListTile(
+              leading: const Icon(Icons.link_off, color: Colors.red),
+              title: const Text(
+                'Disconnect Webex',
+                style: TextStyle(color: Colors.red),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _disconnectWebex(context);
+              },
+            ),
+            SizedBox(height: 10.h),
+          ],
+        ),
+      ),
+    );
+  }
+
   List<CalendarTaskEntity> _getFilteredTasks(List<CalendarTaskEntity> tasks) {
     final now = DateTime.now();
     switch (_selectedFilter) {
@@ -138,9 +415,93 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
         elevation: 0,
         centerTitle: false,
         actions: [
+          // Google Calendar toggle
+          BlocBuilder<CalendarCubit, CalendarState>(
+            buildWhen: (prev, curr) =>
+                curr is GoogleCalendarConnected ||
+                curr is GoogleCalendarDisconnected ||
+                curr is CalendarLoaded,
+            builder: (context, state) {
+              bool isConnected = false;
+              if (state is CalendarLoaded) {
+                isConnected = state.googleStatus?.isConnected ?? false;
+              } else if (state is GoogleCalendarConnected) {
+                isConnected = true;
+              }
+
+              return Container(
+                margin: EdgeInsets.only(right: 4.w),
+                decoration: BoxDecoration(
+                  color: isConnected
+                      ? Colors.green.withOpacity(0.15)
+                      : isDark
+                          ? Colors.white10
+                          : Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    isConnected ? Icons.event_available : Icons.event_busy,
+                    color: isConnected ? Colors.green : theme.colorScheme.secondary,
+                    size: 18.sp,
+                  ),
+                  onPressed: () {
+                    if (isConnected) {
+                      _showGoogleCalendarMenu(context, theme, isDark);
+                    } else {
+                      _connectGoogleCalendar(context);
+                    }
+                  },
+                  tooltip: isConnected ? 'Google Calendar' : 'Connect Google',
+                ),
+              );
+            },
+          ),
+          // Webex toggle
+          BlocBuilder<CalendarCubit, CalendarState>(
+            buildWhen: (prev, curr) =>
+                curr is WebexConnected ||
+                curr is WebexDisconnected ||
+                curr is CalendarLoaded,
+            builder: (context, state) {
+              bool isConnected = false;
+              if (state is CalendarLoaded) {
+                isConnected = state.webexStatus?.isConnected ?? false;
+              } else if (state is WebexConnected) {
+                isConnected = true;
+              }
+
+              return Container(
+                margin: EdgeInsets.only(right: 4.w),
+                decoration: BoxDecoration(
+                  color: isConnected
+                      ? Colors.blue.withOpacity(0.15)
+                      : isDark
+                          ? Colors.white10
+                          : Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    isConnected ? Icons.video_call : Icons.video_call_outlined,
+                    color: isConnected ? Colors.blue : theme.colorScheme.secondary,
+                    size: 18.sp,
+                  ),
+                  onPressed: () {
+                    if (isConnected) {
+                      _showWebexMenu(context, theme, isDark);
+                    } else {
+                      _connectWebex(context);
+                    }
+                  },
+                  tooltip: isConnected ? 'Webex Connected' : 'Connect Webex',
+                ),
+              );
+            },
+          ),
           // Calendar view toggle
           Container(
-            margin: EdgeInsets.only(right: 8.w),
+            margin: EdgeInsets.only(right: 4.w),
             decoration: BoxDecoration(
               color: isDark ? Colors.white10 : Colors.grey.shade200,
               borderRadius: BorderRadius.circular(12.r),
@@ -153,7 +514,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         ? Icons.calendar_view_day
                         : Icons.calendar_month,
                 color: theme.colorScheme.onSurface,
-                size: 20.sp,
+                size: 18.sp,
               ),
               onPressed: () {
                 setState(() {
@@ -444,43 +805,25 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
                 SizedBox(height: 12.h),
 
+                // Today's meetings section (if connected and it's today)
+                if (isSameDay(effectiveSelection, DateTime.now()) &&
+                    state.todayMeetings != null &&
+                    state.todayMeetings!.isNotEmpty)
+                  _buildTodayMeetingsSection(state.todayMeetings!, theme, isDark),
+
+                // Calendar integrations banner (if not all connected)
+                if ((state.googleStatus == null || !state.googleStatus!.isConnected) ||
+                    (state.webexStatus == null || !state.webexStatus!.isConnected))
+                  _buildCalendarIntegrationsBanner(context, theme, isDark, state),
+
                 // Events List
                 Expanded(
-                  child:
-                      selectedDayEvents == null ||
-                              (selectedDayEvents.tasks.isEmpty &&
-                                  selectedDayEvents.reminders.isEmpty)
-                          ? _buildEmptyState(
-                            theme,
-                            isDark,
-                          ).animate().fadeIn(duration: 400.ms, delay: 300.ms)
-                          : ListView(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            physics: const BouncingScrollPhysics(),
-                            children: [
-                              ..._getFilteredTasks(selectedDayEvents.tasks).asMap().entries.map(
-                                (entry) => _buildTaskCard(
-                                  entry.value,
-                                  theme,
-                                  isDark,
-                                  context,
-                                ).animate(delay: (entry.key * 80).ms)
-                                    .fadeIn(duration: 300.ms)
-                                    .slideX(begin: 0.1, end: 0),
-                              ),
-                              ...selectedDayEvents.reminders.map(
-                                (reminder) => _buildEventCard(
-                                  reminder.title,
-                                  'Reminder: ${DateFormat('hh:mm a').format(reminder.reminderTime)}',
-                                  Colors.purple,
-                                  theme,
-                                  isDark,
-                                  Icons.notifications_active_outlined,
-                                ),
-                              ),
-                              SizedBox(height: 100.h), // Space for bottom nav
-                            ],
-                          ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
+                  child: _buildEventsList(
+                    selectedDayEvents,
+                    theme,
+                    isDark,
+                    context,
+                  ),
                 ),
               ],
             );
@@ -747,6 +1090,133 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     );
   }
 
+  Widget _buildEventsList(
+    DayEventsEntity? selectedDayEvents,
+    ThemeData theme,
+    bool isDark,
+    BuildContext context,
+  ) {
+    final tasks = selectedDayEvents?.tasks ?? [];
+    final reminders = selectedDayEvents?.reminders ?? [];
+    final googleEvents = selectedDayEvents?.googleEvents ?? [];
+
+    final filteredTasks = _getFilteredTasks(tasks);
+    final hasAnyEvents = filteredTasks.isNotEmpty ||
+        reminders.isNotEmpty ||
+        (_showGoogleEvents && googleEvents.isNotEmpty);
+
+    if (!hasAnyEvents) {
+      return _buildEmptyState(theme, isDark).animate().fadeIn(duration: 400.ms, delay: 300.ms);
+    }
+
+    return ListView(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        // Google Calendar Events (if showing)
+        if (_showGoogleEvents && googleEvents.isNotEmpty) ...[
+          Padding(
+            padding: EdgeInsets.only(bottom: 8.h, top: 4.h),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_month_rounded,
+                  size: 14.sp,
+                  color: Colors.blue,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  'Google Calendar',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
+                  ),
+                ),
+                SizedBox(width: 6.w),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    '${googleEvents.length}',
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...googleEvents.asMap().entries.map(
+            (entry) => _buildGoogleEventCard(entry.value, theme, isDark)
+                .animate(delay: (entry.key * 80).ms)
+                .fadeIn(duration: 300.ms)
+                .slideX(begin: 0.1, end: 0),
+          ),
+          if (filteredTasks.isNotEmpty || reminders.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              child: Divider(color: theme.dividerColor.withOpacity(0.3)),
+            ),
+        ],
+
+        // Tasks section
+        if (filteredTasks.isNotEmpty) ...[
+          Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.task_alt_rounded,
+                  size: 14.sp,
+                  color: theme.colorScheme.primary,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  'Tasks',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...filteredTasks.asMap().entries.map(
+            (entry) => _buildTaskCard(
+              entry.value,
+              theme,
+              isDark,
+              context,
+            ).animate(delay: (entry.key * 80).ms)
+                .fadeIn(duration: 300.ms)
+                .slideX(begin: 0.1, end: 0),
+          ),
+        ],
+
+        // Reminders section
+        ...reminders.map(
+          (reminder) => _buildEventCard(
+            reminder.title,
+            'Reminder: ${DateFormat('hh:mm a').format(reminder.reminderTime)}',
+            Colors.purple,
+            theme,
+            isDark,
+            Icons.notifications_active_outlined,
+          ),
+        ),
+
+        SizedBox(height: 100.h), // Space for bottom nav
+      ],
+    ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
+  }
+
   Widget _buildEmptyState(ThemeData theme, bool isDark) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -882,6 +1352,525 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildGoogleEventCard(
+    GoogleCalendarEventEntity event,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final startTime = event.startTime != null
+        ? DateFormat('hh:mm a').format(event.startTime!)
+        : 'All day';
+    final endTime = event.endTime != null
+        ? DateFormat('hh:mm a').format(event.endTime!)
+        : '';
+    final timeText = endTime.isNotEmpty ? '$startTime - $endTime' : startTime;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.3),
+          width: 1.5,
+        ),
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
+      child: Row(
+        children: [
+          // Google Calendar indicator
+          Container(
+            padding: EdgeInsets.all(10.r),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.event_note_rounded,
+              color: Colors.blue,
+              size: 20.sp,
+            ),
+          ),
+          SizedBox(width: 14.w),
+          // Event info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        event.title,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_month_rounded,
+                            size: 10.sp,
+                            color: Colors.blue,
+                          ),
+                          SizedBox(width: 3.w),
+                          Text(
+                            'Google',
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      size: 13.sp,
+                      color: theme.colorScheme.secondary,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      timeText,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: theme.colorScheme.secondary,
+                      ),
+                    ),
+                    if (event.location != null && event.location!.isNotEmpty) ...[
+                      SizedBox(width: 10.w),
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 13.sp,
+                        color: theme.colorScheme.secondary,
+                      ),
+                      SizedBox(width: 2.w),
+                      Expanded(
+                        child: Text(
+                          event.location!,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: theme.colorScheme.secondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (event.meetLink != null) ...[
+            SizedBox(width: 8.w),
+            GestureDetector(
+              onTap: () async {
+                final uri = Uri.parse(event.meetLink!);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              child: Container(
+                padding: EdgeInsets.all(8.r),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Icon(
+                  Icons.videocam_rounded,
+                  color: Colors.green,
+                  size: 18.sp,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarIntegrationsBanner(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    CalendarLoaded state,
+  ) {
+    final isGoogleConnected = state.googleStatus?.isConnected ?? false;
+    final isWebexConnected = state.webexStatus?.isConnected ?? false;
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(12.r),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: theme.dividerColor.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Calendar Integrations',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              // Google Calendar
+              Expanded(
+                child: _buildIntegrationCard(
+                  context: context,
+                  theme: theme,
+                  isDark: isDark,
+                  title: 'Google',
+                  icon: Icons.calendar_month_rounded,
+                  color: Colors.green,
+                  isConnected: isGoogleConnected,
+                  onConnect: () => _connectGoogleCalendar(context),
+                  onTap: () => _showGoogleCalendarMenu(context, theme, isDark),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              // Webex
+              Expanded(
+                child: _buildIntegrationCard(
+                  context: context,
+                  theme: theme,
+                  isDark: isDark,
+                  title: 'Webex',
+                  icon: Icons.video_call_rounded,
+                  color: Colors.blue,
+                  isConnected: isWebexConnected,
+                  onConnect: () => _connectWebex(context),
+                  onTap: () => _showWebexMenu(context, theme, isDark),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildIntegrationCard({
+    required BuildContext context,
+    required ThemeData theme,
+    required bool isDark,
+    required String title,
+    required IconData icon,
+    required Color color,
+    required bool isConnected,
+    required VoidCallback onConnect,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: isConnected ? onTap : onConnect,
+      child: Container(
+        padding: EdgeInsets.all(12.r),
+        decoration: BoxDecoration(
+          color: isConnected
+              ? color.withOpacity(0.1)
+              : isDark
+                  ? Colors.white.withOpacity(0.03)
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isConnected ? color.withOpacity(0.3) : theme.dividerColor.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(
+                  icon,
+                  color: isConnected ? color : theme.colorScheme.secondary,
+                  size: 20.sp,
+                ),
+                if (isConnected)
+                  Icon(
+                    Icons.check_circle,
+                    color: color,
+                    size: 16.sp,
+                  )
+                else
+                  Icon(
+                    Icons.add_circle_outline,
+                    color: theme.colorScheme.secondary,
+                    size: 16.sp,
+                  ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: isConnected ? color : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 2.h),
+            Row(
+              children: [
+                Text(
+                  isConnected ? 'Connected' : 'Tap to connect',
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: theme.colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleCalendarBanner(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.blue.withOpacity(0.1),
+            Colors.green.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10.r),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.calendar_month_rounded,
+              color: Colors.blue,
+              size: 24.sp,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Connect Google Calendar',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  'Sync your meetings and events',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: theme.colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => _connectGoogleCalendar(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            ),
+            child: Text(
+              'Connect',
+              style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildTodayMeetingsSection(
+    List<GoogleCalendarEventEntity> meetings,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    if (meetings.isEmpty || !_showGoogleEvents) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Row(
+            children: [
+              Icon(
+                Icons.videocam_rounded,
+                color: Colors.green,
+                size: 18.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                "Today's Meetings",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Text(
+                  '${meetings.length}',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        SizedBox(
+          height: 80.h,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            physics: const BouncingScrollPhysics(),
+            itemCount: meetings.length,
+            itemBuilder: (ctx, index) {
+              final meeting = meetings[index];
+              return Container(
+                width: 200.w,
+                margin: EdgeInsets.only(right: 12.w),
+                padding: EdgeInsets.all(12.r),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.green.withOpacity(0.1),
+                      Colors.blue.withOpacity(0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(
+                    color: Colors.green.withOpacity(0.2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      meeting.title,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 12.sp,
+                          color: theme.colorScheme.secondary,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          meeting.startTime != null
+                              ? DateFormat('hh:mm a').format(meeting.startTime!)
+                              : 'All day',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: theme.colorScheme.secondary,
+                          ),
+                        ),
+                        if (meeting.meetLink != null) ...[
+                          const Spacer(),
+                          Icon(
+                            Icons.videocam_rounded,
+                            size: 14.sp,
+                            color: Colors.green,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ).animate(delay: (index * 100).ms).fadeIn().slideX(begin: 0.2, end: 0);
+            },
+          ),
+        ),
+        SizedBox(height: 12.h),
+      ],
     );
   }
 }

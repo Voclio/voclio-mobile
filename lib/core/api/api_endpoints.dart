@@ -81,6 +81,26 @@ class ApiEndpoints {
   static const String calendarEvents = '/calendar/events';
   static String calendarDay(String date) => '/calendar/day/$date';
 
+  // ========== Google Calendar ==========
+  static const String googleCalendarStatus = '/calendar/google/status';
+  static const String googleCalendarConnect = '/calendar/google/connect';
+  static const String googleCalendarConnectMobile = '/calendar/google/connect/mobile';
+  static const String googleCalendarLinkSession = '/calendar/google/link-session';
+  static const String googleCalendarCallbackMobile = '/calendar/google/callback/mobile';
+  static const String googleCalendarDisconnect = '/calendar/google/disconnect';
+  static const String googleCalendarEvents = '/calendar/google/events';
+  static const String googleCalendarToday = '/calendar/google/today';
+  static const String googleCalendarUpcoming = '/calendar/google/upcoming';
+
+  // ========== Webex Calendar ==========
+  static const String webexAuth = '/webex/auth';
+  static const String webexCallback = '/webex/callback';
+  static const String webexStatus = '/webex/status';
+  static const String webexMeetings = '/webex/meetings';
+  static const String webexMeetingsToday = '/webex/meetings/today';
+  static const String webexDisconnect = '/webex/disconnect';
+  static String webexMeetingById(String id) => '/webex/meetings/$id';
+
   // ========== Reminders ==========
   static const String reminders = '/reminders';
   static const String upcomingReminders = '/reminders/upcoming';

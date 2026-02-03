@@ -32,23 +32,20 @@ class AiSuggestionsWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 16.h),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            theme.primaryColor.withOpacity(0.9),
-            theme.primaryColor.withOpacity(0.7),
-          ],
+          colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.85)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(22.r),
         boxShadow: [
           BoxShadow(
-            color: theme.primaryColor.withOpacity(0.3),
-            blurRadius: 20,
+            color: theme.primaryColor.withOpacity(0.35),
+            blurRadius: 24,
             offset: const Offset(0, 10),
+            spreadRadius: -2,
           ),
         ],
       ),
@@ -58,10 +55,10 @@ class AiSuggestionsWidget extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(8.w),
+                padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Icon(
                   Icons.auto_awesome,
@@ -74,27 +71,29 @@ class AiSuggestionsWidget extends StatelessWidget {
                 'AI Suggestions',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
                 ),
               ),
               const Spacer(),
               _buildStatsChip('🔥 ${summary.currentStreak} Day Streak'),
             ],
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 18.h),
           ...suggestions
               .take(3)
               .map((suggestion) => _buildSuggestionItem(suggestion)),
-          SizedBox(height: 12.h),
+          SizedBox(height: 8.h),
           Align(
             alignment: Alignment.centerRight,
             child: Text(
               'Based on your ${summary.totalSessions} sessions this month',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withOpacity(0.65),
                 fontSize: 11.sp,
                 fontStyle: FontStyle.italic,
+                letterSpacing: 0.2,
               ),
             ),
           ),
@@ -153,26 +152,44 @@ class AiSuggestionsWidget extends StatelessWidget {
 
   Widget _buildLoadingState() {
     return Container(
-      height: 150.h,
-      margin: EdgeInsets.symmetric(vertical: 16.h),
+      height: 160.h,
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(24.r),
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(22.r),
       ),
-      child: const Center(child: CircularProgressIndicator()),
+      child: Center(
+        child: SizedBox(
+          width: 30.w,
+          height: 30.w,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade400),
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildErrorState(String message) {
     return Container(
-      padding: EdgeInsets.all(16.w),
-      margin: EdgeInsets.symmetric(vertical: 16.h),
+      padding: EdgeInsets.all(18.w),
       decoration: BoxDecoration(
-        color: (Colors.red[50] ?? Colors.red).withOpacity(0.3),
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: Colors.red[100] ?? Colors.red),
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(22.r),
+        border: Border.all(color: Colors.red.shade100),
       ),
-      child: Text(message, style: const TextStyle(color: Colors.red)),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red.shade400, size: 22.sp),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: Colors.red.shade700, fontSize: 13.sp),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
