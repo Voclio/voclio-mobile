@@ -179,64 +179,99 @@ class HomeListTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              GestureDetector(
-                onTap: () => _showProfileMenu(context),
-                child: Container(
-                  width: 56.r,
-                  height: 56.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        context.colors.primary!.withOpacity(0.1),
-                        context.colors.primary!.withOpacity(0.05),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    border: Border.all(
-                      color: context.colors.primary!.withOpacity(0.2),
-                      width: 2.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: context.colors.primary!.withOpacity(0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
+              // Profile section with menu indicator
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showProfileMenu(context),
+                  borderRadius: BorderRadius.circular(16.r),
+                  child: Container(
+                    padding: EdgeInsets.all(4.w),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: context.colors.primary!.withOpacity(0.1),
+                        width: 1,
                       ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child:
-                        avatarUrl != null && avatarUrl.isNotEmpty
-                            ? Image.network(
-                              avatarUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: context.colors.primary!.withOpacity(
-                                    0.1,
-                                  ),
-                                  child: Icon(
-                                    Icons.person_rounded,
-                                    size: 28.sp,
-                                    color: context.colors.primary,
-                                  ),
-                                );
-                              },
-                            )
-                            : Container(
-                              color: context.colors.primary!.withOpacity(0.05),
-                              child: Icon(
-                                Icons.person_rounded,
-                                size: 28.sp,
-                                color: context.colors.primary,
-                              ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Avatar
+                        Container(
+                          width: 50.r,
+                          height: 50.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                context.colors.primary!.withOpacity(0.1),
+                                context.colors.primary!.withOpacity(0.05),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
+                            border: Border.all(
+                              color: context.colors.primary!.withOpacity(0.2),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.colors.primary!.withOpacity(0.15),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child:
+                                avatarUrl != null && avatarUrl.isNotEmpty
+                                    ? Image.network(
+                                      avatarUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          color: context.colors.primary!.withOpacity(
+                                            0.1,
+                                          ),
+                                          child: Icon(
+                                            Icons.person_rounded,
+                                            size: 26.sp,
+                                            color: context.colors.primary,
+                                          ),
+                                        );
+                                      },
+                                    )
+                                    : Container(
+                                      color: context.colors.primary!.withOpacity(0.05),
+                                      child: Icon(
+                                        Icons.person_rounded,
+                                        size: 26.sp,
+                                        color: context.colors.primary,
+                                      ),
+                                    ),
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        // Dropdown indicator
+                        Container(
+                          padding: EdgeInsets.all(4.w),
+                          decoration: BoxDecoration(
+                            color: context.colors.primary!.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: context.colors.primary,
+                            size: 16.sp,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              SizedBox(width: 16.w),
+              SizedBox(width: 14.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
