@@ -20,13 +20,22 @@ class OTPResponseModel extends OTPResponse {
     return OTPResponseModel(
       success: parseBool(json['success'] ?? json['status']),
       message: (json['message'] ?? json['msg'] ?? 'OTP Sent') as String,
-      sessionId: (json['sessionId'] ?? json['session_id']) as String?,
-      expiresAt: json['expiresAt'] != null || json['expires_at'] != null
-          ? DateTime.tryParse(
-                (json['expiresAt'] ?? json['expires_at']).toString(),
-              ) ??
-              DateTime.now().add(const Duration(minutes: 5))
-          : DateTime.now().add(const Duration(minutes: 5)),
+      sessionId:
+          (json['data'] != null
+                  ? (json['data']['sessionId'] ??
+                      json['data']['session_id'] ??
+                      json['data']['reset_token'])
+                  : (json['sessionId'] ??
+                      json['session_id'] ??
+                      json['reset_token']))
+              as String?,
+      expiresAt:
+          json['expiresAt'] != null || json['expires_at'] != null
+              ? DateTime.tryParse(
+                    (json['expiresAt'] ?? json['expires_at']).toString(),
+                  ) ??
+                  DateTime.now().add(const Duration(minutes: 5))
+              : DateTime.now().add(const Duration(minutes: 5)),
     );
   }
 

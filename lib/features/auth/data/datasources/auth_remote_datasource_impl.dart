@@ -1,5 +1,7 @@
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/auth_request_model.dart';
 import '../models/auth_response_model.dart';
@@ -78,9 +80,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<AuthResponseModel> googleSignIn() async {
     try {
-      // Assuming token is obtained here or passed logically.
-      // Requirement asks for body {"id_token": ...}
-      final String idToken = "YOUR_GOOGLE_ID_TOKEN";
+      // Initialize Google Sign-In
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+      );
+
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        throw Exception('Google sign in was cancelled');
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw Exception('Failed to get Google ID token');
+      }
+
+      // Send ID token to backend
       final response = await apiClient.post(
         ApiEndpoints.googleAuth,
         data: {'id_token': idToken},
@@ -94,10 +116,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<AuthResponseModel> facebookSignIn() async {
     try {
-      final String accessToken = "YOUR_FACEBOOK_ACCESS_TOKEN";
+      // Trigger the Facebook sign-in flow
+      final LoginResult result = await FacebookAuth.instance.login(
+        permissions: ['email', 'public_profile'],
+      );
+
+      if (result.status != LoginStatus.success) {
+        throw Exception(
+          'Facebook sign in was cancelled or failed: ${result.status}',
+        );
+      }
+
+      final AccessToken? accessToken = result.accessToken;
+
+      if (accessToken == null) {
+        throw Exception('Failed to get Facebook access token');
+      }
+
+      // Send access token to backend
       final response = await apiClient.post(
         ApiEndpoints.facebookAuth,
-        data: {'access_token': accessToken},
+        data: {'access_token': accessToken.tokenString},
       );
       return AuthResponseModel.fromJson(response.data);
     } catch (e) {
@@ -106,14 +145,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<OTPResponseModel> resendOTP(String email, OTPType type) async {
+    final response = await apiClient.post(
+      ApiEndpoints.resendOtp,
+      data: {'email': email, 'type': type.toShortString},
+    );
+    return OTPResponseModel.fromJson(response.data);
+  }
+
+  @override
   Future<void> changePassword(
     String currentPassword,
     String newPassword,
   ) async {
-    await apiClient.post(
+    await apiClient.put(
       ApiEndpoints.changePassword,
       data: {'current_password': currentPassword, 'new_password': newPassword},
     );
+  }
+
+  @override
+  Future<AuthResponseModel> getProfile() async {
+    final response = await apiClient.get(ApiEndpoints.profile);
+    return AuthResponseModel.fromJson(response.data);
   }
 
   @override
@@ -121,7 +175,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String name,
     String phoneNumber,
   ) async {
-    final response = await apiClient.post(
+    final response = await apiClient.put(
       ApiEndpoints.updateProfile,
       data: {'name': name, 'phone_number': phoneNumber},
     );

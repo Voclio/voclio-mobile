@@ -1,7 +1,8 @@
 class User {
   final String id;
   final String email;
-  final String fullName;
+  final String name;
+  final String? phoneNumber;
   final String? avatar;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -9,7 +10,8 @@ class User {
   const User({
     required this.id,
     required this.email,
-    required this.fullName,
+    required this.name,
+    this.phoneNumber,
     this.avatar,
     required this.createdAt,
     this.updatedAt,
@@ -21,7 +23,8 @@ class User {
     return other is User &&
         other.id == id &&
         other.email == email &&
-        other.fullName == fullName &&
+        other.name == name &&
+        other.phoneNumber == phoneNumber &&
         other.avatar == avatar &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
@@ -31,7 +34,8 @@ class User {
   int get hashCode {
     return id.hashCode ^
         email.hashCode ^
-        fullName.hashCode ^
+        name.hashCode ^
+        phoneNumber.hashCode ^
         avatar.hashCode ^
         createdAt.hashCode ^
         updatedAt.hashCode;
@@ -39,6 +43,6 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, email: $email, fullName: $fullName, avatar: $avatar, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'User(id: $id, email: $email, name: $name, phoneNumber: $phoneNumber, avatar: $avatar, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'dart:math' as math;
 
@@ -64,49 +66,34 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     )..repeat(reverse: true);
 
     _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _logoController,
-        curve: Curves.easeOutBack,
-      ),
+      CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
     );
 
-    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _logoController,
-        curve: Curves.easeIn,
-      ),
-    );
+    _logoOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
 
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _textController,
-        curve: Curves.easeIn,
-      ),
-    );
+    _textOpacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
 
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _textController,
-        curve: Curves.easeOut,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
 
     _progressValue = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _progressController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
     );
 
-    _waveAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_waveController);
+    _waveAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_waveController);
     _floatAnimation = Tween<double>(begin: -10.0, end: 10.0).animate(
-      CurvedAnimation(
-        parent: _floatController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
   }
 
@@ -135,7 +122,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     if (!mounted) return;
 
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    context.goRoute(AppRouter.onboarding);
+    context.read<AuthBloc>().add(CheckAuthStatusEvent());
   }
 
   @override
@@ -154,43 +141,63 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     final isSmallScreen = size.height < 600;
     final colors = context.colors;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Container(
-        width: size.width,
-        height: size.height,
-        color: Colors.white,
-        child: Stack(
-          children: [
-            _buildSoundWaves(size, colors),
-            _buildFloatingShapes(size, colors),
-            SafeArea(
-              child: SizedBox(
-                width: size.width,
-                height: size.height,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(height: isSmallScreen ? size.height * 0.1 : size.height * 0.15),
-                    Flexible(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildAnimatedLogo(size, isSmallScreen, colors),
-                          SizedBox(height: isSmallScreen ? 20 : 30),
-                          _buildAnimatedText(size, isSmallScreen, colors),
-                        ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthSuccess) {
+          context.goRoute(AppRouter.home);
+        } else if (state is AuthInitial) {
+          context.goRoute(AppRouter.onboarding);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Container(
+          width: size.width,
+          height: size.height,
+          color: Colors.white,
+          child: Stack(
+            children: [
+              _buildSoundWaves(size, colors),
+              _buildFloatingShapes(size, colors),
+              SafeArea(
+                child: SizedBox(
+                  width: size.width,
+                  height: size.height,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        height:
+                            isSmallScreen
+                                ? size.height * 0.1
+                                : size.height * 0.15,
                       ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: isSmallScreen ? 40 : 60),
-                      child: _buildLoadingSection(size, isSmallScreen, colors),
-                    ),
-                  ],
+                      Flexible(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildAnimatedLogo(size, isSmallScreen, colors),
+                            SizedBox(height: isSmallScreen ? 20 : 30),
+                            _buildAnimatedText(size, isSmallScreen, colors),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          bottom: isSmallScreen ? 40 : 60,
+                        ),
+                        child: _buildLoadingSection(
+                          size,
+                          isSmallScreen,
+                          colors,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -210,7 +217,9 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(15, (index) {
-                    final wave = math.sin((_waveAnimation.value * 2 * math.pi * 2) + (index * 0.5));
+                    final wave = math.sin(
+                      (_waveAnimation.value * 2 * math.pi * 2) + (index * 0.5),
+                    );
                     final height = 15.0 + (wave * 25).abs();
                     final opacity = 0.15 + (wave.abs() * 0.15);
 
@@ -235,7 +244,10 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(12, (index) {
-                    final wave = math.sin((_waveAnimation.value * 2 * math.pi * 1.5) - (index * 0.6));
+                    final wave = math.sin(
+                      (_waveAnimation.value * 2 * math.pi * 1.5) -
+                          (index * 0.6),
+                    );
                     final height = 12.0 + (wave * 20).abs();
                     final opacity = 0.1 + (wave.abs() * 0.15);
 
@@ -266,7 +278,9 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
           children: [
             // 🔹 مثلث أعلى اليسار
             Positioned(
-              top: size.height * 0.12 + (math.sin(_waveAnimation.value * 2 * math.pi) * 20),
+              top:
+                  size.height * 0.12 +
+                  (math.sin(_waveAnimation.value * 2 * math.pi) * 20),
               left: size.width * 0.1,
               child: Transform.rotate(
                 angle: _waveAnimation.value * 2 * math.pi,
@@ -279,7 +293,9 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
 
             // 🔹 مثلث أسفل اليمين
             Positioned(
-              bottom: size.height * 0.2 + (math.sin(_waveAnimation.value * 2 * math.pi + 1) * 15),
+              bottom:
+                  size.height * 0.2 +
+                  (math.sin(_waveAnimation.value * 2 * math.pi + 1) * 15),
               right: size.width * 0.12,
               child: Transform.rotate(
                 angle: -_waveAnimation.value * 2 * math.pi,
@@ -292,7 +308,9 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
 
             // 🟦 مكعب أعلى اليمين
             Positioned(
-              top: size.height * 0.28 + (math.sin(_waveAnimation.value * 2 * math.pi + 2) * 25),
+              top:
+                  size.height * 0.28 +
+                  (math.sin(_waveAnimation.value * 2 * math.pi + 2) * 25),
               right: size.width * 0.15,
               child: Transform.rotate(
                 angle: _waveAnimation.value * 2 * math.pi * 0.5,
@@ -316,7 +334,9 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
 
             // 🟪 مكعب أسفل اليسار
             Positioned(
-              bottom: size.height * 0.3 + (math.sin(_waveAnimation.value * 2 * math.pi + 3) * 20),
+              bottom:
+                  size.height * 0.3 +
+                  (math.sin(_waveAnimation.value * 2 * math.pi + 3) * 20),
               left: size.width * 0.12,
               child: Transform.rotate(
                 angle: -_waveAnimation.value * 2 * math.pi * 0.7,
@@ -358,7 +378,6 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
                 'assets/images/12.png',
                 width: logoSize,
                 height: logoSize,
-
               ),
             ),
           ),
@@ -459,7 +478,10 @@ class TrianglePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color..style = PaintingStyle.fill;
+    final paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
     final path = Path();
     path.moveTo(size.width / 2, 0);
     path.lineTo(0, size.height);

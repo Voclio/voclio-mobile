@@ -6,9 +6,11 @@ import '../entities/otp_request.dart';
 import '../entities/otp_response.dart';
 
 abstract class AuthRepository {
+  Future<Either<Failure, AuthResponse?>> checkAuthStatus();
   Future<Either<Failure, AuthResponse>> login(AuthRequest request);
   Future<Either<Failure, AuthResponse>> register(AuthRequest request);
   Future<Either<Failure, OTPResponse>> sendOTP(String email, OTPType type);
+  Future<Either<Failure, OTPResponse>> resendOTP(String email, OTPType type);
   Future<Either<Failure, OTPResponse>> verifyOTP(OTPRequest request);
   Future<Either<Failure, void>> forgotPassword(String email);
   Future<Either<Failure, void>> resetPassword(String token, String newPassword);
@@ -20,5 +22,9 @@ abstract class AuthRepository {
     String currentPassword,
     String newPassword,
   );
-  Future<Either<Failure, AuthResponse>> updateProfile(String name, String phoneNumber);
+  Future<Either<Failure, AuthResponse>> getProfile();
+  Future<Either<Failure, AuthResponse>> updateProfile(
+    String name,
+    String phoneNumber,
+  );
 }

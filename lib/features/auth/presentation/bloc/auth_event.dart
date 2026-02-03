@@ -96,3 +96,21 @@ class LogoutEvent extends AuthEvent {
 class RefreshAuthEvent extends AuthEvent {
   const RefreshAuthEvent();
 }
+
+class ResendOTPEvent extends AuthEvent {
+  final String email;
+  final OTPType type;
+
+  const ResendOTPEvent(this.email, this.type);
+
+  @override
+  List<Object?> get props => [email, type];
+}
+
+class GetProfileEvent extends AuthEvent {
+  const GetProfileEvent();
+}
+
+class CheckAuthStatusEvent extends AuthEvent {
+  const CheckAuthStatusEvent();
+}

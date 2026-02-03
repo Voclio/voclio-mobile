@@ -22,6 +22,19 @@ class AuthRepositoryImpl implements AuthRepository {
        _localDataSource = localDataSource;
 
   @override
+  Future<Either<Failure, AuthResponse?>> checkAuthStatus() async {
+    try {
+      final authData = await _localDataSource.getAuthData();
+      if (authData != null) {
+        return Right(authData);
+      }
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, AuthResponse>> login(AuthRequest request) async {
     try {
       final requestModel = AuthRequestModel.fromEntity(request);
@@ -169,6 +182,34 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.changePassword(currentPassword, newPassword);
       return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, OTPResponse>> resendOTP(
+    String email,
+    OTPType type,
+  ) async {
+    try {
+      final responseModel = await _remoteDataSource.resendOTP(email, type);
+      return Right(responseModel);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, AuthResponse>> getProfile() async {
+    try {
+      final response = await _remoteDataSource.getProfile();
+      await _localDataSource.saveAuthData(response);
+      return Right(response);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

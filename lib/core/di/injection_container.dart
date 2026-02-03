@@ -18,6 +18,7 @@ import 'package:voclio_app/features/tasks/domain/usecases/create_task_use_case.d
 import 'package:voclio_app/features/tasks/domain/usecases/create_subtask_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_subtask_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/delete_task_use_case.dart';
+import '../../features/auth/domain/usecases/check_auth_status_usecase.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/complete_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_all_tasks_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_task_use_case.dart';
@@ -88,10 +89,12 @@ import 'package:voclio_app/features/auth/domain/repositories/auth_repository.dar
 import 'package:voclio_app/features/auth/domain/usecases/login_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/register_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/send_otp_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/resend_otp_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/forgot_password_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/update_profile_usecase.dart';
+import 'package:voclio_app/features/auth/domain/usecases/get_profile_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/google_sign_in_usecase.dart';
 import 'package:voclio_app/features/auth/domain/usecases/facebook_sign_in_usecase.dart';
@@ -179,6 +182,9 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<SendOTPUseCase>(
     () => SendOTPUseCase(getIt<AuthRepository>()),
   );
+  getIt.registerLazySingleton<ResendOTPUseCase>(
+    () => ResendOTPUseCase(getIt<AuthRepository>()),
+  );
   getIt.registerLazySingleton<VerifyOTPUseCase>(
     () => VerifyOTPUseCase(getIt<AuthRepository>()),
   );
@@ -190,6 +196,9 @@ Future<void> setupDependencies() async {
   );
   getIt.registerLazySingleton<UpdateProfileUseCase>(
     () => UpdateProfileUseCase(getIt<AuthRepository>()),
+  );
+  getIt.registerLazySingleton<GetProfileUseCase>(
+    () => GetProfileUseCase(getIt<AuthRepository>()),
   );
   getIt.registerLazySingleton<LogoutUseCase>(
     () => LogoutUseCase(getIt<AuthRepository>()),
@@ -204,20 +213,27 @@ Future<void> setupDependencies() async {
     () => ChangePasswordUseCase(getIt<AuthRepository>()),
   );
 
+  getIt.registerLazySingleton<CheckAuthStatusUseCase>(
+    () => CheckAuthStatusUseCase(getIt<AuthRepository>()),
+  );
+
   // BLoC
   getIt.registerFactory<AuthBloc>(
     () => AuthBloc(
       loginUseCase: getIt<LoginUseCase>(),
       registerUseCase: getIt<RegisterUseCase>(),
       sendOTPUseCase: getIt<SendOTPUseCase>(),
+      resendOTPUseCase: getIt<ResendOTPUseCase>(),
       verifyOTPUseCase: getIt<VerifyOTPUseCase>(),
       forgotPasswordUseCase: getIt<ForgotPasswordUseCase>(),
       resetPasswordUseCase: getIt<ResetPasswordUseCase>(),
       updateProfileUseCase: getIt<UpdateProfileUseCase>(),
+      getProfileUseCase: getIt<GetProfileUseCase>(),
       logoutUseCase: getIt<LogoutUseCase>(),
       googleSignInUseCase: getIt<GoogleSignInUseCase>(),
       facebookSignInUseCase: getIt<FacebookSignInUseCase>(),
       changePasswordUseCase: getIt<ChangePasswordUseCase>(),
+      checkAuthStatusUseCase: getIt<CheckAuthStatusUseCase>(),
     ),
   );
 

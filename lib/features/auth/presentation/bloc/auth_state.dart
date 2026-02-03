@@ -51,4 +51,15 @@ class OTPVerified extends AuthState {
 
 class ForgotPasswordSent extends AuthState {}
 
+class PasswordResetLoading extends AuthState {}
+
 class PasswordResetSuccess extends AuthState {}
+
+class PasswordChangedSuccess extends AuthState {}
+
+class RegistrationPending extends AuthState {
+  final AuthResponse response;
+  const RegistrationPending(this.response);
+  @override
+  List<Object> get props => [response];
+}

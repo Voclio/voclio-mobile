@@ -4,7 +4,8 @@ class UserModel extends User {
   const UserModel({
     required super.id,
     required super.email,
-    required super.fullName,
+    required super.name,
+    super.phoneNumber,
     super.avatar,
     required super.createdAt,
     super.updatedAt,
@@ -16,13 +17,17 @@ class UserModel extends User {
 
     // Handle both 'name' (from API) and 'fullName' (possible local format)
     final userName =
-        (json['name'] ?? json['full_name'] ?? json['fullName'] ?? 'Unknown User')
+        (json['name'] ??
+                json['full_name'] ??
+                json['fullName'] ??
+                'Unknown User')
             as String;
 
     return UserModel(
       id: userId,
       email: (json['email'] ?? '') as String,
-      fullName: userName,
+      name: userName,
+      phoneNumber: json['phone_number'] as String?,
       avatar: json['avatar'] as String?,
       // Provide default value if createdAt is not present
       createdAt:
@@ -45,10 +50,11 @@ class UserModel extends User {
     return {
       'id': id,
       'email': email,
-      'fullName': fullName,
+      'name': name,
+      'phone_number': phoneNumber,
       'avatar': avatar,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
@@ -56,7 +62,8 @@ class UserModel extends User {
     return UserModel(
       id: user.id,
       email: user.email,
-      fullName: user.fullName,
+      name: user.name,
+      phoneNumber: user.phoneNumber,
       avatar: user.avatar,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

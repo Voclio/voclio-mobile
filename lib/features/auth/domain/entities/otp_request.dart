@@ -37,7 +37,7 @@ extension OTPTypeExtension on OTPType {
       case OTPType.registration:
         return 'registration';
       case OTPType.forgotPassword:
-        return 'forgotPassword';
+        return 'password_reset';
       case OTPType.resetPassword:
         return 'resetPassword';
       case OTPType.login:

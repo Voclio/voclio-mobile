@@ -7,6 +7,9 @@ import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/change_password_screen.dart';
+import '../../features/auth/presentation/screens/profile_screen.dart';
+import '../../features/auth/presentation/screens/edit_profile_screen.dart';
+import '../../features/auth/domain/entities/user.dart';
 import '../../features/auth/domain/entities/otp_request.dart';
 import '../../features/auth/domain/entities/auth_request.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -44,6 +47,8 @@ class AppRouter {
   static const String calendar = '/calendar';
   static const String voice = '/voice';
   static const String voiceRecorder = '/voice/record';
+  static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -139,6 +144,18 @@ class AppRouter {
               create: (context) => getIt<VoiceBloc>(),
               child: const VoiceRecordingScreen(),
             ),
+      ),
+      GoRoute(
+        path: profile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: editProfile,
+        name: editProfile,
+        builder: (context, state) {
+          final user = state.extra as User;
+          return EditProfileScreen(user: user);
+        },
       ),
     ],
   );

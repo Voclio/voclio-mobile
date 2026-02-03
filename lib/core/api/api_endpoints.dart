@@ -21,6 +21,7 @@ class ApiEndpoints {
   static const String logout = '/auth/logout';
   static const String sendOtp = '/auth/send-otp';
   static const String verifyOtp = '/auth/verify-otp';
+  static const String resendOtp = '/auth/resend-otp';
 
   // ========== Dashboard ==========
   static const String dashboardStats = '/dashboard/stats';
