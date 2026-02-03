@@ -8,6 +8,7 @@ import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/auth/presentation/widgets/auth_button.dart';
 import 'package:voclio_app/features/auth/presentation/widgets/auth_loading_widget.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,31 +21,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthBloc>().add(GetProfileEvent());
+    // Only fetch profile if we don't already have data
+    Future.microtask(() {
+      final currentState = context.read<AuthBloc>().state;
+      if (currentState is! AuthSuccess) {
+        context.read<AuthBloc>().add(const GetProfileEvent());
+      }
+    });
   }
 
   void _handleLogout() {
-    showDialog(
+    VoclioDialog.showConfirm(
       context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            title: const Text('Logout'),
-            content: const Text('Are you sure you want to logout?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                  context.read<AuthBloc>().add(const LogoutEvent());
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Logout'),
-              ),
-            ],
-          ),
+      title: 'Logout',
+      message: 'Are you sure you want to logout from Voclio?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      onConfirm: () {
+        Navigator.of(context).pop();
+        context.read<AuthBloc>().add(const LogoutEvent());
+        context.goRoute(AppRouter.login);
+      },
     );
   }
 
@@ -66,53 +63,127 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthLoading) {
-            // Show loading dialog
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder:
-                  (context) =>
-                      const AuthLoadingDialog(message: 'Processing...'),
-            );
-          } else if (state is AuthInitial) {
-            // Dismiss any dialogs and navigate to login
-            Navigator.of(context).popUntil((route) => route.isFirst);
+          final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
+          if (!isCurrentRoute) return;
 
-            // Show logout success message
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Logged out successfully'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-
-            // Navigate to login
-            Future.delayed(const Duration(milliseconds: 500), () {
-              context.goRoute(AppRouter.login);
-            });
-          } else if (state is AuthError) {
-            // Dismiss loading dialog
-            Navigator.of(context).pop();
-
-            // Show error
+          if (state is AuthError) {
+            // Only show error snackbar, don't redirect to login
+            // The auth interceptor handles token refresh automatically
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state is AuthSuccess) {
-            // Dismiss loading dialog if showing
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
+          } else if (state is ProfileUpdateError) {
+            // Show error but don't navigate away - profile data is preserved
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
+          // Don't do anything for AuthSuccess - just let the builder handle it
         },
         builder: (context, state) {
           if (state is AuthLoading) {
             return const Center(child: AuthLoadingWidget());
+          }
+
+          // Handle ProfileUpdateError - show profile with preserved user data
+          if (state is ProfileUpdateError) {
+            final user = state.response.user;
+
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<AuthBloc>().add(const GetProfileEvent());
+                await Future.delayed(const Duration(seconds: 1));
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.all(24.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Profile Avatar
+                    CircleAvatar(
+                      radius: 60.r,
+                      backgroundColor: context.colors.primary,
+                      child: Text(
+                        user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          fontSize: 48.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // User Name
+                    Text(
+                      user.name,
+                      style: context.textStyle.copyWith(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    SizedBox(height: 8.h),
+
+                    // Show error banner
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      margin: EdgeInsets.symmetric(vertical: 8.h),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 20.sp,
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              state.message,
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // Continue showing profile items...
+                    _buildProfileItem(
+                      context,
+                      Icons.email,
+                      'Email',
+                      user.email,
+                    ),
+                    SizedBox(height: 24.h),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(const GetProfileEvent());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           if (state is AuthSuccess) {
@@ -281,14 +352,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           if (state is AuthError) {
+            // Check if it's a token error - show appropriate UI
+            final message = state.message.toLowerCase();
+            final isTokenError =
+                message.contains('token') ||
+                message.contains('unauthorized') ||
+                message.contains('expired') ||
+                message.contains('login again') ||
+                message.contains('session') ||
+                message.contains('401');
+
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+                  Icon(
+                    isTokenError ? Icons.lock_outline : Icons.error_outline,
+                    size: 64.sp,
+                    color: isTokenError ? Colors.orange : Colors.red,
+                  ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Failed to load profile',
+                    isTokenError ? 'Session Expired' : 'Failed to load profile',
                     style: context.textStyle.copyWith(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
@@ -296,7 +381,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    state.message,
+                    isTokenError
+                        ? 'Please login again to continue'
+                        : state.message,
                     style: context.textStyle.copyWith(
                       fontSize: 14.sp,
                       color: Colors.grey,
@@ -306,14 +393,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(height: 24.h),
                   ElevatedButton.icon(
                     onPressed: () {
-                      context.read<AuthBloc>().add(const GetProfileEvent());
+                      if (isTokenError) {
+                        context.goRoute(AppRouter.login);
+                      } else {
+                        context.read<AuthBloc>().add(const GetProfileEvent());
+                      }
                     },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    icon: Icon(isTokenError ? Icons.login : Icons.refresh),
+                    label: Text(isTokenError ? 'Go to Login' : 'Retry'),
                   ),
                 ],
               ),
             );
+          }
+
+          // Handle PasswordChangedSuccess and ProfileUpdateError by re-fetching profile
+          if (state is PasswordChangedSuccess || state is ProfileUpdateError) {
+            // Trigger a profile fetch to get proper state
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                context.read<AuthBloc>().add(const GetProfileEvent());
+              }
+            });
+            return const Center(child: AuthLoadingWidget());
           }
 
           return const Center(child: Text('Unknown state'));

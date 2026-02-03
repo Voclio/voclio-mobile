@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
@@ -185,7 +186,7 @@ class _AuthShimmerWidgetState extends State<AuthShimmerWidget>
   }
 }
 
-class AuthLoadingDialog extends StatelessWidget {
+class AuthLoadingDialog extends StatefulWidget {
   final String message;
 
   const AuthLoadingDialog({
@@ -194,7 +195,35 @@ class AuthLoadingDialog extends StatelessWidget {
   });
 
   @override
+  State<AuthLoadingDialog> createState() => _AuthLoadingDialogState();
+}
+
+class _AuthLoadingDialogState extends State<AuthLoadingDialog> {
+  int _secondsElapsed = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _secondsElapsed++;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final showWarning = _secondsElapsed >= 5;
+    
     return Center(
       child: Material(
         color: Colors.transparent,
@@ -212,8 +241,37 @@ class AuthLoadingDialog extends StatelessWidget {
               ),
             ],
           ),
-          child: AuthLoadingWidget(
-            message: message,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AuthLoadingWidget(
+                message: widget.message,
+              ),
+              if (showWarning) ...[
+                SizedBox(height: 16.h),
+                Text(
+                  'Taking longer than expected...',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.orange,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8.h),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: context.colors.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),

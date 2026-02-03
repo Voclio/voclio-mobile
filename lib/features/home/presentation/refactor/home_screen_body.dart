@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:voclio_app/features/home/presentation/widgets/home_list_tile.dart';
+import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_state.dart';
 import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart';
@@ -36,6 +37,15 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
   void initState() {
     super.initState();
     context.read<DashboardCubit>().loadDashboardStats();
+
+    // Only fetch profile if user is already logged in (has valid auth state)
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess) {
+      // Already have profile data, no need to fetch again
+    } else if (authState is! AuthInitial) {
+      // Only fetch if not in initial/guest state
+      context.read<AuthBloc>().add(const GetProfileEvent());
+    }
 
     _floatingController = AnimationController(
       vsync: this,

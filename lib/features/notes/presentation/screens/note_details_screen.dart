@@ -6,6 +6,7 @@ import 'package:voclio_app/features/notes/domain/entities/note_entity.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
 import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import '../widgets/tag_selection_sheet.dart';
 
 class NoteDetailScreen extends StatefulWidget {
@@ -80,60 +81,25 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
-    final theme = Theme.of(context);
-    // final isDark = theme.brightness == Brightness.dark;
-
-    showDialog(
+    VoclioDialog.showConfirm(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: theme.colorScheme.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            title: Text(
-              "Delete Note?",
-              style: theme.textTheme.headlineSmall?.copyWith(fontSize: 20.sp),
-            ),
-            content: Text(
-              "This action cannot be undone.",
-              style: theme.textTheme.bodyMedium,
-            ),
-            actions: [
-              // CANCEL
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(color: theme.colorScheme.secondary),
-                ),
-              ),
+      title: 'Delete Note?',
+      message: 'This action cannot be undone. Are you sure you want to delete this note?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: () {
+        // 1. Close the Dialog
+        Navigator.pop(context);
 
-              // DELETE
-              TextButton(
-                onPressed: () {
-                  // 1. Close the Dialog
-                  Navigator.pop(context);
+        // 2. Prevent Auto-Save from running when we pop the screen
+        _isModified = false;
 
-                  // 2. Prevent Auto-Save from running when we pop the screen
-                  _isModified = false;
+        // 3. Delete logic
+        cubit.deleteNote(widget.note!.id);
 
-                  // 3. Delete logic
-                  cubit.deleteNote(widget.note!.id);
-
-                  // 4. Close the Detail Screen
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  "Delete",
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        // 4. Close the Detail Screen
+        Navigator.pop(context);
+      },
     );
   }
 

@@ -35,10 +35,9 @@ class AuthTopControls extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(width: 20.w,),
           SizedBox(
-            width: isSmall ? 70.w :70.w,
-            height: isSmall ? 70.h : 70.h,
+            width: isSmall ? 100.w : 120.w,
+            height: isSmall ? 100.h : 120.h,
             child: Image.asset(
               'assets/images/12.png',
               fit: BoxFit.contain,

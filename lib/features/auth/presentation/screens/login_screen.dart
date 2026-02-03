@@ -42,33 +42,32 @@ class _LoginScreenState extends State<LoginScreen> {
     final isSmall = size.height < 700;
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthLoading) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => const AuthLoadingDialog(message: 'Logging in...'),
-          );
-        } else if (state is AuthSuccess) {
-          Navigator.of(context).pop(); // Dismiss loading
+        final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
+        if (!isCurrentRoute) {
+          return;
+        }
+        if (state is AuthSuccess) {
+          // Go directly to home
           context.goRoute(AppRouter.home);
         } else if (state is AuthError) {
-          Navigator.of(context).pop(); // Dismiss loading
-           showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Login Failed'),
-              content: Text(state.message),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
+          // Show error as snackbar instead of dialog for faster feedback
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.message.contains('timeout') ||
+                        state.message.contains('Timeout')
+                    ? 'Connection timeout. Please try again.'
+                    : state.message,
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 3),
             ),
           );
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _onRefresh,
@@ -90,22 +89,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Top controls - Logo centered with Skip button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(width: 60.w), // Balance the skip button
-                            Expanded(child: AuthTopControls()),
-                            AuthLinkButton(
-                              text: 'As Guest',
-                              onPressed: () {
-                                context.goRoute(AppRouter.home);
-                              },
-                            ),
-                          ],
-                        ),
+                        // Logo
+                        AuthTopControls(),
 
-                        SizedBox(height: isSmall ? 35.h : 35.h),
+                        SizedBox(height: isSmall ? 20.h : 24.h),
 
                         // Title info wrapped with CustomFadeIn
                         CustomFadeIn(
@@ -205,10 +192,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         SizedBox(height: isSmall ? 24.h : 20.h),
 
-                        // Login button
-                        AuthButton(
-                          text: context.translate(LangKeys.login),
-                          onPressed: _onLogin,
+                        // Login button with inline loading
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            final isLoading = state is AuthLoading;
+                            return AuthButton(
+                              text: context.translate(LangKeys.login),
+                              onPressed: isLoading ? null : _onLogin,
+                              isLoading: isLoading,
+                            );
+                          },
                         ),
 
                         SizedBox(height: isSmall ? 20.h : 24.h),

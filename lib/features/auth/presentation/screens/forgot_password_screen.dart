@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -65,50 +66,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
-          showDialog(
+          final email = _emailController.text.trim();
+          VoclioDialog.showSuccess(
             context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Check your email'),
-                  content: const Text(
-                    'We have sent a password reset code to your email.',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        final email = _emailController.text.trim();
-                        context.pushRoute(
-                          '${AppRouter.otp}?email=$email&type=forgotPassword',
-                        );
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
+            title: 'Check Your Email',
+            message: 'We have sent a password reset code to your email.',
+            buttonText: 'Continue',
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.pushRoute(
+                '${AppRouter.otp}?email=$email&type=forgotPassword',
+              );
+            },
           );
         } else if (state is AuthError) {
           // Dismiss loading if showing
           if (Navigator.of(context).canPop()) {
             Navigator.of(context).pop();
           }
-          showDialog(
+          VoclioDialog.showError(
             context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Error'),
-                  content: Text(state.message),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
+            title: 'Oops!',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _onRefresh,

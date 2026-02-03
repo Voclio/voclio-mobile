@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -74,42 +75,27 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           );
         } else if (state is PasswordResetSuccess) {
           Navigator.of(context).pop(); // Dismiss loading
-          showDialog(
+          VoclioDialog.showSuccess(
             context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Password reset successfully!'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        context.goRoute(AppRouter.login);
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
+            title: 'Password Reset!',
+            message: 'Your password has been reset successfully. You can now login with your new password.',
+            buttonText: 'Go to Login',
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.goRoute(AppRouter.login);
+            },
           );
         } else if (state is AuthError) {
           Navigator.of(context).pop(); // Dismiss loading
-          showDialog(
+          VoclioDialog.showError(
             context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Reset Failed'),
-                  content: Text(state.message),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
+            title: 'Reset Failed',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _onRefresh,

@@ -48,7 +48,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profile updated successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
             context.pop(); // Go back to profile
+          } else if (state is ProfileUpdateError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,

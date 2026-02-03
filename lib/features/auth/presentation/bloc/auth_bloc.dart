@@ -169,12 +169,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     UpdateProfileEvent event,
     Emitter<AuthState> emit,
   ) async {
+    // Save current state in case update fails
+    final previousState = state;
+
     emit(AuthLoading());
     final result = await _updateProfileUseCase(event.name, event.phoneNumber);
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (response) => emit(AuthSuccess(response)),
-    );
+    result.fold((failure) {
+      // If we had a valid auth state before, restore it and show error
+      // This prevents redirecting to login on update failure
+      if (previousState is AuthSuccess) {
+        // Emit error with preserved user data
+        emit(ProfileUpdateError(failure.message, previousState.response));
+      } else {
+        emit(AuthError(failure.message));
+      }
+    }, (response) => emit(AuthSuccess(response)));
   }
 
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
@@ -214,14 +223,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ChangePasswordEvent event,
     Emitter<AuthState> emit,
   ) async {
+    // Store previous state to restore after password change
+    final previousState = state;
     emit(AuthLoading());
     final result = await _changePasswordUseCase(
       event.currentPassword,
       event.newPassword,
     );
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (_) => emit(PasswordChangedSuccess()),
+      (failure) {
+        // Restore previous state on error if it was AuthSuccess
+        if (previousState is AuthSuccess) {
+          emit(previousState);
+          emit(ProfileUpdateError(failure.message, previousState.response));
+        } else {
+          emit(AuthError(failure.message));
+        }
+      },
+      (_) {
+        emit(PasswordChangedSuccess());
+        // Restore AuthSuccess state so profile screen shows user data
+        if (previousState is AuthSuccess) {
+          emit(previousState);
+        }
+      },
     );
   }
 
@@ -248,11 +273,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     GetProfileEvent event,
     Emitter<AuthState> emit,
   ) async {
+    // Save current state in case profile fetch fails
+    final previousState = state;
+
     emit(AuthLoading());
     final result = await _getProfileUseCase();
-    result.fold(
-      (failure) => emit(AuthError(failure.message)),
-      (response) => emit(AuthSuccess(response)),
-    );
+    result.fold((failure) {
+      // If we had a valid auth state before, don't show error
+      // Just restore previous state (user can still use cached data)
+      if (previousState is AuthSuccess) {
+        emit(previousState);
+      } else {
+        // Only emit error if no previous auth state
+        emit(AuthError(failure.message));
+      }
+    }, (response) => emit(AuthSuccess(response)));
   }
 }

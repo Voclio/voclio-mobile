@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -10,6 +11,7 @@ import '../../../../core/styles/fonts/font_weight_helper.dart';
 import '../../../../core/common/animation/animate_do.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/auth_phone_field.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
 import '../widgets/auth_loading_widget.dart';
@@ -32,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String _fullPhoneNumber = '';
 
   @override
   void dispose() {
@@ -50,22 +53,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthLoading || state is OTPLoading) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder:
-                (context) => const AuthLoadingDialog(message: 'Processing...'),
-          );
-        } else if (state is RegistrationPending) {
+        if (state is RegistrationPending) {
           // Registration initiated, OTP sent - navigate to OTP screen
-          Navigator.of(context).pop(); // Dismiss loading
-
           final request = AuthRequest(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             fullName: _nameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
+            phoneNumber: _fullPhoneNumber.isNotEmpty ? _fullPhoneNumber : _phoneController.text.trim(),
           );
 
           context.pushRoute(
@@ -73,11 +67,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             extra: request,
           );
         } else if (state is AuthSuccess) {
-          Navigator.of(context).pop(); // Dismiss loading
           context.goRoute(AppRouter.home);
         } else if (state is AuthError) {
-          Navigator.of(context).pop(); // Dismiss loading
-
           // Check if it's a duplicate email error
           final message = state.message.toLowerCase();
           final isDuplicateEmail =
@@ -86,41 +77,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
               message.contains('registered') ||
               message.contains('conflict');
 
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: Text(
-                    isDuplicateEmail
-                        ? 'Email Already Registered'
-                        : 'Registration Failed',
-                  ),
-                  content: Text(
-                    isDuplicateEmail
-                        ? 'This email is already registered. Please login or use a different email.'
-                        : state.message,
-                  ),
-                  actions: [
-                    if (isDuplicateEmail)
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          context.goRoute(AppRouter.login);
-                        },
-                        child: const Text('Go to Login'),
-                      ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(
-                        isDuplicateEmail ? 'Try Different Email' : 'OK',
-                      ),
-                    ),
-                  ],
-                ),
-          );
+          if (isDuplicateEmail) {
+            VoclioDialog.show(
+              context: context,
+              title: 'Email Already Registered',
+              message: 'This email is already registered. Please login or use a different email.',
+              type: VoclioDialogType.warning,
+              primaryButtonText: 'Go to Login',
+              secondaryButtonText: 'Try Different Email',
+              onPrimaryPressed: () {
+                Navigator.of(context).pop();
+                context.goRoute(AppRouter.login);
+              },
+              onSecondaryPressed: () => Navigator.of(context).pop(),
+            );
+          } else {
+            VoclioDialog.showError(
+              context: context,
+              title: 'Registration Failed',
+              message: state.message,
+            );
+          }
         }
       },
       child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
         resizeToAvoidBottomInset: true,
         body: SafeArea(
           child: Padding(
@@ -192,20 +173,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 SizedBox(height: isSmall ? 12.h : 14.h),
 
-                                AuthTextField(
+                                AuthPhoneField(
                                   label: 'Phone Number',
-                                  hint: '+1234567890',
+                                  hint: 'Enter phone number',
                                   controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
+                                  initialCountryCode: 'EG', // Default to Egypt
+                                  onChanged: (phone) {
+                                    _fullPhoneNumber = phone.completeNumber;
+                                  },
+                                  validator: (phone) {
+                                    if (phone == null || phone.number.isEmpty) {
                                       return 'Please enter your phone number';
-                                    }
-                                    // Basic phone validation
-                                    if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(
-                                      value.replaceAll(RegExp(r'[\s-]'), ''),
-                                    )) {
-                                      return 'Please enter a valid phone number';
                                     }
                                     return null;
                                   },
@@ -278,9 +256,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                                 SizedBox(height: isSmall ? 16.h : 20.h),
 
-                                AuthButton(
-                                  text: context.translate(LangKeys.signUp),
-                                  onPressed: _onRegister,
+                                BlocBuilder<AuthBloc, AuthState>(
+                                  builder: (context, state) {
+                                    final isLoading =
+                                        state is AuthLoading ||
+                                        state is OTPLoading;
+                                    return AuthButton(
+                                      text: context.translate(LangKeys.signUp),
+                                      onPressed: isLoading ? null : _onRegister,
+                                      isLoading: isLoading,
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -327,7 +313,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
+        phoneNumber: _fullPhoneNumber.isNotEmpty ? _fullPhoneNumber : _phoneController.text.trim(),
       );
       context.read<AuthBloc>().add(RegisterEvent(request));
     }

@@ -2,88 +2,243 @@ import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/language/lang_keys.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import '../../../notifications/presentation/widgets/notification_badge.dart';
 
 class HomeListTile extends StatelessWidget {
   const HomeListTile({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+  void _showProfileMenu(BuildContext context) {
+    final RenderBox button = context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
+    final Offset position = button.localToGlobal(
+      Offset(0, button.size.height),
+      ancestor: overlay,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        20.w,
+        position.dy + 10.h,
+        overlay.size.width - 200.w,
+        0,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      elevation: 8,
+      items: [
+        _buildMenuItem(
+          context,
+          icon: Icons.person_outline,
+          title: 'Profile',
+          value: 'profile',
+        ),
+        _buildMenuItem(
+          context,
+          icon: Icons.dashboard_outlined,
+          title: 'Dashboard',
+          value: 'dashboard',
+        ),
+        _buildMenuItem(
+          context,
+          icon: Icons.calendar_month_outlined,
+          title: 'Calendar',
+          value: 'calendar',
+        ),
+        _buildMenuItem(
+          context,
+          icon: Icons.timer_outlined,
+          title: 'Focus Timer',
+          value: 'focusTimer',
+        ),
+        _buildMenuItem(
+          context,
+          icon: Icons.emoji_events_outlined,
+          title: 'Achievements',
+          value: 'achievements',
+        ),
+        const PopupMenuDivider(),
+        _buildMenuItem(
+          context,
+          icon: Icons.settings_outlined,
+          title: 'Settings',
+          value: 'settings',
+        ),
+        _buildMenuItem(
+          context,
+          icon: Icons.logout,
+          title: 'Logout',
+          value: 'logout',
+          isDestructive: true,
+        ),
+      ],
+    ).then((value) {
+      if (value == null) return;
+      
+      switch (value) {
+        case 'profile':
+          context.push(AppRouter.profile);
+          break;
+        case 'dashboard':
+          context.push(AppRouter.dashboard);
+          break;
+        case 'calendar':
+          context.push(AppRouter.calendar);
+          break;
+        case 'focusTimer':
+          context.push(AppRouter.focusTimer);
+          break;
+        case 'achievements':
+          context.push(AppRouter.achievements);
+          break;
+        case 'settings':
+          context.push(AppRouter.settings);
+          break;
+        case 'logout':
+          _handleLogout(context);
+          break;
+      }
+    });
+  }
+
+  PopupMenuItem<String> _buildMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+    bool isDestructive = false,
+  }) {
+    final color = isDestructive ? Colors.red : context.colors.primary;
+    return PopupMenuItem<String>(
+      value: value,
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-            },
-            child: Container(
-              width: 56.r,
-              height: 56.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: context.colors.primary!.withOpacity(0.2),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: context.colors.primary!.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: Image.network(
-                  'https://raw.githubusercontent.com/Voclio/voclio-mobile/main/assets/images/onboarding.png',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey.shade300,
-                      child: Icon(
-                        Icons.person,
-                        size: 30.sp,
-                        color: Colors.grey.shade600,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
+          Icon(icon, size: 22.sp, color: color),
           SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.translate(LangKeys.welcoming),
-                  style: context.textStyle.copyWith(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  'Youssef',
-                  style: context.textStyle.copyWith(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A2E),
-                  ),
-                ),
-              ],
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w500,
+              color: isDestructive ? Colors.red : Colors.black87,
             ),
           ),
-          const NotificationBadge(),
         ],
       ),
+    );
+  }
+
+  void _handleLogout(BuildContext context) {
+    VoclioDialog.showConfirm(
+      context: context,
+      title: 'Logout',
+      message: 'Are you sure you want to logout from Voclio?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      onConfirm: () {
+        Navigator.of(context).pop();
+        context.read<AuthBloc>().add(const LogoutEvent());
+        context.go(AppRouter.login);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final user = state is AuthSuccess ? state.response.user : null;
+        final userName = user?.name.isNotEmpty == true ? user!.name : 'User';
+        final avatarUrl = user?.avatar;
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showProfileMenu(context),
+                child: Container(
+                  width: 56.r,
+                  height: 56.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: context.colors.primary!.withOpacity(0.2),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: context.colors.primary!.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child:
+                        avatarUrl != null && avatarUrl.isNotEmpty
+                            ? Image.network(
+                              avatarUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey.shade300,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 30.sp,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                );
+                              },
+                            )
+                            : Container(
+                              color: Colors.grey.shade300,
+                              child: Icon(
+                                Icons.person,
+                                size: 30.sp,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.translate(LangKeys.welcoming),
+                      style: context.textStyle.copyWith(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      userName,
+                      style: context.textStyle.copyWith(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1A1A2E),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const NotificationBadge(),
+            ],
+          ),
+        );
+      },
     );
   }
 }

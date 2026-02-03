@@ -18,7 +18,19 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> saveAuthData(AuthResponseModel response) async {
     // Save User Data to SharedPreferences
-    final userModel = UserModel.fromEntity(response.user);
+    UserModel userModel = UserModel.fromEntity(response.user);
+
+    // If refresh response doesn't include user data, keep existing cached user
+    if ((userModel.email.isEmpty && userModel.name == 'Unknown User') ||
+        userModel.id.isEmpty) {
+      final cachedUserString = _prefs.getString('auth_user');
+      if (cachedUserString != null) {
+        try {
+          final cachedUserJson = jsonDecode(cachedUserString);
+          userModel = UserModel.fromJson(cachedUserJson);
+        } catch (_) {}
+      }
+    }
     await _prefs.setString('auth_user', jsonEncode(userModel.toJson()));
 
     // Save Tokens to Secure Storage
@@ -36,44 +48,97 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<AuthResponseModel?> getAuthData() async {
     try {
       final userString = _prefs.getString('auth_user');
-      final accessToken = await _storage.read(key: 'access_token');
-      final refreshToken = await _storage.read(key: 'refresh_token');
-      final expiresAtString = await _storage.read(key: 'token_expires_at');
+      
+      // Read tokens with timeout to prevent hanging
+      final accessToken = await _storage.read(key: 'access_token').timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => null,
+      );
+      final refreshToken = await _storage.read(key: 'refresh_token').timeout(
+        const Duration(seconds: 2),
+        onTimeout: () => null,
+      );
+      final expiresAtString = await _storage.read(key: 'token_expires_at').timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => null,
+      );
 
-      if (userString != null && accessToken != null && refreshToken != null) {
-        final userJson = jsonDecode(userString);
+      // Validate all required data exists
+      if (userString == null || 
+          accessToken == null || 
+          refreshToken == null ||
+          accessToken.isEmpty ||
+          refreshToken.isEmpty) {
+        // Incomplete data, clear everything
+        await clearAuthData();
+        return null;
+      }
 
-        // Calculate expires_in from persisted expiration time
-        int expiresIn = 86400; // Default 24 hours
-        if (expiresAtString != null) {
-          final expiresAt = DateTime.tryParse(expiresAtString);
-          if (expiresAt != null) {
-            expiresIn = expiresAt.difference(DateTime.now()).inSeconds;
-            if (expiresIn < 0) expiresIn = 0; // Token expired
+      // Parse user data
+      Map<String, dynamic> userJson;
+      try {
+        userJson = jsonDecode(userString);
+      } catch (e) {
+        // Corrupted user data, clear everything
+        await clearAuthData();
+        return null;
+      }
+
+      // Validate user data has required fields
+      if (userJson['email'] == null || userJson['id'] == null) {
+        await clearAuthData();
+        return null;
+      }
+
+      // Calculate expires_in from persisted expiration time
+      int expiresIn = 86400; // Default 24 hours
+      DateTime? expiresAt;
+      
+      if (expiresAtString != null) {
+        expiresAt = DateTime.tryParse(expiresAtString);
+        if (expiresAt != null) {
+          expiresIn = expiresAt.difference(DateTime.now()).inSeconds;
+          if (expiresIn < 0) {
+            expiresIn = 0; // Token expired
           }
         }
-
-        return AuthResponseModel.fromJson({
-          'data': {
-            'user': userJson,
-            'tokens': {
-              'access_token': accessToken,
-              'refresh_token': refreshToken,
-              'expires_in': expiresIn,
-            },
-          },
-        });
       }
+
+      // Build response model
+      return AuthResponseModel.fromJson({
+        'data': {
+          'user': userJson,
+          'tokens': {
+            'access_token': accessToken,
+            'refresh_token': refreshToken,
+            'expires_in': expiresIn,
+          },
+        },
+      });
     } catch (e) {
+      // Any error, clear cache and return null
       await clearAuthData();
+      return null;
     }
-    return null;
   }
 
   @override
   Future<void> clearAuthData() async {
-    await _prefs.remove('auth_user');
-    await _storage.deleteAll();
+    try {
+      await _prefs.remove('auth_user');
+    } catch (_) {}
+    
+    try {
+      await _storage.delete(key: 'access_token');
+    } catch (_) {}
+    
+    try {
+      await _storage.delete(key: 'refresh_token');
+    } catch (_) {}
+    
+    try {
+      await _storage.delete(key: 'token_expires_at');
+    } catch (_) {}
   }
 
   @override

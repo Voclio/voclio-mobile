@@ -1,46 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/phone_number.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import '../../../../core/common/animation/animate_do.dart';
 
-class AuthTextField extends StatelessWidget {
+class AuthPhoneField extends StatelessWidget {
   final String label;
   final String? hint;
   final TextEditingController controller;
-  final TextInputType keyboardType;
-  final bool obscureText;
-  final Widget? suffixIcon;
-  final IconData? prefixIcon;
-  final String? Function(String?)? validator;
-  final void Function(String)? onChanged;
+  final String? Function(PhoneNumber?)? validator;
+  final void Function(PhoneNumber)? onChanged;
   final bool enabled;
+  final String initialCountryCode;
 
-  const AuthTextField({
+  const AuthPhoneField({
     super.key,
     required this.label,
     this.hint,
     required this.controller,
-    this.keyboardType = TextInputType.text,
-    this.obscureText = false,
-    this.suffixIcon,
-    this.prefixIcon,
     this.validator,
     this.onChanged,
     this.enabled = true,
+    this.initialCountryCode = 'EG', // Default to Egypt
   });
-
-  IconData _getDefaultIcon() {
-    if (keyboardType == TextInputType.emailAddress) {
-      return Icons.email_outlined;
-    } else if (keyboardType == TextInputType.phone) {
-      return Icons.phone_outlined;
-    } else if (obscureText) {
-      return Icons.lock_outline_rounded;
-    } else if (label.toLowerCase().contains('name')) {
-      return Icons.person_outline_rounded;
-    }
-    return Icons.text_fields_rounded;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +31,6 @@ class AuthTextField extends StatelessWidget {
     final primaryColor = colors.primary ?? Theme.of(context).primaryColor;
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
-    final icon = prefixIcon ?? _getDefaultIcon();
 
     return CustomFadeInUp(
       duration: 600,
@@ -64,13 +46,18 @@ class AuthTextField extends StatelessWidget {
             ),
           ],
         ),
-        child: TextFormField(
+        child: IntlPhoneField(
           controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          validator: validator,
-          onChanged: onChanged,
           enabled: enabled,
+          initialCountryCode: initialCountryCode,
+          disableLengthCheck: false,
+          showDropdownIcon: true,
+          dropdownIconPosition: IconPosition.trailing,
+          flagsButtonPadding: EdgeInsets.only(left: 16.w),
+          dropdownIcon: Icon(
+            Icons.arrow_drop_down,
+            color: primaryColor,
+          ),
           style: TextStyle(
             fontSize: isSmall ? 14.sp : 16.sp,
             color: const Color(0xFF1A1A2E),
@@ -88,16 +75,6 @@ class AuthTextField extends StatelessWidget {
               fontSize: 14.sp,
               color: Colors.grey.shade400,
             ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12.r),
-              padding: EdgeInsets.all(8.r),
-              decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(icon, color: primaryColor, size: 20.sp),
-            ),
-            suffixIcon: suffixIcon,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16.r),
               borderSide: BorderSide.none,
@@ -125,6 +102,8 @@ class AuthTextField extends StatelessWidget {
               vertical: 18.h,
             ),
           ),
+          onChanged: onChanged,
+          validator: validator,
         ),
       ),
     );

@@ -10,6 +10,7 @@ class AuthButton extends StatelessWidget {
   final bool isEnabled;
   final Color? backgroundColor;
   final Color? textColor;
+  final IconData? icon;
 
   const AuthButton({
     super.key,
@@ -19,6 +20,7 @@ class AuthButton extends StatelessWidget {
     this.isEnabled = true,
     this.backgroundColor,
     this.textColor,
+    this.icon,
   });
 
   @override
@@ -26,78 +28,77 @@ class AuthButton extends StatelessWidget {
     final colors = context.colors;
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
-    final effectiveBackgroundColor = backgroundColor ?? colors.primary!;
+    final primaryColor = colors.primary ?? Theme.of(context).primaryColor;
+    final effectiveBackgroundColor = backgroundColor ?? primaryColor;
     final effectiveTextColor = textColor ?? Colors.white;
 
     return CustomFadeInUp(
       duration: 600,
       child: Container(
+        width: double.infinity,
+        height: isSmall ? 54.h : 56.h,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow:
-              isEnabled && !isLoading
-                  ? [
-                    BoxShadow(
-                      color: effectiveBackgroundColor.withOpacity(0.35),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
-                      spreadRadius: 0,
-                    ),
-                  ]
-                  : [],
+          borderRadius: BorderRadius.circular(16.r),
+          gradient: LinearGradient(
+            colors: [
+              effectiveBackgroundColor,
+              effectiveBackgroundColor.withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: isEnabled && !isLoading
+              ? [
+                  BoxShadow(
+                    color: effectiveBackgroundColor.withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ]
+              : [],
         ),
-        child: SizedBox(
-          width: double.infinity,
-          height: isSmall ? 54.h : 60.h,
-          child: ElevatedButton(
-            onPressed: isEnabled && !isLoading ? onPressed : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: effectiveBackgroundColor,
-              disabledBackgroundColor: effectiveBackgroundColor.withOpacity(
-                0.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14.r),
-              ),
-              elevation: 0,
-              shadowColor: Colors.transparent,
+        child: ElevatedButton(
+          onPressed: isEnabled && !isLoading ? onPressed : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            disabledBackgroundColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
             ),
-            child:
-                isLoading
-                    ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: isSmall ? 20.w : 22.w,
-                          height: isSmall ? 20.h : 22.h,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              effectiveTextColor,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: isSmall ? 10.w : 12.w),
-                        Text(
-                          'Loading...',
-                          style: context.textStyle.copyWith(
-                            fontSize: isSmall ? 14.sp : 16.sp,
-                            fontWeight: FontWeight.w600,
-                            color: effectiveTextColor.withOpacity(0.8),
-                          ),
-                        ),
-                      ],
-                    )
-                    : Text(
+          ),
+          child: isLoading
+              ? SizedBox(
+                  height: 24.h,
+                  width: 24.w,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      effectiveTextColor,
+                    ),
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(
+                        icon,
+                        size: 20.sp,
+                        color: effectiveTextColor,
+                      ),
+                      SizedBox(width: 10.w),
+                    ],
+                    Text(
                       text,
-                      style: context.textStyle.copyWith(
-                        fontSize: isSmall ? 16.sp : 18.sp,
+                      style: TextStyle(
+                        fontSize: isSmall ? 16.sp : 16.sp,
                         fontWeight: FontWeight.bold,
                         color: effectiveTextColor,
-                        letterSpacing: 0.5,
                       ),
                     ),
-          ),
+                  ],
+                ),
         ),
       ),
     );

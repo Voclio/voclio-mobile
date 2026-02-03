@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import '../bloc/tags_cubit.dart';
 import '../bloc/tags_state.dart';
 import '../../domain/entities/tag_entity.dart';
@@ -206,26 +207,16 @@ class _TagsScreenState extends State<TagsScreen> {
   }
 
   void _confirmDelete(BuildContext context, String id) {
-    showDialog(
+    VoclioDialog.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Tag'),
-        content: const Text('Are you sure you want to delete this tag?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              context.read<TagsCubit>().deleteTag(id);
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Tag',
+      message: 'Are you sure you want to delete this tag? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: () {
+        context.read<TagsCubit>().deleteTag(id);
+        Navigator.pop(context);
+      },
     );
   }
 }

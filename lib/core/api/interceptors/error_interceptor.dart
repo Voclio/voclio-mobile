@@ -11,7 +11,7 @@ class ErrorInterceptor extends Interceptor {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         errorMessage =
-            'Connection timeout. Please check your internet connection.';
+            'Connection timeout. Please check your internet connection and try again.';
         break;
 
       case DioExceptionType.badResponse:
@@ -23,11 +23,11 @@ class ErrorInterceptor extends Interceptor {
         break;
 
       case DioExceptionType.connectionError:
-        errorMessage = 'No internet connection';
+        errorMessage = 'No internet connection. Please check your network and try again.';
         break;
 
       default:
-        errorMessage = 'Unexpected error occurred';
+        errorMessage = 'Unexpected error occurred. Please try again.';
     }
 
     developer.log(
@@ -46,7 +46,7 @@ class ErrorInterceptor extends Interceptor {
       case 400:
         return response.data['message'] ?? 'Bad request';
       case 401:
-        return 'Unauthorized. Please login again.';
+        return 'Authentication failed. Please try again.';
       case 403:
         return 'Forbidden. You don\'t have permission.';
       case 404:

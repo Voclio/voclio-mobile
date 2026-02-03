@@ -57,6 +57,18 @@ class PasswordResetSuccess extends AuthState {}
 
 class PasswordChangedSuccess extends AuthState {}
 
+/// Error state specifically for profile update failures
+/// This prevents redirecting to login when update fails
+class ProfileUpdateError extends AuthState {
+  final String message;
+  final AuthResponse response;
+
+  const ProfileUpdateError(this.message, this.response);
+
+  @override
+  List<Object?> get props => [message, response];
+}
+
 class RegistrationPending extends AuthState {
   final AuthResponse response;
   const RegistrationPending(this.response);
