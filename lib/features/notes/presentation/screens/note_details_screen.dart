@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
 import 'package:voclio_app/features/notes/domain/entities/note_entity.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
+import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
 import '../widgets/tag_selection_sheet.dart';
 
 class NoteDetailScreen extends StatefulWidget {
@@ -61,6 +63,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         lastEditDate: now,
         creationDate: now,
         tags: _selectedTags,
+        categoryId: 1, // Default category
       );
       cubit.addNote(newNote);
     } else {
@@ -70,6 +73,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         content: content,
         lastEditDate: now,
         tags: _selectedTags,
+        categoryId: widget.note!.categoryId ?? 1,
       );
       cubit.updateNote(updatedNote);
     }
@@ -229,9 +233,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
                                   builder:
-                                      (context) => TagSelectionSheet(
-                                        selectedTags: _selectedTags,
-                                        availableTags: state.availableTags,
+                                      (ctx) => BlocProvider(
+                                        create: (_) => GetIt.I<TagsCubit>(),
+                                        child: TagSelectionSheet(
+                                          selectedTags: _selectedTags,
+                                        ),
                                       ),
                                 );
 
@@ -240,6 +246,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                                 _selectedTags = result;
                                 _isModified = true;
                               });
+                              // Also refresh NotesCubit tags so the filter list updates
+                              context.read<NotesCubit>().fetchTags();
                             }
                           },
                           child: Container(

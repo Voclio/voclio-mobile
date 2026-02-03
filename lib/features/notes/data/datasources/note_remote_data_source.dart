@@ -3,7 +3,7 @@ import 'package:voclio_app/core/api/api_endpoints.dart';
 import 'package:voclio_app/features/notes/data/models/note_model.dart';
 
 abstract class NoteRemoteDataSource {
-  Future<List<NoteModel>> getNotes();
+  Future<List<NoteModel>> getNotes({String? search});
   Future<NoteModel> addNote(NoteModel note);
   Future<NoteModel> updateNote(NoteModel note);
   Future<void> deleteNote(String id);
@@ -16,9 +16,14 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
   NoteRemoteDataSourceImpl({required this.apiClient});
 
   @override
-  Future<List<NoteModel>> getNotes() async {
+  Future<List<NoteModel>> getNotes({String? search}) async {
     try {
-      final response = await apiClient.get(ApiEndpoints.notes);
+      final response = await apiClient.get(
+        ApiEndpoints.notes,
+        queryParameters: search != null && search.isNotEmpty
+            ? {'search': search}
+            : null,
+      );
       final rawData = response.data;
 
       List<dynamic> notesList = [];
@@ -55,7 +60,9 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
     );
     final rawData = response.data;
 
-    if (rawData is Map && rawData['data'] != null) {
+    if (rawData is Map && rawData['data'] is Map && rawData['data']['note'] != null) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']['note']));
+    } else if (rawData is Map && rawData['data'] != null) {
       return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']));
     } else if (rawData is Map) {
       return NoteModel.fromJson(Map<String, dynamic>.from(rawData));
@@ -71,7 +78,9 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
     );
     final rawData = response.data;
 
-    if (rawData is Map && rawData['data'] != null) {
+    if (rawData is Map && rawData['data'] is Map && rawData['data']['note'] != null) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']['note']));
+    } else if (rawData is Map && rawData['data'] != null) {
       return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']));
     } else if (rawData is Map) {
       return NoteModel.fromJson(Map<String, dynamic>.from(rawData));
@@ -87,6 +96,11 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
   @override
   Future<NoteModel?> getNote(String id) async {
     final response = await apiClient.get(ApiEndpoints.noteById(id));
-    return NoteModel.fromJson(response.data['data']);
+    final rawData = response.data;
+    
+    if (rawData is Map && rawData['data'] is Map && rawData['data']['note'] != null) {
+      return NoteModel.fromJson(Map<String, dynamic>.from(rawData['data']['note']));
+    }
+    return NoteModel.fromJson(rawData['data']);
   }
 }

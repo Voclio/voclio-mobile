@@ -8,6 +8,7 @@ class NoteEntity extends Equatable {
   final DateTime creationDate;
   final List<String> tags;
   final String? voiceToTextDuration; // e.g. "02:15"
+  final int? categoryId;
 
   const NoteEntity({
     required this.id,
@@ -17,6 +18,7 @@ class NoteEntity extends Equatable {
     required this.creationDate,
     this.tags = const [],
     this.voiceToTextDuration,
+    this.categoryId,
   });
 
   NoteEntity copyWith({
@@ -27,6 +29,7 @@ class NoteEntity extends Equatable {
     DateTime? creationDate,
     List<String>? tags,
     String? voiceToTextDuration,
+    int? categoryId,
   }) {
     return NoteEntity(
       id: id ?? this.id,
@@ -36,9 +39,10 @@ class NoteEntity extends Equatable {
       creationDate: creationDate ?? this.creationDate,
       tags: tags ?? this.tags,
       voiceToTextDuration: voiceToTextDuration ?? this.voiceToTextDuration,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 
   @override
-  List<Object?> get props => [id, title, lastEditDate, tags];
+  List<Object?> get props => [id, title, lastEditDate, tags, categoryId];
 }

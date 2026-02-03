@@ -9,7 +9,7 @@ class GetAllNotesUseCase {
 
   GetAllNotesUseCase(this.repository);
 
-  Future<Either<Failure, List<NoteEntity>>> call() async {
-    return await repository.getNotes();
+  Future<Either<Failure, List<NoteEntity>>> call({String? search}) async {
+    return await repository.getNotes(search: search);
   }
 }

@@ -170,7 +170,15 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
         ApiEndpoints.taskSubtasks(taskId),
         data: {'title': title, 'order': order},
       );
-      return SubtaskModel.fromJson(response.data['data']);
+      final rawData = response.data;
+      
+      if (rawData is Map && rawData['data'] is Map && rawData['data']['subtask'] != null) {
+        return SubtaskModel.fromJson(Map<String, dynamic>.from(rawData['data']['subtask']));
+      } else if (rawData is Map && rawData['data'] != null) {
+        return SubtaskModel.fromJson(Map<String, dynamic>.from(rawData['data']));
+      }
+      
+      return SubtaskModel.fromJson(Map<String, dynamic>.from(rawData));
     } catch (e) {
       throw Exception('Failed to create subtask: $e');
     }

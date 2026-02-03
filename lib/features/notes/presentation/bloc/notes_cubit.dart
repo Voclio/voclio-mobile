@@ -39,9 +39,9 @@ class NotesCubit extends Cubit<NotesState> {
     );
   }
 
-  Future<void> getNotes() async {
+  Future<void> getNotes({String? search}) async {
     emit(state.copyWith(status: NotesStatus.loading));
-    final result = await getAllNotesUseCase();
+    final result = await getAllNotesUseCase(search: search);
     // if (isClosed) return;
     result.fold(
       (failure) => emit(

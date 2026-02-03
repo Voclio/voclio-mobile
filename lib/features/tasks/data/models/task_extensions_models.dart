@@ -19,14 +19,14 @@ class SubtaskModel {
 
   factory SubtaskModel.fromJson(Map<String, dynamic> json) {
     return SubtaskModel(
-      id: json['subtask_id'] ?? json['id'] ?? '',
-      taskId: json['task_id'] ?? '',
-      title: json['title'] ?? '',
+      id: (json['subtask_id'] ?? json['id'] ?? '').toString(),
+      taskId: (json['task_id'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
       completed: json['completed'] ?? false,
-      order: json['order'] ?? 0,
+      order: int.tryParse((json['order'] ?? 0).toString()) ?? 0,
       createdAt:
           json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
+              ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
               : DateTime.now(),
     );
   }
@@ -67,7 +67,7 @@ class TaskCategoryModel {
 
   factory TaskCategoryModel.fromJson(Map<String, dynamic> json) {
     return TaskCategoryModel(
-      id: json['category_id'] ?? json['id'] ?? '',
+      id: (json['category_id'] ?? json['id'] ?? '').toString(),
       name: json['name'] ?? '',
       color: json['color'] ?? '#3498db',
       icon: json['icon'] ?? '📁',

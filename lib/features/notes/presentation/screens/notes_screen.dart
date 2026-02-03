@@ -106,7 +106,12 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
 
               // 2. Search Bar
               TextField(
-                    onChanged: (val) => setState(() => _searchQuery = val),
+                    onChanged: (val) {
+                      setState(() => _searchQuery = val);
+                      // Trigger server-side search
+                      // Debounce could be added here for better performance
+                      context.read<NotesCubit>().getNotes(search: val);
+                    },
                     style: theme.textTheme.bodyLarge,
                     decoration: InputDecoration(
                       hintText: "Search notes...",
@@ -197,103 +202,167 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                       );
                     }
                   },
-                  child: RefreshIndicator(
-                    onRefresh: () => context.read<NotesCubit>().getNotes(),
-                    child: BlocBuilder<NotesCubit, NotesState>(
-                      builder: (context, state) {
-                        if (state.status == NotesStatus.loading &&
-                            state.notes.isEmpty) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
+                  child: BlocBuilder<NotesCubit, NotesState>(
+                    builder: (context, state) {
+                      if (state.status == NotesStatus.loading &&
+                          state.notes.isEmpty) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                        if (state.status == NotesStatus.failure &&
-                            state.notes.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
+                      if (state.status == NotesStatus.failure &&
+                          state.notes.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                color: theme.colorScheme.error,
+                                size: 48.r,
+                              ),
+                              SizedBox(height: 16.h),
+                              Text(
+                                state.errorMessage,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
                                   color: theme.colorScheme.error,
-                                  size: 48.r,
                                 ),
-                                SizedBox(height: 16.h),
-                                Text(
-                                  state.errorMessage,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: theme.colorScheme.error,
+                              ),
+                              TextButton(
+                                onPressed:
+                                    () => context.read<NotesCubit>().getNotes(
+                                      search: _searchQuery,
+                                    ),
+                                child: const Text("Retry"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // Filter Logic
+                      final filteredNotes =
+                          state.notes.where((note) {
+                            // Search is now server-side, but we keep local filtering for tags
+                            final matchesTag =
+                                _selectedTagName == null ||
+                                note.tags.contains(_selectedTagName);
+                            return matchesTag;
+                          }).toList();
+
+                      if (filteredNotes.isEmpty) {
+                        return RefreshIndicator(
+                          onRefresh:
+                              () => context.read<NotesCubit>().getNotes(
+                                search: _searchQuery,
+                              ),
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SizedBox(height: 200.h),
+                              Center(
+                                child: Text(
+                                  "No notes found",
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return RefreshIndicator(
+                        onRefresh:
+                            () => context.read<NotesCubit>().getNotes(
+                              search: _searchQuery,
+                            ),
+                        child:
+                            _isGridMode
+                                ? Builder(
+                                  builder: (context) {
+                                    // 1. Calculate dynamic aspect ratio
+                                    // We want the card to have a fixed height (e.g., 200.h) regardless of width
+                                    // Formula: Ratio = Width / DesiredHeight
+
+                                    final double screenWidth =
+                                        MediaQuery.of(context).size.width;
+                                    // Total Horizontal Padding = 20.w (left) + 20.w (right) + 16.w (middle gap)
+                                    final double totalPadding = 56.w;
+                                    final double cardWidth =
+                                        (screenWidth - totalPadding) / 2;
+
+                                    // Adjust this value (210.h) until your content fits perfectly
+                                    final double desiredCardHeight = 210.h;
+                                    final double childAspectRatio =
+                                        cardWidth / desiredCardHeight;
+
+                                    return GridView.builder(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(
+                                            parent: BouncingScrollPhysics(),
+                                          ),
+                                      padding: EdgeInsets.only(bottom: 100.h),
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 2,
+                                            crossAxisSpacing: 16.w,
+                                            mainAxisSpacing: 16.h,
+                                            // 2. Use the calculated ratio
+                                            childAspectRatio: childAspectRatio,
+                                          ),
+                                      itemCount: filteredNotes.length,
+                                      itemBuilder:
+                                          (context, index) => NoteCard(
+                                                note: filteredNotes[index],
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (
+                                                            _,
+                                                          ) => BlocProvider.value(
+                                                            value:
+                                                                context
+                                                                    .read<
+                                                                      NotesCubit
+                                                                    >(),
+                                                            child: NoteDetailScreen(
+                                                              note:
+                                                                  filteredNotes[index],
+                                                            ),
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                              )
+                                              .animate()
+                                              .fadeIn(
+                                                duration: 400.ms,
+                                                delay: Duration(
+                                                  milliseconds: 50 * index,
+                                                ),
+                                              )
+                                              .slideY(
+                                                begin: 0.2,
+                                                end: 0,
+                                                duration: 400.ms,
+                                                delay: Duration(
+                                                  milliseconds: 50 * index,
+                                                ),
+                                              ),
+                                    );
+                                  },
+                                )
+                                : ListView.separated(
+                                  physics: const AlwaysScrollableScrollPhysics(
+                                    parent: BouncingScrollPhysics(),
                                   ),
-                                ),
-                                TextButton(
-                                  onPressed:
-                                      () =>
-                                          context.read<NotesCubit>().getNotes(),
-                                  child: const Text("Retry"),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        // Filter Logic
-                        final filteredNotes =
-                            state.notes.where((note) {
-                              final matchesSearch =
-                                  note.title.toLowerCase().contains(
-                                    _searchQuery.toLowerCase(),
-                                  ) ||
-                                  note.content.toLowerCase().contains(
-                                    _searchQuery.toLowerCase(),
-                                  );
-                              final matchesTag =
-                                  _selectedTagName == null ||
-                                  note.tags.contains(_selectedTagName);
-                              return matchesSearch && matchesTag;
-                            }).toList();
-
-                        if (filteredNotes.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "No notes found",
-                              style: theme.textTheme.bodyMedium,
-                            ),
-                          );
-                        }
-
-                        return _isGridMode
-                            ? Builder(
-                              builder: (context) {
-                                // 1. Calculate dynamic aspect ratio
-                                // We want the card to have a fixed height (e.g., 200.h) regardless of width
-                                // Formula: Ratio = Width / DesiredHeight
-
-                                final double screenWidth =
-                                    MediaQuery.of(context).size.width;
-                                // Total Horizontal Padding = 20.w (left) + 20.w (right) + 16.w (middle gap)
-                                final double totalPadding = 56.w;
-                                final double cardWidth =
-                                    (screenWidth - totalPadding) / 2;
-
-                                // Adjust this value (210.h) until your content fits perfectly
-                                final double desiredCardHeight = 210.h;
-                                final double childAspectRatio =
-                                    cardWidth / desiredCardHeight;
-
-                                return GridView.builder(
-                                  physics: const BouncingScrollPhysics(),
-                                  padding: EdgeInsets.only(bottom: 100.h),
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        crossAxisSpacing: 16.w,
-                                        mainAxisSpacing: 16.h,
-                                        // 2. Use the calculated ratio
-                                        childAspectRatio: childAspectRatio,
-                                      ),
                                   itemCount: filteredNotes.length,
+                                  padding: EdgeInsets.only(bottom: 100.h),
+
+                                  separatorBuilder:
+                                      (_, __) => SizedBox(height: 16.h),
                                   itemBuilder:
                                       (context, index) => NoteCard(
                                             note: filteredNotes[index],
@@ -308,6 +377,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                                                 .read<
                                                                   NotesCubit
                                                                 >(),
+
                                                         child: NoteDetailScreen(
                                                           note:
                                                               filteredNotes[index],
@@ -332,57 +402,9 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                               milliseconds: 50 * index,
                                             ),
                                           ),
-                                );
-                              },
-                            )
-                            // ... existing list view code ...
-                            : ListView.separated(
-                              physics: const BouncingScrollPhysics(),
-                              itemCount: filteredNotes.length,
-                              padding: EdgeInsets.only(bottom: 100.h),
-
-                              separatorBuilder:
-                                  (_, __) => SizedBox(height: 16.h),
-                              itemBuilder:
-                                  (context, index) => NoteCard(
-                                        note: filteredNotes[index],
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) => BlocProvider.value(
-                                                    value:
-                                                        context
-                                                            .read<NotesCubit>(),
-
-                                                    child: NoteDetailScreen(
-                                                      note:
-                                                          filteredNotes[index],
-                                                    ),
-                                                  ),
-                                            ),
-                                          );
-                                        }, // Todo: Navigate to details
-                                      )
-                                      .animate()
-                                      .fadeIn(
-                                        duration: 400.ms,
-                                        delay: Duration(
-                                          milliseconds: 50 * index,
-                                        ),
-                                      )
-                                      .slideY(
-                                        begin: 0.2,
-                                        end: 0,
-                                        duration: 400.ms,
-                                        delay: Duration(
-                                          milliseconds: 50 * index,
-                                        ),
-                                      ),
-                            );
-                      },
-                    ),
+                                ),
+                      );
+                    },
                   ),
                 ),
               ),
