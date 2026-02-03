@@ -92,10 +92,15 @@ class TaskModel extends TaskEntity {
 
   // --- TO JSON ---
   Map<String, dynamic> toJson() {
+    // Map 'none' priority to 'low' since API may not accept 'none'
+    final priorityValue = priority == TaskPriority.none 
+        ? 'low' 
+        : priority.name.toLowerCase();
+    
     final Map<String, dynamic> data = {
       'title': title,
-      'status': isDone ? 'completed' : 'todo',
-      'priority': priority.name.toLowerCase(),
+      'status': isDone ? 'completed' : 'pending',
+      'priority': priorityValue,
       'due_date': date.toIso8601String().split('.').first, // Clean ISO format
     };
 

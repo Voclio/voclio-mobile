@@ -261,7 +261,16 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetTasksByCategoryUseCase(getIt()));
   getIt.registerLazySingleton(() => GetCategoriesUseCase(getIt()));
 
-  getIt.registerFactory(
+  // Core Tags - Must be registered before TasksCubit
+  getIt.registerLazySingleton<TagRemoteDataSource>(
+    () => TagRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<TagRepository>(
+    () => TagRepositoryImpl(remoteDataSource: getIt<TagRemoteDataSource>()),
+  );
+  getIt.registerLazySingleton(() => GetTagsUseCase(getIt()));
+
+  getIt.registerLazySingleton(
     () => TasksCubit(
       deletaTaskUseCase: getIt(),
       updateTaskUseCase: getIt(),
@@ -297,15 +306,6 @@ Future<void> setupDependencies() async {
       getTagsUseCase: getIt(),
     ),
   );
-
-  // Core Tags
-  getIt.registerLazySingleton<TagRemoteDataSource>(
-    () => TagRemoteDataSourceImpl(apiClient: getIt<ApiClient>()),
-  );
-  getIt.registerLazySingleton<TagRepository>(
-    () => TagRepositoryImpl(remoteDataSource: getIt<TagRemoteDataSource>()),
-  );
-  getIt.registerLazySingleton(() => GetTagsUseCase(getIt()));
 
   // Feature Tags
   getIt.registerLazySingleton<tags_ds.TagRemoteDataSource>(

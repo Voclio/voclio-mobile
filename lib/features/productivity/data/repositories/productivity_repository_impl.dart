@@ -72,10 +72,31 @@ class ProductivityRepositoryImpl implements ProductivityRepository {
   }
 
   @override
+  @override
   Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions() async {
     try {
       final suggestions = await remoteDataSource.getAiSuggestions();
       return Right(suggestions);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteFocusSession(String id) async {
+    try {
+      await remoteDataSource.deleteFocusSession(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> getProductivitySummary() async {
+    try {
+      final summary = await remoteDataSource.getProductivitySummary();
+      return Right(summary);
     } catch (e) {
       return Left(ServerFailure());
     }

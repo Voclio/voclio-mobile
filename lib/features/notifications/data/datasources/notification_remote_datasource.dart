@@ -5,6 +5,7 @@ import '../models/notification_response_model.dart';
 
 abstract class NotificationRemoteDataSource {
   Future<List<NotificationModel>> getNotifications();
+  Future<NotificationModel> getNotificationById(int id);
   Future<int> getUnreadCount();
   Future<void> markAsRead(int id);
   Future<void> markAllAsRead();
@@ -22,6 +23,23 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     final response = await apiClient.get(ApiEndpoints.notifications);
     final responseModel = NotificationResponseModel.fromJson(response.data);
     return responseModel.data;
+  }
+
+  @override
+  Future<NotificationModel> getNotificationById(int id) async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.notificationById(id.toString()));
+      final rawData = response.data;
+      
+      if (rawData is Map && rawData['data'] is Map && rawData['data']['notification'] != null) {
+        return NotificationModel.fromJson(rawData['data']['notification']);
+      } else if (rawData is Map && rawData['data'] != null) {
+        return NotificationModel.fromJson(rawData['data']);
+      }
+      return NotificationModel.fromJson(rawData);
+    } catch (e) {
+      throw Exception('Failed to fetch notification: $e');
+    }
   }
 
   @override

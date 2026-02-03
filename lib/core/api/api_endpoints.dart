@@ -40,7 +40,7 @@ class ApiEndpoints {
   static String taskWithSubtasks(String id) => '/tasks/$id/with-subtasks';
   static String completeTask(String id) => taskById(id);
   static String subtasks(String taskId) => '/tasks/$taskId/subtasks';
-  static String subtaskById(String id) => '/tasks/subtasks/$id';
+  static String subtaskById(String taskId, String subtaskId) => '/tasks/$taskId/subtasks/$subtaskId';
   static String taskCategoryById(String id) => '/tasks/categories/$id';
 
   static const String tasksByDate = '/tasks/by-date';
@@ -56,12 +56,21 @@ class ApiEndpoints {
   static String removeNoteTag(String noteId, String tagId) =>
       '/notes/$noteId/tags/$tagId';
 
+  // ========== Categories ==========
+  static const String categories = '/categories';
+  static String categoryById(String id) => '/categories/$id';
+  static String categoryStats(String id) => '/categories/$id/stats';
+
   // ========== Voice ==========
   static const String voiceRecordings = '/voice';
   static const String uploadVoice = '/voice/upload';
   static const String transcribe = '/voice/transcribe';
-  static String completeProcess = '/voice/process-complete';
+  static const String voiceProcessComplete = '/voice/process-complete';
+  static const String voicePreviewExtraction = '/voice/preview-extraction';
+  static const String voiceCreateFromPreview = '/voice/create-from-preview';
+  static const String voiceUpdateTranscription = '/voice/update-transcription';
 
+  static String voiceById(String id) => '/voice/$id';
   static String createNoteFromVoice(String id) => '/voice/$id/create-note';
   static String createTasksFromVoice(String id) => '/voice/$id/create-tasks';
   static String deleteVoice(String id) => '/voice/$id';

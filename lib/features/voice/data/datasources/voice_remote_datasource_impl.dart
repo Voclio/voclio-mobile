@@ -132,4 +132,99 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     // Return empty string if transcription is missing
     return '';
   }
+
+  @override
+  Future<VoiceRecordingModel> getVoiceById(String id) async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.voiceById(id));
+      final rawData = response.data;
+
+      if (rawData is Map &&
+          rawData['data'] is Map &&
+          rawData['data']['recording'] != null) {
+        return VoiceRecordingModel.fromJson(rawData['data']['recording']);
+      } else if (rawData is Map && rawData['data'] != null) {
+        return VoiceRecordingModel.fromJson(rawData['data']);
+      }
+      return VoiceRecordingModel.fromJson(rawData);
+    } catch (e) {
+      throw Exception('Failed to fetch voice recording: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> processComplete(File file) async {
+    String fileName = file.path.split('/').last;
+
+    final audioFile = await MultipartFile.fromFile(
+      file.path,
+      filename: fileName,
+      contentType: MediaType('audio', 'mp4'),
+    );
+
+    FormData formData = FormData.fromMap({
+      "audio": audioFile,
+      "filename": fileName,
+    });
+
+    try {
+      final response = await apiClient.post(
+        ApiEndpoints.voiceProcessComplete,
+        data: formData,
+        options: Options(
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Accept": "application/json",
+          },
+        ),
+      );
+
+      debugPrint("PROCESS COMPLETE RESPONSE: ${response.data}");
+      return response.data['data'] ?? response.data;
+    } on DioException catch (e) {
+      debugPrint("PROCESS COMPLETE ERROR: ${e.response?.data}");
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> previewExtraction(String transcription) async {
+    try {
+      final response = await apiClient.post(
+        ApiEndpoints.voicePreviewExtraction,
+        data: {'transcription': transcription},
+      );
+      return response.data['data'] ?? response.data;
+    } catch (e) {
+      throw Exception('Failed to preview extraction: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> createFromPreview(
+    List<Map<String, dynamic>> tasks,
+    List<Map<String, dynamic>> notes,
+  ) async {
+    try {
+      final response = await apiClient.post(
+        ApiEndpoints.voiceCreateFromPreview,
+        data: {'tasks': tasks, 'notes': notes},
+      );
+      return response.data['data'] ?? response.data;
+    } catch (e) {
+      throw Exception('Failed to create from preview: $e');
+    }
+  }
+
+  @override
+  Future<void> updateTranscription(String voiceId, String transcription) async {
+    try {
+      await apiClient.put(
+        ApiEndpoints.voiceUpdateTranscription,
+        data: {'voice_id': voiceId, 'transcription': transcription},
+      );
+    } catch (e) {
+      throw Exception('Failed to update transcription: $e');
+    }
+  }
 }

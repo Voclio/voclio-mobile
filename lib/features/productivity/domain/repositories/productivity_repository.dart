@@ -11,7 +11,9 @@ abstract class ProductivityRepository {
   );
   Future<Either<Failure, List<FocusSessionEntity>>> getFocusSessions();
   Future<Either<Failure, void>> endFocusSession(String id, int actualDuration);
+  Future<Either<Failure, void>> deleteFocusSession(String id);
   Future<Either<Failure, StreakEntity>> getStreak();
   Future<Either<Failure, List<AchievementEntity>>> getAchievements();
+  Future<Either<Failure, Map<String, dynamic>>> getProductivitySummary();
   Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions();
 }

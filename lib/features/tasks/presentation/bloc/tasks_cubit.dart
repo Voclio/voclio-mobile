@@ -263,38 +263,67 @@ class TasksCubit extends Cubit<TasksState> {
   }
 
   Future<void> addSubtask(String taskId, String title) async {
-    // 1. Optimistic UI update (optional, but good for UX)
+    // 1. Find the task
     final int taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
-    if (taskIndex != -1) {
-      final task = state.tasks[taskIndex];
-      final tempSubtask = SubTask(
-        id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
-        title: title,
-      );
-      final updatedTask = task.copyWith(
-        subtasks: [...task.subtasks, tempSubtask],
-      );
+    if (taskIndex == -1) return;
 
-      final updatedTasks = List<TaskEntity>.from(state.tasks);
-      updatedTasks[taskIndex] = updatedTask;
-      emit(state.copyWith(tasks: updatedTasks));
-    }
+    final task = state.tasks[taskIndex];
+    final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
+    
+    // 2. Optimistic UI update with temporary subtask
+    final tempSubtask = SubTask(
+      id: tempId,
+      title: title,
+      isDone: false,
+    );
+    final updatedTask = task.copyWith(
+      subtasks: [...task.subtasks, tempSubtask],
+    );
 
-    final result = await createSubtaskUseCase(taskId, title, 0);
+    final updatedTasks = List<TaskEntity>.from(state.tasks);
+    updatedTasks[taskIndex] = updatedTask;
+    emit(state.copyWith(tasks: updatedTasks));
+
+    // 3. Call API
+    final result = await createSubtaskUseCase(taskId, title, task.subtasks.length);
 
     result.fold(
       (failure) {
+        // Revert by removing the temp subtask
+        final revertedTask = task.copyWith(
+          subtasks: task.subtasks.where((s) => s.id != tempId).toList(),
+        );
+        final revertedTasks = List<TaskEntity>.from(state.tasks);
+        final idx = revertedTasks.indexWhere((t) => t.id == taskId);
+        if (idx != -1) revertedTasks[idx] = revertedTask;
+        
         emit(
           state.copyWith(
             status: TasksStatus.failure,
             errorMessage: failure.message,
+            tasks: revertedTasks,
           ),
         );
-        getTasks(); // Revert
       },
       (subtaskEntity) {
-        // Refresh full task to get updated subtask list with server IDs
-        getTasks();
+        // Replace temp subtask with real one from server
+        final currentTasks = List<TaskEntity>.from(state.tasks);
+        final idx = currentTasks.indexWhere((t) => t.id == taskId);
+        if (idx != -1) {
+          final currentTask = currentTasks[idx];
+          final newSubtasks = currentTask.subtasks.map((s) {
+            if (s.id == tempId) {
+              return SubTask(
+                id: subtaskEntity.id,
+                title: subtaskEntity.title,
+                isDone: subtaskEntity.completed,
+              );
+            }
+            return s;
+          }).toList();
+          currentTasks[idx] = currentTask.copyWith(subtasks: newSubtasks);
+          emit(state.copyWith(tasks: currentTasks, status: TasksStatus.success));
+        }
       },
     );
   }
@@ -319,6 +348,7 @@ class TasksCubit extends Cubit<TasksState> {
 
     // 2. Call API
     final result = await updateSubtaskUseCase(
+      taskId,
       subtask.id,
       subtask.title,
       !subtask.isDone,

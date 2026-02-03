@@ -27,11 +27,12 @@ abstract class TaskRepository {
     int order,
   );
   Future<Either<Failure, void>> updateSubtask(
+    String taskId,
     String subtaskId,
     String title,
     bool completed,
   );
-  Future<Either<Failure, void>> deleteSubtask(String subtaskId);
+  Future<Either<Failure, void>> deleteSubtask(String taskId, String subtaskId);
 
   // Categories
   Future<Either<Failure, List<TaskCategoryEntity>>> getCategories();

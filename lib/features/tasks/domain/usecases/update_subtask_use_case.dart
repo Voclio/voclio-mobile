@@ -7,7 +7,7 @@ class UpdateSubtaskUseCase {
 
   UpdateSubtaskUseCase(this.taskRepository);
 
-  Future<Either<Failure, void>> call(String subtaskId, String title, bool completed) async {
-    return await taskRepository.updateSubtask(subtaskId, title, completed);
+  Future<Either<Failure, void>> call(String taskId, String subtaskId, String title, bool completed) async {
+    return await taskRepository.updateSubtask(taskId, subtaskId, title, completed);
   }
 }

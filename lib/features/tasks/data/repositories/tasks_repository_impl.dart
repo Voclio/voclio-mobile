@@ -191,12 +191,13 @@ class TaskRepositoryImpl implements TaskRepository {
 
   @override
   Future<Either<Failure, void>> updateSubtask(
+    String taskId,
     String subtaskId,
     String title,
     bool completed,
   ) async {
     try {
-      await remoteDataSource.updateSubtask(subtaskId, title, completed);
+      await remoteDataSource.updateSubtask(taskId, subtaskId, title, completed);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -204,9 +205,9 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteSubtask(String subtaskId) async {
+  Future<Either<Failure, void>> deleteSubtask(String taskId, String subtaskId) async {
     try {
-      await remoteDataSource.deleteSubtask(subtaskId);
+      await remoteDataSource.deleteSubtask(taskId, subtaskId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

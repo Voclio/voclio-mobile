@@ -53,12 +53,31 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                   Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Notes", style: theme.textTheme.headlineSmall),
+                          Row(
+                            children: [
+                              Text("Notes", style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              )),
+                              SizedBox(width: 8.w),
+                              Icon(
+                                Icons.note_alt_rounded,
+                                size: 22.sp,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4.h),
                           BlocBuilder<NotesCubit, NotesState>(
                             builder: (context, state) {
+                              final totalWords = state.notes.fold<int>(
+                                0,
+                                (sum, note) => sum + note.content.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length,
+                              );
                               return Text(
-                                "${state.notes.length} total notes",
-                                style: theme.textTheme.bodyMedium,
+                                "${state.notes.length} notes • ${_formatNumber(totalWords)} words",
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                ),
                               );
                             },
                           ),
@@ -206,7 +225,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                     builder: (context, state) {
                       if (state.status == NotesStatus.loading &&
                           state.notes.isEmpty) {
-                        return const Center(child: CircularProgressIndicator());
+                        return _buildLoadingState(context, theme);
                       }
 
                       if (state.status == NotesStatus.failure &&
@@ -259,13 +278,8 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                           child: ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
-                              SizedBox(height: 200.h),
-                              Center(
-                                child: Text(
-                                  "No notes found",
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                              ),
+                              SizedBox(height: 80.h),
+                              _buildEmptyState(context, theme),
                             ],
                           ),
                         );
@@ -436,6 +450,100 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
     );
   }
 
+  Widget _buildLoadingState(BuildContext context, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Column(
+      children: [
+        SizedBox(height: 40.h),
+        // Shimmer-like loading cards
+        ...List.generate(3, (index) {
+          return Container(
+            margin: EdgeInsets.only(bottom: 16.h),
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(16.r),
+              border: isDark
+                  ? Border.all(color: Colors.white.withOpacity(0.05))
+                  : Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40.r,
+                      height: 40.r,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 150.w,
+                            height: 14.h,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurface.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Container(
+                            width: 80.w,
+                            height: 10.h,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurface.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Container(
+                  width: double.infinity,
+                  height: 12.h,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  width: 200.w,
+                  height: 12.h,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                ),
+              ],
+            ),
+          )
+              .animate(
+                onPlay: (controller) => controller.repeat(),
+              )
+              .shimmer(
+                duration: 1500.ms,
+                delay: Duration(milliseconds: 100 * index),
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : Colors.grey.shade100,
+              );
+        }),
+      ],
+    );
+  }
+
   Widget _buildFilterChip(String label, String? tagName) {
     final theme = Theme.of(context);
     final isSelected = _selectedTagName == tagName;
@@ -471,5 +579,209 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
         ),
       ),
     );
+  }
+
+  Widget _buildEmptyState(BuildContext context, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final hasSearchOrFilter = _searchQuery.isNotEmpty || _selectedTagName != null;
+    
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Illustration Container
+          Container(
+            width: 140.r,
+            height: 140.r,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.15),
+                  theme.colorScheme.secondary.withOpacity(0.1),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Background circle decoration
+                Positioned(
+                  top: 20.r,
+                  right: 20.r,
+                  child: Container(
+                    width: 30.r,
+                    height: 30.r,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                // Main icon
+                Icon(
+                  hasSearchOrFilter
+                      ? Icons.search_off_rounded
+                      : Icons.note_alt_outlined,
+                  size: 64.sp,
+                  color: theme.colorScheme.primary.withOpacity(0.7),
+                ),
+                // Small floating elements
+                Positioned(
+                  bottom: 25.r,
+                  left: 20.r,
+                  child: Icon(
+                    Icons.edit_note_rounded,
+                    size: 24.sp,
+                    color: theme.colorScheme.secondary.withOpacity(0.5),
+                  ),
+                ),
+              ],
+            ),
+          )
+              .animate()
+              .fadeIn(duration: 600.ms)
+              .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
+
+          SizedBox(height: 32.h),
+
+          // Title
+          Text(
+            hasSearchOrFilter
+                ? "No matching notes"
+                : "Start capturing your ideas",
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          )
+              .animate()
+              .fadeIn(duration: 600.ms, delay: 200.ms)
+              .slideY(begin: 0.3, end: 0),
+
+          SizedBox(height: 12.h),
+
+          // Description
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: Text(
+              hasSearchOrFilter
+                  ? "Try adjusting your search or filters to find what you're looking for"
+                  : "Create your first note to organize thoughts, ideas, and important information",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 300.ms)
+                .slideY(begin: 0.3, end: 0),
+          ),
+
+          SizedBox(height: 32.h),
+
+          // CTA Button
+          if (!hasSearchOrFilter)
+            ElevatedButton.icon(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<NotesCubit>(),
+                    child: const AddNoteBottomSheet(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text("Create Note"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.r),
+                ),
+                elevation: 0,
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 400.ms)
+                .slideY(begin: 0.3, end: 0)
+          else
+            // Clear filters button
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _searchQuery = '';
+                  _selectedTagName = null;
+                });
+                context.read<NotesCubit>().getNotes();
+              },
+              icon: Icon(Icons.clear_all, size: 20.sp),
+              label: const Text("Clear Filters"),
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 400.ms),
+
+          SizedBox(height: 16.h),
+
+          // Quick tips
+          if (!hasSearchOrFilter)
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 40.w),
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : theme.colorScheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : theme.colorScheme.primary.withOpacity(0.1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    size: 20.sp,
+                    color: theme.colorScheme.primary,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: Text(
+                      "Tip: Use tags to organize notes by topics or projects",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 500.ms)
+                .slideY(begin: 0.2, end: 0),
+        ],
+      ),
+    );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
   }
 }

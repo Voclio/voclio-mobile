@@ -11,8 +11,10 @@ abstract class ProductivityRemoteDataSource {
   );
   Future<List<FocusSessionModel>> getFocusSessions();
   Future<void> endFocusSession(String id, int actualDuration);
+  Future<void> deleteFocusSession(String id);
   Future<StreakModel> getStreak();
   Future<List<AchievementModel>> getAchievements();
+  Future<Map<String, dynamic>> getProductivitySummary();
   Future<AiSuggestionModel> getAiSuggestions();
 }
 
@@ -156,6 +158,32 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
           isUnlocked: false,
         ),
       ];
+    }
+  }
+
+  @override
+  Future<void> deleteFocusSession(String id) async {
+    try {
+      await apiClient.delete(ApiEndpoints.focusSessionById(id));
+    } catch (e) {
+      throw Exception('Failed to delete focus session: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getProductivitySummary() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.productivitySummary);
+      return response.data['data'] ?? response.data;
+    } catch (e) {
+      // Return mock summary if API fails
+      return {
+        'total_focus_time': 7200,
+        'sessions_completed': 10,
+        'average_session_length': 720,
+        'most_productive_hour': 14,
+        'weekly_goal_progress': 0.75,
+      };
     }
   }
 

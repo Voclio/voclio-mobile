@@ -232,8 +232,28 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                         builder: (context) {
                           if (state.status == TasksStatus.loading &&
                               state.tasks.isEmpty) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 48.w,
+                                    height: 48.h,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    'Loading tasks...',
+                                    style: TextStyle(
+                                      color: theme.colorScheme.secondary,
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                           } else if (visibleTasks.isEmpty) {
                             return RefreshIndicator(
@@ -241,15 +261,8 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   () => context.read<TasksCubit>().init(),
                               child: ListView(
                                 children: [
-                                  SizedBox(height: 200.h),
-                                  Center(
-                                    child: Text(
-                                      "No tasks found",
-                                      style: TextStyle(
-                                        color: theme.colorScheme.secondary,
-                                      ),
-                                    ),
-                                  ),
+                                  SizedBox(height: 80.h),
+                                  _buildEmptyState(context, state.selectedTagName),
                                 ],
                               ),
                             );
@@ -365,32 +378,38 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final isComplete = percentage == 100;
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface, // Matches theme card color
+        color: isComplete 
+            ? (isDark ? Colors.green.withOpacity(0.15) : Colors.green.shade50)
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24.r),
+        border: isComplete 
+            ? Border.all(color: Colors.green.withOpacity(0.3), width: 1.5)
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-            blurRadius: 10,
+            color: isComplete 
+                ? Colors.green.withOpacity(0.1)
+                : Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
-        // Optional Gradient for Dark Mode to make it pop
-        gradient:
-            isDark
-                ? LinearGradient(
-                  colors: [
-                    theme.colorScheme.secondary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-                : null,
+        gradient: !isComplete && isDark
+            ? LinearGradient(
+                colors: [
+                  theme.colorScheme.secondary.withOpacity(0.1),
+                  theme.colorScheme.secondary.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,18 +417,55 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Overall Progress", style: theme.textTheme.bodyLarge),
-              Text("$percentage%", style: theme.textTheme.bodyMedium),
+              Row(
+                children: [
+                  if (isComplete) ...[
+                    Icon(
+                      Icons.celebration_rounded,
+                      color: Colors.green,
+                      size: 20.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                  ],
+                  Text(
+                    isComplete ? "All Done!" : "Overall Progress",
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isComplete ? Colors.green.shade700 : null,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: isComplete
+                      ? Colors.green.withOpacity(0.2)
+                      : theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  "$percentage%",
+                  style: TextStyle(
+                    color: isComplete ? Colors.green.shade700 : theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ),
             ],
           ),
-          SizedBox(height: 15.h),
-          LinearProgressIndicator(
-            value: progressValue,
-            backgroundColor:
-                isDark ? Colors.white10 : Colors.deepPurple.shade50,
-            color: theme.colorScheme.primary,
-            minHeight: 8.h,
+          SizedBox(height: 16.h),
+          ClipRRect(
             borderRadius: BorderRadius.circular(10.r),
+            child: LinearProgressIndicator(
+              value: progressValue,
+              backgroundColor: isDark 
+                  ? Colors.white10 
+                  : (isComplete ? Colors.green.shade100 : Colors.deepPurple.shade50),
+              color: isComplete ? Colors.green : theme.colorScheme.primary,
+              minHeight: 10.h,
+            ),
           ),
         ],
       ),
@@ -506,5 +562,87 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
         ),
       ),
     );
+  }
+  
+  Widget _buildEmptyState(BuildContext context, String? selectedTagName) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Illustration container
+          Container(
+            width: 120.w,
+            height: 120.h,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.task_alt_rounded,
+              size: 60.sp,
+              color: theme.colorScheme.primary.withOpacity(0.6),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Text(
+            selectedTagName != null 
+                ? 'No tasks in "$selectedTagName"'
+                : 'No tasks yet',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: Text(
+              selectedTagName != null
+                  ? 'Create a new task with this tag to see it here'
+                  : 'Tap the + button to create your first task',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.secondary,
+                height: 1.5,
+              ),
+            ),
+          ),
+          SizedBox(height: 32.h),
+          ElevatedButton.icon(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => BlocProvider.value(
+                  value: context.read<TasksCubit>(),
+                  child: const AddTaskBottomSheet(),
+                ),
+              );
+            },
+            icon: Icon(Icons.add_rounded, size: 20.sp),
+            label: Text(
+              'Create Task',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
   }
 }

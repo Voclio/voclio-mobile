@@ -6,18 +6,23 @@ import '../models/task_extensions_models.dart';
 
 abstract class TaskRemoteDataSource {
   Future<List<TaskModel>> getTasks();
+  Future<List<TaskModel>> getMainTasks();
   Future<List<TaskModel>> getTasksByCategory(String categoryId);
+  Future<List<TaskModel>> getTasksByDate(String date);
   Future<TaskModel> addTask(TaskModel task);
+  Future<List<TaskModel>> bulkCreateTasks(List<TaskModel> tasks);
   Future<TaskModel> updateTask(TaskModel task);
   Future<void> deleteTask(String id);
   Future<TaskModel?> getTask(String taskId);
+  Future<TaskModel?> getTaskWithSubtasks(String taskId);
   Future<void> completeTask(String id);
+  Future<Map<String, dynamic>> getTaskStats();
 
   // Subtasks methods
   Future<List<SubtaskModel>> getSubtasks(String taskId);
   Future<SubtaskModel> createSubtask(String taskId, String title, int order);
-  Future<void> updateSubtask(String subtaskId, String title, bool completed);
-  Future<void> deleteSubtask(String subtaskId);
+  Future<void> updateSubtask(String taskId, String subtaskId, String title, bool completed);
+  Future<void> deleteSubtask(String taskId, String subtaskId);
 
   // Categories methods
   Future<List<TaskCategoryModel>> getCategories();
@@ -54,6 +59,29 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   }
 
   @override
+  Future<List<TaskModel>> getMainTasks() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.mainTasks);
+      return _parseTasksResponse(response.data);
+    } catch (e) {
+      throw Exception('Failed to fetch main tasks: $e');
+    }
+  }
+
+  @override
+  Future<List<TaskModel>> getTasksByDate(String date) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.tasksByDate,
+        queryParameters: {'date': date},
+      );
+      return _parseTasksResponse(response.data);
+    } catch (e) {
+      throw Exception('Failed to fetch tasks by date: $e');
+    }
+  }
+
+  @override
   Future<List<TaskModel>> getTasksByCategory(String categoryId) async {
     try {
       // Endpoint: {{baseUrl}}/tasks/by-category?category_id={{categoryId}}
@@ -64,6 +92,41 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       return _parseTasksResponse(response.data);
     } catch (e) {
       throw Exception('Failed to fetch tasks by category: $e');
+    }
+  }
+
+  @override
+  Future<List<TaskModel>> bulkCreateTasks(List<TaskModel> tasks) async {
+    try {
+      final response = await apiClient.post(
+        ApiEndpoints.bulkTasks,
+        data: {'tasks': tasks.map((t) => t.toJson()).toList()},
+      );
+      return _parseTasksResponse(response.data);
+    } catch (e) {
+      throw Exception('Failed to bulk create tasks: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getTaskStats() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.taskStats);
+      return response.data['data'] ?? response.data;
+    } catch (e) {
+      throw Exception('Failed to fetch task stats: $e');
+    }
+  }
+
+  @override
+  Future<TaskModel?> getTaskWithSubtasks(String taskId) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.taskWithSubtasks(taskId),
+      );
+      return TaskModel.fromRawData(response.data);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -171,13 +234,19 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
         data: {'title': title, 'order': order},
       );
       final rawData = response.data;
-      
-      if (rawData is Map && rawData['data'] is Map && rawData['data']['subtask'] != null) {
-        return SubtaskModel.fromJson(Map<String, dynamic>.from(rawData['data']['subtask']));
+
+      if (rawData is Map &&
+          rawData['data'] is Map &&
+          rawData['data']['subtask'] != null) {
+        return SubtaskModel.fromJson(
+          Map<String, dynamic>.from(rawData['data']['subtask']),
+        );
       } else if (rawData is Map && rawData['data'] != null) {
-        return SubtaskModel.fromJson(Map<String, dynamic>.from(rawData['data']));
+        return SubtaskModel.fromJson(
+          Map<String, dynamic>.from(rawData['data']),
+        );
       }
-      
+
       return SubtaskModel.fromJson(Map<String, dynamic>.from(rawData));
     } catch (e) {
       throw Exception('Failed to create subtask: $e');
@@ -186,13 +255,14 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   @override
   Future<void> updateSubtask(
+    String taskId,
     String subtaskId,
     String title,
     bool completed,
   ) async {
     try {
       await apiClient.put(
-        ApiEndpoints.subtaskById(subtaskId),
+        ApiEndpoints.subtaskById(taskId, subtaskId),
         data: {'title': title, 'completed': completed},
       );
     } catch (e) {
@@ -201,9 +271,9 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   }
 
   @override
-  Future<void> deleteSubtask(String subtaskId) async {
+  Future<void> deleteSubtask(String taskId, String subtaskId) async {
     try {
-      await apiClient.delete(ApiEndpoints.subtaskById(subtaskId));
+      await apiClient.delete(ApiEndpoints.subtaskById(taskId, subtaskId));
     } catch (e) {
       throw Exception('Failed to delete subtask: $e');
     }

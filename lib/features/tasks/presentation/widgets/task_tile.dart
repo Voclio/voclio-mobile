@@ -21,72 +21,97 @@ class TaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     // Opacity for completed tasks
     final double opacity = task.isDone ? 0.5 : 1.0;
+    final bool isOverdue = !task.isDone && task.date.isBefore(DateTime.now());
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+          color: task.isDone 
+              ? (isDark ? Colors.green.withOpacity(0.1) : Colors.green.withOpacity(0.05))
+              : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: theme.colorScheme.onSurface.withOpacity(0.05),
+            color: task.isDone 
+                ? Colors.green.withOpacity(0.3)
+                : isOverdue 
+                    ? Colors.red.withOpacity(0.3)
+                    : theme.colorScheme.onSurface.withOpacity(0.05),
+            width: task.isDone || isOverdue ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 10,
+              color: task.isDone 
+                  ? Colors.green.withOpacity(0.05)
+                  : Colors.black.withOpacity(0.03),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Row(
           children: [
-            // 1. Checkbox (Custom Circle)
-            InkWell(
+            // 1. Checkbox (Custom Circle with animation)
+            GestureDetector(
               onTap: () => onCheckChanged(!task.isDone),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 24.w,
-                height: 24.w,
+                duration: const Duration(milliseconds: 300),
+                width: 26.w,
+                height: 26.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color:
-                        task.isDone
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.secondary.withOpacity(0.3),
+                    color: task.isDone
+                        ? Colors.green
+                        : isOverdue
+                            ? Colors.red.withOpacity(0.5)
+                            : theme.colorScheme.primary.withOpacity(0.4),
                     width: 2,
                   ),
-                  color:
-                      task.isDone
-                          ? theme.colorScheme.primary
-                          : Colors.transparent,
+                  color: task.isDone ? Colors.green : Colors.transparent,
+                  boxShadow: task.isDone
+                      ? [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.3),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
                 ),
-                child:
-                    task.isDone
-                        ? Icon(Icons.check, size: 16.sp, color: Colors.white)
-                        : null,
+                child: task.isDone
+                    ? Icon(Icons.check, size: 16.sp, color: Colors.white)
+                    : null,
               ),
             ),
-            SizedBox(width: 12.w),
+            SizedBox(width: 14.w),
 
-            // 2. Colored Strip (Priority)
+            // 2. Colored Strip (Priority) with gradient
             Container(
-              width: 3.w,
-              height: 40.h,
+              width: 4.w,
+              height: 44.h,
               decoration: BoxDecoration(
-                color: task.priority.color.withOpacity(opacity),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    task.priority.color.withOpacity(opacity),
+                    task.priority.color.withOpacity(opacity * 0.6),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(4.r),
               ),
             ),
 
-            SizedBox(width: 16.w),
+            SizedBox(width: 14.w),
 
-            // 3. Title, Time, and Tags
+            // 3. Title, Time, Tags, and Subtask Progress
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,68 +120,92 @@ class TaskTile extends StatelessWidget {
                     task.title.isEmpty ? "[No Title]" : task.title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withOpacity(opacity),
-                      fontWeight: FontWeight.bold,
-                      decoration:
-                          task.isDone ? TextDecoration.lineThrough : null,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15.sp,
+                      decoration: task.isDone ? TextDecoration.lineThrough : null,
+                      decorationColor: Colors.green,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 6.h),
                   Row(
                     children: [
-                      Flexible(
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 14.sp,
-                              color: theme.colorScheme.secondary,
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              _formatDate(task.date),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.secondary.withOpacity(
-                                  opacity,
-                                ),
-                              ),
-                            ),
-                          ],
+                      // Time
+                      Icon(
+                        isOverdue ? Icons.warning_amber_rounded : Icons.access_time_rounded,
+                        size: 14.sp,
+                        color: isOverdue ? Colors.red : theme.colorScheme.secondary,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        _formatDate(task.date),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isOverdue 
+                              ? Colors.red.withOpacity(0.8)
+                              : theme.colorScheme.secondary.withOpacity(opacity),
+                          fontWeight: isOverdue ? FontWeight.w500 : FontWeight.normal,
                         ),
                       ),
-                      if (task.tags.isNotEmpty) ...[
-                        SizedBox(width: 8.w),
-                        Wrap(
-                          spacing: 4.w,
-                          children:
-                              task.tags.take(2).map((tagName) {
-                                final tagColor = _getTagColor(tagName, theme);
-                                return Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8.w,
-                                    vertical: 2.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: tagColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6.r),
-                                  ),
-                                  child: Text(
-                                    tagName,
-                                    style: TextStyle(
-                                      color: tagColor,
-                                      fontSize: 10.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
+                      
+                      // Subtasks indicator
+                      if (task.subtasks.isNotEmpty) ...[
+                        SizedBox(width: 12.w),
+                        Icon(
+                          Icons.checklist_rounded,
+                          size: 14.sp,
+                          color: theme.colorScheme.secondary,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '${task.completedSubtasks}/${task.totalSubtasks}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.secondary.withOpacity(opacity),
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ],
                   ),
+                  
+                  // Tags row
+                  if (task.tags.isNotEmpty) ...[
+                    SizedBox(height: 8.h),
+                    Wrap(
+                      spacing: 6.w,
+                      runSpacing: 4.h,
+                      children: task.tags.take(2).map((tagName) {
+                        final tagColor = _getTagColor(tagName, theme);
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: tagColor.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Text(
+                            tagName,
+                            style: TextStyle(
+                              color: tagColor.withOpacity(0.9),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                 ],
               ),
+            ),
+            
+            // Arrow indicator
+            Icon(
+              Icons.chevron_right_rounded,
+              color: theme.colorScheme.secondary.withOpacity(0.4),
+              size: 20.sp,
             ),
           ],
         ),

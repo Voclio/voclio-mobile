@@ -5,8 +5,8 @@ import '../models/task_extensions_models.dart';
 abstract class TaskExtensionsDataSource {
   Future<List<SubtaskModel>> getSubtasks(String taskId);
   Future<SubtaskModel> createSubtask(String taskId, String title, int order);
-  Future<void> updateSubtask(String subtaskId, String title, bool completed);
-  Future<void> deleteSubtask(String subtaskId);
+  Future<void> updateSubtask(String taskId, String subtaskId, String title, bool completed);
+  Future<void> deleteSubtask(String taskId, String subtaskId);
 
   Future<List<TaskCategoryModel>> getCategories();
   Future<TaskCategoryModel> createCategory(
@@ -60,13 +60,14 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
 
   @override
   Future<void> updateSubtask(
+    String taskId,
     String subtaskId,
     String title,
     bool completed,
   ) async {
     try {
       await apiClient.put(
-        ApiEndpoints.subtaskById(subtaskId),
+        ApiEndpoints.subtaskById(taskId, subtaskId),
         data: {'title': title, 'completed': completed},
       );
     } catch (e) {
@@ -75,9 +76,9 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
   }
 
   @override
-  Future<void> deleteSubtask(String subtaskId) async {
+  Future<void> deleteSubtask(String taskId, String subtaskId) async {
     try {
-      await apiClient.delete(ApiEndpoints.subtaskById(subtaskId));
+      await apiClient.delete(ApiEndpoints.subtaskById(taskId, subtaskId));
     } catch (e) {
       throw Exception('Failed to delete subtask: $e');
     }

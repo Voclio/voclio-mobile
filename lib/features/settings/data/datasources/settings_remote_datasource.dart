@@ -8,6 +8,7 @@ abstract class SettingsRemoteDataSource {
   Future<UserSettingsModel> updateTheme(String theme);
   Future<UserSettingsModel> updateLanguage(String language);
   Future<UserSettingsModel> updateTimezone(String timezone);
+  Future<Map<String, dynamic>> getNotificationSettings();
   Future<UserSettingsModel> updateNotifications(Map<String, dynamic> data);
 }
 
@@ -72,6 +73,16 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
       return UserSettingsModel.fromJson(response.data['data']);
     } catch (e) {
       throw Exception('Failed to update timezone: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getNotificationSettings() async {
+    try {
+      final response = await apiClient.get(ApiEndpoints.settingsNotifications);
+      return response.data['data'] ?? response.data;
+    } catch (e) {
+      throw Exception('Failed to fetch notification settings: $e');
     }
   }
 
