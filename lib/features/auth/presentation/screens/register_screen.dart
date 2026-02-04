@@ -14,7 +14,6 @@ import '../widgets/auth_text_field.dart';
 import '../widgets/auth_phone_field.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
-import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
 
@@ -59,7 +58,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
             fullName: _nameController.text.trim(),
-            phoneNumber: _fullPhoneNumber.isNotEmpty ? _fullPhoneNumber : _phoneController.text.trim(),
+            phoneNumber:
+                _fullPhoneNumber.isNotEmpty
+                    ? _fullPhoneNumber
+                    : _phoneController.text.trim(),
           );
 
           context.pushRoute(
@@ -75,17 +77,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               message.contains('already') ||
               message.contains('exists') ||
               message.contains('registered') ||
-              message.contains('conflict');
+              message.contains('conflict') ||
+              message.contains('taken');
 
           if (isDuplicateEmail) {
             VoclioDialog.show(
               context: context,
               title: 'Email Already Registered',
-              message: 'This email is already registered. Please login or use a different email.',
+              message:
+                  'This email is already registered. Please login or use a different email.',
               type: VoclioDialogType.warning,
               primaryButtonText: 'Go to Login',
               secondaryButtonText: 'Try Different Email',
               onPrimaryPressed: () {
+                context.read<AuthBloc>().add(RefreshAuthEvent());
                 Navigator.of(context).pop();
                 context.goRoute(AppRouter.login);
               },
@@ -211,10 +216,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   validator: (value) {
                                     if (value == null ||
                                         value.isEmpty ||
-                                        value.length < 6) {
-                                      return context.translate(
-                                        LangKeys.validPasswrod,
-                                      );
+                                        value.length < 8) {
+                                      return 'Password must be at least 8 characters';
                                     }
                                     return null;
                                   },
@@ -308,12 +311,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _onRegister() {
     if (_formKey.currentState?.validate() ?? false) {
-      // Call register first - it checks for duplicate emails and sends OTP
+      // Step 1: Call register to check for existence and send OTP.
       final request = AuthRequest(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
-        phoneNumber: _fullPhoneNumber.isNotEmpty ? _fullPhoneNumber : _phoneController.text.trim(),
+        phoneNumber:
+            _fullPhoneNumber.isNotEmpty
+                ? _fullPhoneNumber
+                : _phoneController.text.trim(),
       );
       context.read<AuthBloc>().add(RegisterEvent(request));
     }

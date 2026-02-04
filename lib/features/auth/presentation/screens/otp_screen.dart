@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,7 +12,6 @@ import '../../../../core/common/animation/animate_do.dart';
 import '../widgets/auth_top_controls.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
-import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/otp_request.dart';
 import '../../domain/entities/auth_request.dart';
@@ -38,6 +38,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final _focusNode = FocusNode();
   bool _canResend = true;
   int _resendCountdown = 0;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -77,29 +78,28 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   void _onVerifyOTP() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final otp = _otpController.text.trim();
+    if (_isProcessing) return;
 
-      if (widget.type == OTPType.registration &&
-          widget.registrationData != null) {
-        // Complete registration with OTP
-        final request = AuthRequest(
-          email: widget.registrationData!.email,
-          password: widget.registrationData!.password,
-          fullName: widget.registrationData!.fullName,
-          phoneNumber: widget.registrationData!.phoneNumber,
-          otp: otp,
-        );
-        context.read<AuthBloc>().add(RegisterEvent(request));
-      } else {
-        // Standard verification (e.g. Forgot Password)
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isProcessing = true;
+      });
+
+      // Clear any previous error state before attempting verification
+      context.read<AuthBloc>().add(const RefreshAuthEvent());
+
+      // Small delay to ensure state is cleared
+      Future.delayed(const Duration(milliseconds: 100), () {
+        final otp = _otpController.text.trim();
+
+        // For ALL types including registration, use verify OTP endpoint
         final request = OTPRequest(
           email: widget.email,
           otp: otp,
           type: widget.type,
         );
         context.read<AuthBloc>().add(VerifyOTPEvent(request));
-      }
+      });
     }
   }
 
@@ -124,85 +124,70 @@ class _OTPScreenState extends State<OTPScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is OTPLoading || state is AuthLoading) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder:
-                (context) => AuthLoadingDialog(
-                  message:
-                      state is OTPLoading
-                          ? 'Verifying code...'
-                          : 'Completing registration...',
-                ),
-          );
-        } else if (state is OTPVerified) {
-          Navigator.of(context).pop(); // Dismiss loading
+          // Keep processing flag true during loading
+          if (!_isProcessing) {
+            setState(() {
+              _isProcessing = true;
+            });
+          }
+        } else if (state is RefreshAuthEvent || state is AuthInitial) {
+          // Don't reset processing flag on refresh - it's intentional
+        } else {
+          // Reset processing flag for any other non-loading state
+          if (_isProcessing) {
+            setState(() {
+              _isProcessing = false;
+            });
+          }
 
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Code verified successfully!'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        if (widget.type == OTPType.forgotPassword) {
-                          context.pushRoute(
-                            '${AppRouter.resetPassword}?email=${widget.email}&token=${state.response.sessionId ?? ""}',
-                          );
-                        } else {
-                          context.goRoute(AppRouter.login);
-                        }
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
+          if (state is AuthSuccess) {
+            // OTP verification returned tokens - registration complete
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Registration successful! Welcome to Voclio!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            Future.delayed(const Duration(milliseconds: 500), () {
+              context.goRoute(AppRouter.home);
+            });
+          } else if (state is OTPVerified) {
+            // OTP verified successfully (no tokens returned)
+            if (widget.type == OTPType.forgotPassword) {
+              // For forgot password flow
+              context.pushRoute(
+                '${AppRouter.resetPassword}?email=${widget.email}&token=${state.response.sessionId ?? ""}',
+              );
+            } else {
+              // For other OTP types, navigate to login
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Email verified successfully!'),
+                  backgroundColor: Colors.green,
                 ),
-          );
-        } else if (state is AuthSuccess) {
-          Navigator.of(context).pop(); // Dismiss loading
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text(
-                    'Account created and signed in successfully!',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        context.goRoute(AppRouter.home);
-                      },
-                      child: const Text('Get Started'),
-                    ),
-                  ],
-                ),
-          );
-        } else if (state is OTPSent) {
-          Navigator.of(context).pop(); // Dismiss loading if it was showing
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Code resent successfully')),
-          );
-        } else if (state is AuthError) {
-          Navigator.of(context).pop(); // Dismiss loading
-          showDialog(
-            context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: const Text('Action Failed'),
-                  content: Text(state.message),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('OK'),
-                    ),
-                  ],
-                ),
-          );
+              );
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.goRoute(AppRouter.login);
+              });
+            }
+          } else if (state is OTPSent) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Code resent successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else if (state is AuthError) {
+            // Clear the OTP input on error so user can try again
+            _otpController.clear();
+
+            // Clear the error state after a short delay
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                context.read<AuthBloc>().add(const RefreshAuthEvent());
+              }
+            });
+          }
         }
       },
       child: Scaffold(
@@ -252,7 +237,9 @@ class _OTPScreenState extends State<OTPScreen> {
                                 theme: context.textStyle.copyWith(
                                   fontSize: isSmall ? 15.sp : 15.sp,
                                   fontWeight: FontWeight.w400,
-                                  color: context.colors.grey?.withOpacity(0.7),
+                                  color: context.colors.grey?.withValues(
+                                    alpha: 0.7,
+                                  ),
                                 ),
                               ),
                             ],
@@ -273,6 +260,7 @@ class _OTPScreenState extends State<OTPScreen> {
                                     focusNode: _focusNode,
                                     keyboardType: TextInputType.number,
                                     maxLength: 6,
+                                    enabled: !_isProcessing,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return ''; // Return empty string to signal error but don't show text
@@ -324,9 +312,9 @@ class _OTPScreenState extends State<OTPScreen> {
                                                     ? context.colors.primary!
                                                     : isFilled
                                                     ? context.colors.primary!
-                                                        .withOpacity(0.5)
-                                                    : Colors.grey.withOpacity(
-                                                      0.3,
+                                                        .withValues(alpha: 0.5)
+                                                    : Colors.grey.withValues(
+                                                      alpha: 0.3,
                                                     ),
                                             width: isFocused ? 2 : 1.5,
                                           ),
@@ -334,7 +322,7 @@ class _OTPScreenState extends State<OTPScreen> {
                                             if (isFocused)
                                               BoxShadow(
                                                 color: context.colors.primary!
-                                                    .withOpacity(0.3),
+                                                    .withValues(alpha: 0.3),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 4),
                                               ),
@@ -363,6 +351,7 @@ class _OTPScreenState extends State<OTPScreen> {
                           AuthButton(
                             text: context.translate(LangKeys.verify),
                             onPressed: _onVerifyOTP,
+                            isLoading: _isProcessing,
                           ),
 
                           SizedBox(height: isSmall ? 20.h : 24.h),
@@ -375,8 +364,8 @@ class _OTPScreenState extends State<OTPScreen> {
                                 "Didn't receive the code? ",
                                 style: context.textStyle.copyWith(
                                   fontSize: isSmall ? 12.sp : 14.sp,
-                                  color: context.colors.primary!.withOpacity(
-                                    0.7,
+                                  color: context.colors.primary!.withValues(
+                                    alpha: 0.7,
                                   ),
                                 ),
                               ),
@@ -397,7 +386,8 @@ class _OTPScreenState extends State<OTPScreen> {
                             text:
                                 'Back to ${context.translate(LangKeys.login)}',
                             onPressed: () {
-                              context.goRoute(AppRouter.login);
+                              context.read<AuthBloc>().add(RefreshAuthEvent());
+                              Navigator.of(context).pop();
                             },
                           ),
                         ],
