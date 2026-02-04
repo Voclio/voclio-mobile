@@ -23,8 +23,7 @@ class ErrorInterceptor extends Interceptor {
         break;
 
       case DioExceptionType.connectionError:
-        errorMessage =
-            'No internet connection. Please check your network and try again.';
+        errorMessage = 'No internet connection. Please check your network and try again.';
         break;
 
       default:
@@ -32,55 +31,36 @@ class ErrorInterceptor extends Interceptor {
     }
 
     developer.log(
-      'API Error extracted: $errorMessage',
+      'API Error: $errorMessage',
       name: 'ErrorInterceptor',
+      error: err,
     );
 
-    // Modify the error to carry our clean message
-    final modifiedError = DioException(
-      requestOptions: err.requestOptions,
-      response: err.response,
-      type: err.type,
-      error: errorMessage, // Important: Store the clean message in .error
-      message: errorMessage, // And in .message
-    );
-
-    return handler.next(modifiedError);
+    return handler.next(err);
   }
 
   String _handleResponseError(Response? response) {
     if (response == null) return 'No response from server';
 
-    final data = response.data;
-    String? message;
-
-    if (data is Map) {
-      if (data['error'] is Map && data['error']['message'] != null) {
-        message = data['error']['message'].toString();
-      } else if (data['message'] != null) {
-        message = data['message'].toString();
-      } else if (data['error'] is String) {
-        message = data['error'];
-      }
-    }
-
     switch (response.statusCode) {
       case 400:
-        return message ?? 'Bad request';
+        return response.data['message'] ?? 'Bad request';
       case 401:
         return 'Authentication failed. Please try again.';
       case 403:
         return 'Forbidden. You don\'t have permission.';
       case 404:
         return 'Resource not found';
-      case 409:
-        return message ?? 'Email already registered';
       case 422:
-        return message ?? 'Validation error';
+        return response.data['message'] ?? 'Validation error';
       case 500:
         return 'Internal server error';
+      case 502:
+        return 'Bad gateway';
+      case 503:
+        return 'Service unavailable';
       default:
-        return message ?? 'Server error occurred';
+        return response.data['message'] ?? 'Server error occurred';
     }
   }
 }

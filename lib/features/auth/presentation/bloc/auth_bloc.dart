@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'dart:developer' as developer;
 import '../../domain/entities/auth_request.dart';
 import '../../domain/entities/auth_response.dart';
 import '../../domain/entities/otp_request.dart';
@@ -113,40 +112,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
-    developer.log(
-      'Registering user: ${event.request.email} with OTP: ${event.request.otp}',
-      name: 'AuthBloc',
-    );
     emit(AuthLoading());
     final result = await _registerUseCase(event.request);
-
     result.fold(
-      (failure) {
-        developer.log(
-          'Registration failed: ${failure.message}',
-          name: 'AuthBloc',
-        );
-        emit(AuthError(failure.message));
-      },
-      (response) {
-        developer.log(
-          'Registration response received. Success: ${response.token.isNotEmpty}',
-          name: 'AuthBloc',
-        );
-        if (response.token.isNotEmpty) {
-          developer.log(
-            'Registration Complete: Emitting AuthSuccess',
-            name: 'AuthBloc',
-          );
-          emit(AuthSuccess(response));
-        } else {
-          developer.log(
-            'Registration Step 1: Emitting RegistrationPending',
-            name: 'AuthBloc',
-          );
-          emit(RegistrationPending(response));
-        }
-      },
+      (failure) => emit(AuthError(failure.message)),
+      (response) => emit(RegistrationPending(response)),
     );
   }
 
@@ -165,24 +135,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(OTPLoading());
     final result = await _verifyOTPUseCase(event.request);
-    result.fold((failure) => emit(AuthError(failure.message)), (response) {
-      if (response.token != null && response.token!.isNotEmpty) {
-        developer.log(
-          'OTP Verified with Login Token: Emitting AuthSuccess',
-          name: 'AuthBloc',
-        );
-        // Create an AuthResponse from binary data
-        final authResponse = AuthResponse(
-          user: response.user!,
-          token: response.token!,
-          refreshToken: response.refreshToken ?? '',
-          expiresAt: response.expiresAt,
-        );
-        emit(AuthSuccess(authResponse));
-      } else {
-        emit(OTPVerified(response));
-      }
-    });
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (response) => emit(OTPVerified(response)),
+    );
   }
 
   Future<void> _onForgotPassword(

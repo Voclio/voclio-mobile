@@ -10,9 +10,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/auth_request_model.dart';
-import '../models/auth_response_model.dart';
 import '../models/otp_request_model.dart';
-import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
@@ -28,7 +26,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, AuthResponse?>> checkAuthStatus() async {
     try {
       final authData = await _localDataSource.getAuthData();
-
+      
       // No cached auth data
       if (authData == null) {
         return const Right(null);
@@ -71,10 +69,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final responseModel = await _remoteDataSource
           .login(requestModel)
           .timeout(
-            const Duration(seconds: 25),
+            const Duration(seconds: 8),
             onTimeout: () {
               throw ServerException(
-                408,
+                408, 
                 'Login request timed out. Please check your internet connection and try again.',
               );
             },
@@ -84,11 +82,9 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on TimeoutException {
-      return Left(
-        ServerFailure(
-          'Connection timeout. Please check your internet connection and try again.',
-        ),
-      );
+      return Left(ServerFailure(
+        'Connection timeout. Please check your internet connection and try again.',
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -98,26 +94,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, AuthResponse>> register(AuthRequest request) async {
     try {
       final requestModel = AuthRequestModel.fromEntity(request);
-      final responseModel = await _remoteDataSource
-          .register(requestModel)
-          .timeout(
-            const Duration(seconds: 25),
-            onTimeout: () {
-              throw ServerException(
-                408,
-                'Registration timed out. Please try again.',
-              );
-            },
-          );
-
-      // Only save auth data if an OTP was provided (meaning this is the verification step)
-      // AND we received a valid token.
-      if (request.otp != null &&
-          request.otp!.isNotEmpty &&
-          responseModel.token.isNotEmpty) {
-        await _localDataSource.saveAuthData(responseModel);
-      }
-
+      final responseModel = await _remoteDataSource.register(requestModel).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          throw ServerException(408, 'Registration timed out. Please try again.');
+        },
+      );
+      await _localDataSource.saveAuthData(responseModel);
       return Right(responseModel);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -134,17 +117,12 @@ class AuthRepositoryImpl implements AuthRepository {
     OTPType type,
   ) async {
     try {
-      final responseModel = await _remoteDataSource
-          .sendOTP(email, type)
-          .timeout(
-            const Duration(seconds: 20),
-            onTimeout: () {
-              throw ServerException(
-                408,
-                'OTP request timed out. Please try again.',
-              );
-            },
-          );
+      final responseModel = await _remoteDataSource.sendOTP(email, type).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          throw ServerException(408, 'OTP request timed out. Please try again.');
+        },
+      );
       return Right(responseModel);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -159,30 +137,12 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, OTPResponse>> verifyOTP(OTPRequest request) async {
     try {
       final requestModel = OTPRequestModel.fromEntity(request);
-      final responseModel = await _remoteDataSource
-          .verifyOTP(requestModel)
-          .timeout(
-            const Duration(seconds: 20),
-            onTimeout: () {
-              throw ServerException(
-                408,
-                'OTP verification timed out. Please try again.',
-              );
-            },
-          );
-
-      // If verification returns a token (registration flow), save it.
-      if (responseModel.token != null && responseModel.token!.isNotEmpty) {
-        await _localDataSource.saveAuthData(
-          AuthResponseModel(
-            user: UserModel.fromEntity(responseModel.user!),
-            token: responseModel.token!,
-            refreshToken: responseModel.refreshToken ?? '',
-            expiresAt: responseModel.expiresAt,
-          ),
-        );
-      }
-
+      final responseModel = await _remoteDataSource.verifyOTP(requestModel).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          throw ServerException(408, 'OTP verification timed out. Please try again.');
+        },
+      );
       return Right(responseModel);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -225,10 +185,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       // Clear local data immediately
       await _localDataSource.clearAuthData();
-
+      
       // Try to notify server in background but don't wait
       _remoteDataSource.logout().catchError((_) {});
-
+      
       return const Right(null);
     } catch (e) {
       // Ensure local data is cleared even on error
@@ -298,14 +258,12 @@ class AuthRepositoryImpl implements AuthRepository {
     String newPassword,
   ) async {
     try {
-      await _remoteDataSource
-          .changePassword(currentPassword, newPassword)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw ServerException(408, 'Change password timed out.');
-            },
-          );
+      await _remoteDataSource.changePassword(currentPassword, newPassword).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw ServerException(408, 'Change password timed out.');
+        },
+      );
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -322,14 +280,12 @@ class AuthRepositoryImpl implements AuthRepository {
     OTPType type,
   ) async {
     try {
-      final responseModel = await _remoteDataSource
-          .resendOTP(email, type)
-          .timeout(
-            const Duration(seconds: 8),
-            onTimeout: () {
-              throw ServerException(408, 'Resend OTP timed out.');
-            },
-          );
+      final responseModel = await _remoteDataSource.resendOTP(email, type).timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          throw ServerException(408, 'Resend OTP timed out.');
+        },
+      );
       return Right(responseModel);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -357,11 +313,9 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } on TimeoutException {
-      return Left(
-        ServerFailure(
-          'Connection timeout. Please check your internet connection.',
-        ),
-      );
+      return Left(ServerFailure(
+        'Connection timeout. Please check your internet connection.',
+      ));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -373,14 +327,12 @@ class AuthRepositoryImpl implements AuthRepository {
     String phoneNumber,
   ) async {
     try {
-      final response = await _remoteDataSource
-          .updateProfile(name, phoneNumber)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw ServerException(408, 'Update profile timed out.');
-            },
-          );
+      final response = await _remoteDataSource.updateProfile(name, phoneNumber).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw ServerException(408, 'Update profile timed out.');
+        },
+      );
       await _localDataSource.saveAuthData(response);
       return Right(response);
     } on ServerException catch (e) {

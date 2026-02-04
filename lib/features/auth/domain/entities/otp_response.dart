@@ -1,22 +1,14 @@
-import 'user.dart';
-
 class OTPResponse {
   final bool success;
   final String message;
   final String? sessionId;
   final DateTime expiresAt;
-  final String? token;
-  final String? refreshToken;
-  final User? user;
 
   const OTPResponse({
     required this.success,
     required this.message,
     this.sessionId,
     required this.expiresAt,
-    this.token,
-    this.refreshToken,
-    this.user,
   });
 
   @override

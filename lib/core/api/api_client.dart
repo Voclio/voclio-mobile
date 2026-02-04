@@ -206,30 +206,22 @@ class ApiClient {
         // Try to extract error message from various possible structures
         String errorMessage = 'Server error occurred';
 
-        if (error.message != null &&
-            !error.message!.contains('DioException') &&
-            !error.message!.contains('status code')) {
-          errorMessage = error.message!;
-        } else if (error.response?.data != null) {
+        if (error.response?.data != null) {
           final data = error.response!.data;
 
           // Try different error message locations
           if (data is Map) {
-            // Priority 1: Nested error.message (standard for our backend 409)
+            // Check for error.message pattern
             if (data['error'] is Map && data['error']['message'] != null) {
-              errorMessage = data['error']['message'].toString();
+              errorMessage = data['error']['message'];
             }
-            // Priority 2: Direct message field
+            // Check for direct message field
             else if (data['message'] != null) {
-              errorMessage = data['message'].toString();
+              errorMessage = data['message'];
             }
-            // Priority 3: Direct error string field
+            // Check for error string field
             else if (data['error'] is String) {
               errorMessage = data['error'];
-            }
-            // Priority 4: msg field (some frameworks use this)
-            else if (data['msg'] != null) {
-              errorMessage = data['msg'].toString();
             }
           }
         }

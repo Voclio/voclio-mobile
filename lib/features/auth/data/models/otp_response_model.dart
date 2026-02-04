@@ -1,4 +1,3 @@
-import '../models/user_model.dart';
 import '../../domain/entities/otp_response.dart';
 
 class OTPResponseModel extends OTPResponse {
@@ -7,9 +6,6 @@ class OTPResponseModel extends OTPResponse {
     required super.message,
     super.sessionId,
     required super.expiresAt,
-    super.token,
-    super.refreshToken,
-    super.user,
   });
 
   factory OTPResponseModel.fromJson(Map<String, dynamic> json) {
@@ -21,17 +17,14 @@ class OTPResponseModel extends OTPResponse {
       return true; // Default to true if unsure, assuming 200 OK means success
     }
 
-    final data = json['data'] as Map<String, dynamic>?;
-    final tokens = data?['tokens'] as Map<String, dynamic>?;
-
     return OTPResponseModel(
       success: parseBool(json['success'] ?? json['status']),
       message: (json['message'] ?? json['msg'] ?? 'OTP Sent') as String,
       sessionId:
-          (data != null
-                  ? (data['sessionId'] ??
-                      data['session_id'] ??
-                      data['reset_token'])
+          (json['data'] != null
+                  ? (json['data']['sessionId'] ??
+                      json['data']['session_id'] ??
+                      json['data']['reset_token'])
                   : (json['sessionId'] ??
                       json['session_id'] ??
                       json['reset_token']))
@@ -43,9 +36,6 @@ class OTPResponseModel extends OTPResponse {
                   ) ??
                   DateTime.now().add(const Duration(minutes: 5))
               : DateTime.now().add(const Duration(minutes: 5)),
-      token: tokens?['access_token'] as String?,
-      refreshToken: tokens?['refresh_token'] as String?,
-      user: data?['user'] != null ? UserModel.fromJson(data!['user']) : null,
     );
   }
 
@@ -64,9 +54,6 @@ class OTPResponseModel extends OTPResponse {
       message: response.message,
       sessionId: response.sessionId,
       expiresAt: response.expiresAt,
-      token: response.token,
-      refreshToken: response.refreshToken,
-      user: response.user,
     );
   }
 }
