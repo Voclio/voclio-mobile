@@ -68,7 +68,7 @@ class ErrorInterceptor extends Interceptor {
       case 400:
         return message ?? 'Bad request';
       case 401:
-        return 'Authentication failed. Please try again.';
+        return message ?? 'Authentication failed. Please try again.';
       case 403:
         return 'Forbidden. You don\'t have permission.';
       case 404:

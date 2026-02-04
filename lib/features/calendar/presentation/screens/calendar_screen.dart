@@ -52,10 +52,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<TasksCubit>(),
-          child: TaskDetailScreen(task: task),
-        ),
+        builder:
+            (_) => BlocProvider.value(
+              value: context.read<TasksCubit>(),
+              child: TaskDetailScreen(task: task),
+            ),
       ),
     );
   }
@@ -89,7 +90,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
             // Calendar
             Expanded(
               child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
                 child: Column(
                   children: [
                     _buildCalendar(theme, isDark)
@@ -168,8 +171,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     _calendarFormat == CalendarFormat.month
                         ? Icons.calendar_view_week
                         : _calendarFormat == CalendarFormat.twoWeeks
-                            ? Icons.calendar_view_day
-                            : Icons.calendar_month,
+                        ? Icons.calendar_view_day
+                        : Icons.calendar_month,
                     color: theme.colorScheme.onSurface,
                   ),
                   onPressed: () {
@@ -375,11 +378,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildFilterChips(ThemeData theme, bool isDark, List<TaskEntity> events) {
+  Widget _buildFilterChips(
+    ThemeData theme,
+    bool isDark,
+    List<TaskEntity> events,
+  ) {
     final now = DateTime.now();
     final pendingCount = events.where((t) => !t.isDone).length;
     final completedCount = events.where((t) => t.isDone).length;
-    final overdueCount = events.where((t) => !t.isDone && t.date.isBefore(now)).length;
+    final overdueCount =
+        events.where((t) => !t.isDone && t.date.isBefore(now)).length;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -388,15 +396,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
         children: [
           _buildFilterChip('All', 'all', events.length, theme, isDark),
           SizedBox(width: 8.w),
-          _buildFilterChip('Pending', 'pending', pendingCount, theme, isDark,
-              color: Colors.orange),
+          _buildFilterChip(
+            'Pending',
+            'pending',
+            pendingCount,
+            theme,
+            isDark,
+            color: Colors.orange,
+          ),
           SizedBox(width: 8.w),
-          _buildFilterChip('Completed', 'completed', completedCount, theme, isDark,
-              color: Colors.green),
+          _buildFilterChip(
+            'Completed',
+            'completed',
+            completedCount,
+            theme,
+            isDark,
+            color: Colors.green,
+          ),
           SizedBox(width: 8.w),
           if (overdueCount > 0)
-            _buildFilterChip('Overdue', 'overdue', overdueCount, theme, isDark,
-                color: Colors.red),
+            _buildFilterChip(
+              'Overdue',
+              'overdue',
+              overdueCount,
+              theme,
+              isDark,
+              color: Colors.red,
+            ),
         ],
       ),
     );
@@ -423,9 +449,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withOpacity(0.15)
-              : isDark
+          color:
+              isSelected
+                  ? chipColor.withOpacity(0.15)
+                  : isDark
                   ? Colors.white.withOpacity(0.05)
                   : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20.r),
@@ -449,9 +476,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? chipColor.withOpacity(0.2)
-                    : theme.colorScheme.secondary.withOpacity(0.1),
+                color:
+                    isSelected
+                        ? chipColor.withOpacity(0.2)
+                        : theme.colorScheme.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
@@ -470,8 +498,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildEmptyState(ThemeData theme, bool isDark) {
-    final isToday = _selectedDay != null && isSameDay(_selectedDay, DateTime.now());
-    
+    final isToday =
+        _selectedDay != null && isSameDay(_selectedDay, DateTime.now());
+
     return Container(
       padding: EdgeInsets.all(40.r),
       decoration: BoxDecoration(
@@ -549,22 +578,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
           color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isOverdue
-                ? Colors.red.withOpacity(0.4)
-                : task.priority.color.withOpacity(0.3),
+            color:
+                isOverdue
+                    ? Colors.red.withOpacity(0.4)
+                    : task.priority.color.withOpacity(0.3),
             width: 1.5,
           ),
-          boxShadow: isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: isOverdue
-                        ? Colors.red.withOpacity(0.08)
-                        : task.priority.color.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          boxShadow:
+              isDark
+                  ? []
+                  : [
+                    BoxShadow(
+                      color:
+                          isOverdue
+                              ? Colors.red.withOpacity(0.08)
+                              : task.priority.color.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
         ),
         child: Row(
           children: [
@@ -589,18 +621,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: task.isDone
-                        ? theme.colorScheme.primary
-                        : isOverdue
+                    color:
+                        task.isDone
+                            ? theme.colorScheme.primary
+                            : isOverdue
                             ? Colors.red.withOpacity(0.5)
                             : theme.colorScheme.secondary.withOpacity(0.3),
                     width: 2,
                   ),
-                  color: task.isDone ? theme.colorScheme.primary : Colors.transparent,
+                  color:
+                      task.isDone
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
                 ),
-                child: task.isDone
-                    ? Icon(Icons.check, size: 16.sp, color: Colors.white)
-                    : null,
+                child:
+                    task.isDone
+                        ? Icon(Icons.check, size: 16.sp, color: Colors.white)
+                        : null,
               ),
             ),
             SizedBox(width: 12.w),
@@ -617,10 +654,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
-                            color: task.isDone
-                                ? theme.colorScheme.secondary
-                                : theme.colorScheme.onSurface,
-                            decoration: task.isDone ? TextDecoration.lineThrough : null,
+                            color:
+                                task.isDone
+                                    ? theme.colorScheme.secondary
+                                    : theme.colorScheme.onSurface,
+                            decoration:
+                                task.isDone ? TextDecoration.lineThrough : null,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -628,7 +667,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       if (isOverdue)
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           margin: EdgeInsets.only(left: 8.w),
                           decoration: BoxDecoration(
                             color: Colors.red.withOpacity(0.1),
@@ -662,21 +704,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       Icon(
                         Icons.access_time_rounded,
                         size: 14.sp,
-                        color: isOverdue ? Colors.red : theme.colorScheme.secondary,
+                        color:
+                            isOverdue
+                                ? Colors.red
+                                : theme.colorScheme.secondary,
                       ),
                       SizedBox(width: 4.w),
                       Text(
                         'Due: ${DateFormat('hh:mm a').format(task.date)}',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: isOverdue ? Colors.red : theme.colorScheme.secondary,
-                          fontWeight: isOverdue ? FontWeight.w500 : FontWeight.normal,
+                          color:
+                              isOverdue
+                                  ? Colors.red
+                                  : theme.colorScheme.secondary,
+                          fontWeight:
+                              isOverdue ? FontWeight.w500 : FontWeight.normal,
                         ),
                       ),
                       if (hasSubtasks) ...[
                         SizedBox(width: 12.w),
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.secondary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6.r),
@@ -747,7 +799,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final now = DateTime.now();
     final pendingCount = events.where((t) => !t.isDone).length;
     final completedCount = events.where((t) => t.isDone).length;
-    final overdueCount = events.where((t) => !t.isDone && t.date.isBefore(now)).length;
+    final overdueCount =
+        events.where((t) => !t.isDone && t.date.isBefore(now)).length;
 
     return Container(
       height: 0.75.sh,
@@ -858,7 +911,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
                 children: [
-                  _buildStatChip('Pending', pendingCount, Colors.orange, isDark),
+                  _buildStatChip(
+                    'Pending',
+                    pendingCount,
+                    Colors.orange,
+                    isDark,
+                  ),
                   SizedBox(width: 8.w),
                   _buildStatChip('Done', completedCount, Colors.green, isDark),
                   if (overdueCount > 0) ...[
@@ -875,54 +933,55 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           // Events list
           Expanded(
-            child: events.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(24.r),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
-                            shape: BoxShape.circle,
+            child:
+                events.isEmpty
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(24.r),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.event_available_outlined,
+                              size: 48.sp,
+                              color: theme.colorScheme.primary.withOpacity(0.5),
+                            ),
                           ),
-                          child: Icon(
-                            Icons.event_available_outlined,
-                            size: 48.sp,
-                            color: theme.colorScheme.primary.withOpacity(0.5),
+                          SizedBox(height: 20.h),
+                          Text(
+                            'No tasks for this day',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              color: theme.colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 20.h),
-                        Text(
-                          'No tasks for this day',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            color: theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
+                          SizedBox(height: 8.h),
+                          Text(
+                            'Tap + to add a new task',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: theme.colorScheme.secondary,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Tap + to add a new task',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                    : ListView.builder(
+                      padding: EdgeInsets.all(20.r),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: events.length,
+                      itemBuilder: (context, index) {
+                        return _buildEventCard(events[index], theme, isDark)
+                            .animate(delay: (index * 80).ms)
+                            .fadeIn(duration: 300.ms)
+                            .slideX(begin: 0.1, end: 0);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.all(20.r),
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: events.length,
-                    itemBuilder: (context, index) {
-                      return _buildEventCard(events[index], theme, isDark)
-                          .animate(delay: (index * 80).ms)
-                          .fadeIn(duration: 300.ms)
-                          .slideX(begin: 0.1, end: 0);
-                    },
-                  ),
           ),
         ],
       ),
@@ -942,10 +1001,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Container(
             width: 8.w,
             height: 8.h,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           SizedBox(width: 6.w),
           Text(

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -15,6 +16,7 @@ import '../widgets/auth_link_button.dart';
 import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
+import '../../domain/entities/otp_request.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -50,20 +52,56 @@ class _LoginScreenState extends State<LoginScreen> {
           // Go directly to home
           context.goRoute(AppRouter.home);
         } else if (state is AuthError) {
-          // Show error as snackbar instead of dialog for faster feedback
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.message.contains('timeout') ||
-                        state.message.contains('Timeout')
-                    ? 'Connection timeout. Please try again.'
-                    : state.message,
+          // Check if error is due to unverified email
+          final message = state.message.toLowerCase();
+          final isUnverifiedEmail =
+              message.contains('not verified') ||
+              message.contains('verify your email') ||
+              message.contains('email verification') ||
+              message.contains('unverified');
+
+          if (isUnverifiedEmail) {
+            // User exists but email not verified - redirect to OTP
+            VoclioDialog.show(
+              context: context,
+              title: 'Email Not Verified',
+              message:
+                  'Your email is not verified yet. We\'ll send you a new verification code.',
+              type: VoclioDialogType.warning,
+              primaryButtonText: 'Verify Now',
+              secondaryButtonText: 'Cancel',
+              onPrimaryPressed: () {
+                Navigator.of(context).pop();
+                // Send new OTP
+                context.read<AuthBloc>().add(
+                  SendOTPEvent(
+                    _emailController.text.trim(),
+                    OTPType.registration,
+                  ),
+                );
+                // Navigate to OTP screen
+                context.pushRoute(
+                  '${AppRouter.otp}?email=${_emailController.text.trim()}&type=registration',
+                );
+              },
+              onSecondaryPressed: () => Navigator.of(context).pop(),
+            );
+          } else {
+            // Show error as snackbar for other errors
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  state.message.contains('timeout') ||
+                          state.message.contains('Timeout')
+                      ? 'Connection timeout. Please try again.'
+                      : state.message,
+                ),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 3),
               ),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+            );
+          }
         }
       },
       child: Scaffold(
