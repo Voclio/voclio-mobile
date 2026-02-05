@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:voclio_app/features/voice/presentation/bloc/voice_bloc.dart';
+import 'package:voclio_app/features/reminders/presentation/cubit/reminders_cubit.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/otp_screen.dart';
@@ -15,6 +16,7 @@ import '../../features/auth/domain/entities/auth_request.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/reminders/presentation/screens/reminders_screen.dart';
+import '../../features/reminders/presentation/screens/add_reminder_screen.dart';
 import '../../features/productivity/presentation/screens/focus_timer_screen.dart';
 import '../../features/productivity/presentation/screens/achievements_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
@@ -39,6 +41,7 @@ class AppRouter {
   static const String home = '/home';
   static const String dashboard = '/dashboard';
   static const String reminders = '/reminders';
+  static const String addReminder = '/reminders/add';
   static const String focusTimer = '/focus-timer';
   static const String achievements = '/achievements';
   static const String notifications = '/notifications';
@@ -101,6 +104,13 @@ class AppRouter {
       GoRoute(
         path: dashboard,
         builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: addReminder,
+        builder: (context, state) => BlocProvider(
+          create: (context) => getIt<RemindersCubit>(),
+          child: const AddReminderScreen(),
+        ),
       ),
       GoRoute(
         path: reminders,

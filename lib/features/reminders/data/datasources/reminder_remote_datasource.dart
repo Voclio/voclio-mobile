@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
 import '../models/reminder_model.dart';
@@ -18,88 +19,39 @@ class ReminderRemoteDataSourceImpl implements ReminderRemoteDataSource {
 
   ReminderRemoteDataSourceImpl({required this.apiClient});
 
-  // Mock data storage
-  static final List<ReminderModel> _mockReminders = [
-    ReminderModel(
-      id: '1',
-      taskId: 'task1',
-      reminderTime: DateTime.now().add(const Duration(hours: 2)),
-      reminderType: 'one_time',
-      isActive: true,
-      createdAt: DateTime.now(),
-    ),
-    ReminderModel(
-      id: '2',
-      taskId: 'task2',
-      reminderTime: DateTime.now().add(const Duration(days: 1)),
-      reminderType: 'daily',
-      isActive: true,
-      createdAt: DateTime.now(),
-    ),
-    ReminderModel(
-      id: '3',
-      taskId: 'task3',
-      reminderTime: DateTime.now().add(const Duration(days: 7)),
-      reminderType: 'weekly',
-      isActive: true,
-      createdAt: DateTime.now(),
-    ),
-  ];
-
   @override
   Future<List<ReminderModel>> getReminders() async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.reminders);
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => ReminderModel.fromJson(json)).toList();
-    } catch (e) {
-      // Return mock data if API fails
-      return List.from(_mockReminders);
-    }
+    debugPrint('📌 GET Reminders - calling API: ${ApiEndpoints.reminders}');
+    final response = await apiClient.get(ApiEndpoints.reminders);
+    debugPrint('📌 GET Reminders - response: ${response.data}');
+    final List<dynamic> data = response.data['data'] ?? [];
+    debugPrint('📌 GET Reminders - parsed ${data.length} items');
+    return data.map((json) => ReminderModel.fromJson(json)).toList();
   }
 
   @override
   Future<List<ReminderModel>> getUpcomingReminders() async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.upcomingReminders);
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => ReminderModel.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception('Failed to fetch upcoming reminders: $e');
-    }
+    final response = await apiClient.get(ApiEndpoints.upcomingReminders);
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => ReminderModel.fromJson(json)).toList();
   }
 
   @override
   Future<ReminderModel> getReminder(String id) async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.reminderById(id));
-      return ReminderModel.fromJson(response.data['data']);
-    } catch (e) {
-      throw Exception('Failed to fetch reminder: $e');
-    }
+    final response = await apiClient.get(ApiEndpoints.reminderById(id));
+    return ReminderModel.fromJson(response.data['data']);
   }
 
   @override
   Future<ReminderModel> createReminder(ReminderModel reminder) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.reminders,
-        data: reminder.toJson(),
-      );
-      return ReminderModel.fromJson(response.data['data']);
-    } catch (e) {
-      // Mock: Add new reminder
-      final newReminder = ReminderModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        taskId: reminder.taskId,
-        reminderTime: reminder.reminderTime,
-        reminderType: reminder.reminderType,
-        isActive: true,
-        createdAt: DateTime.now(),
-      );
-      _mockReminders.add(newReminder);
-      return newReminder;
-    }
+    debugPrint('📌 CREATE Reminder - calling API: ${ApiEndpoints.reminders}');
+    debugPrint('📌 CREATE Reminder - data: ${reminder.toJson()}');
+    final response = await apiClient.post(
+      ApiEndpoints.reminders,
+      data: reminder.toJson(),
+    );
+    debugPrint('📌 CREATE Reminder - response: ${response.data}');
+    return ReminderModel.fromJson(response.data['data']);
   }
 
   @override
@@ -107,67 +59,28 @@ class ReminderRemoteDataSourceImpl implements ReminderRemoteDataSource {
     String id,
     ReminderModel reminder,
   ) async {
-    try {
-      final response = await apiClient.put(
-        ApiEndpoints.reminderById(id),
-        data: reminder.toJson(),
-      );
-      return ReminderModel.fromJson(response.data['data']);
-    } catch (e) {
-      // Mock: Update reminder
-      final index = _mockReminders.indexWhere((r) => r.id == id);
-      if (index != -1) {
-        _mockReminders[index] = reminder;
-        return reminder;
-      }
-      throw Exception('Reminder not found');
-    }
+    final response = await apiClient.put(
+      ApiEndpoints.reminderById(id),
+      data: reminder.toJson(),
+    );
+    return ReminderModel.fromJson(response.data['data']);
   }
 
   @override
   Future<void> snoozeReminder(String id, int minutes) async {
-    try {
-      await apiClient.put(
-        ApiEndpoints.snoozeReminder(id),
-        data: {'snooze_minutes': minutes},
-      );
-    } catch (e) {
-      // Mock: Update the reminder time
-      final index = _mockReminders.indexWhere((r) => r.id == id);
-      if (index != -1) {
-        final reminder = _mockReminders[index];
-        _mockReminders[index] = ReminderModel(
-          id: reminder.id,
-          taskId: reminder.taskId,
-          reminderTime: DateTime.now().add(Duration(minutes: minutes)),
-          reminderType: reminder.reminderType,
-          isActive: reminder.isActive,
-          createdAt: reminder.createdAt,
-        );
-      }
-      return;
-    }
+    await apiClient.put(
+      ApiEndpoints.snoozeReminder(id),
+      data: {'snooze_minutes': minutes},
+    );
   }
 
   @override
   Future<void> dismissReminder(String id) async {
-    try {
-      await apiClient.put(ApiEndpoints.dismissReminder(id));
-    } catch (e) {
-      // Mock: Remove the reminder
-      _mockReminders.removeWhere((r) => r.id == id);
-      return;
-    }
+    await apiClient.put(ApiEndpoints.dismissReminder(id));
   }
 
   @override
   Future<void> deleteReminder(String id) async {
-    try {
-      await apiClient.delete(ApiEndpoints.reminderById(id));
-    } catch (e) {
-      // Mock: Remove the reminder
-      _mockReminders.removeWhere((r) => r.id == id);
-      return;
-    }
+    await apiClient.delete(ApiEndpoints.reminderById(id));
   }
 }

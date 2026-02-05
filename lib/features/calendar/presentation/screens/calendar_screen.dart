@@ -116,19 +116,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ],
         ),
       ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: 85.h),
-        child: FloatingActionButton(
-              onPressed: () {
-                // Add new event with selected date
-              },
-              backgroundColor: theme.colorScheme.primary,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-            .animate()
-            .fadeIn(duration: 600.ms, delay: 600.ms)
-            .scale(begin: const Offset(0.5, 0.5)),
-      ),
     );
   }
 

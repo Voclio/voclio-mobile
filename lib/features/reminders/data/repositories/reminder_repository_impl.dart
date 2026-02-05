@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:voclio_app/core/errors/failures.dart';
 import 'package:voclio_app/features/reminders/domain/entities/reminder_entity.dart';
 import '../../domain/repositories/reminder_repository.dart';
@@ -16,7 +17,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       final reminders = await remoteDataSource.getReminders();
       return Right(reminders.map((r) => r.toEntity()).toList());
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ getReminders error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -26,7 +28,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       final reminders = await remoteDataSource.getUpcomingReminders();
       return Right(reminders.map((r) => r.toEntity()).toList());
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ getUpcomingReminders error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -36,7 +39,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       final reminder = await remoteDataSource.getReminder(id);
       return Right(reminder.toEntity());
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ getReminder error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -49,7 +53,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       final created = await remoteDataSource.createReminder(reminderModel);
       return Right(created.toEntity());
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ createReminder error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -65,7 +70,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       );
       return Right(updated.toEntity());
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ updateReminder error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -75,7 +81,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       await remoteDataSource.snoozeReminder(id, minutes);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ snoozeReminder error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -85,7 +92,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       await remoteDataSource.dismissReminder(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ dismissReminder error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -95,7 +103,8 @@ class ReminderRepositoryImpl implements ReminderRepository {
       await remoteDataSource.deleteReminder(id);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure());
+      debugPrint('❌ deleteReminder error: $e');
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

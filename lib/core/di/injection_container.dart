@@ -47,6 +47,8 @@ import 'package:voclio_app/features/reminders/domain/repositories/reminder_repos
 import 'package:voclio_app/features/reminders/domain/usecases/create_reminder_usecase.dart';
 import 'package:voclio_app/features/reminders/domain/usecases/delete_reminder_usecase.dart';
 import 'package:voclio_app/features/reminders/domain/usecases/get_reminders_usecase.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/get_upcoming_reminders_usecase.dart';
+import 'package:voclio_app/features/reminders/domain/usecases/dismiss_reminder_usecase.dart';
 import 'package:voclio_app/features/reminders/domain/usecases/snooze_reminder_usecase.dart';
 import 'package:voclio_app/features/reminders/domain/usecases/update_reminder_usecase.dart';
 import 'package:voclio_app/features/reminders/data/repositories/reminder_repository_impl.dart';
@@ -377,13 +379,21 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(
     () => SnoozeReminderUseCase(getIt<ReminderRepository>()),
   );
+  getIt.registerLazySingleton(
+    () => DismissReminderUseCase(getIt<ReminderRepository>()),
+  );
+  getIt.registerLazySingleton(
+    () => GetUpcomingRemindersUseCase(getIt<ReminderRepository>()),
+  );
   getIt.registerFactory<RemindersCubit>(
     () => RemindersCubit(
       getRemindersUseCase: getIt(),
+      getUpcomingRemindersUseCase: getIt(),
       createReminderUseCase: getIt(),
       updateReminderUseCase: getIt(),
       deleteReminderUseCase: getIt(),
       snoozeReminderUseCase: getIt(),
+      dismissReminderUseCase: getIt(),
     ),
   );
 

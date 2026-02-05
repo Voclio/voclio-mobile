@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../domain/entities/notification_entity.dart';
 
 class NotificationCard extends StatelessWidget {
   final NotificationEntity notification;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final int index;
 
   const NotificationCard({
     super.key,
     required this.notification,
     required this.onTap,
     required this.onDelete,
+    this.index = 0,
   });
 
   IconData _getIcon() {
@@ -52,98 +55,217 @@ class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      color: notification.isRead ? null : Colors.blue[50],
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.all(12.w),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40.w,
-                height: 40.h,
-                decoration: BoxDecoration(
-                  color: _getColor().withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Icon(_getIcon(), color: _getColor(), size: 24.sp),
+    final theme = Theme.of(context);
+    final color = _getColor();
+    
+    return Dismissible(
+      key: Key(notification.id.toString()),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => onDelete(),
+      background: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.red.shade300, Colors.red.shade500],
+          ),
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.delete_rounded, color: Colors.white, size: 28.sp),
+            SizedBox(height: 4.h),
+            Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.title,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight:
-                                  notification.isRead
-                                      ? FontWeight.normal
-                                      : FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (!notification.isRead)
-                          Container(
-                            width: 8.w,
-                            height: 8.h,
-                            decoration: const BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      notification.message,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
+            ),
+          ],
+        ),
+      ),
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          border: notification.isRead 
+            ? null 
+            : Border.all(color: theme.primaryColor.withOpacity(0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: notification.isRead 
+                ? Colors.black.withOpacity(0.04)
+                : theme.primaryColor.withOpacity(0.1),
+              blurRadius: notification.isRead ? 10 : 20,
+              offset: const Offset(0, 4),
+              spreadRadius: notification.isRead ? 0 : 2,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(20.r),
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon Container with gradient
+                  Container(
+                    width: 50.w,
+                    height: 50.h,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          color.withOpacity(0.2),
+                          color.withOpacity(0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(
+                        color: color.withOpacity(0.2),
+                        width: 1,
+                      ),
                     ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Icon(
+                      _getIcon(),
+                      color: color,
+                      size: 24.sp,
+                    ),
+                  ),
+                  SizedBox(width: 14.w),
+                  // Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _formatTime(notification.createdAt),
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: onDelete,
-                          borderRadius: BorderRadius.circular(4.r),
-                          child: Padding(
-                            padding: EdgeInsets.all(4.w),
-                            child: Icon(
-                              Icons.delete_outline,
-                              size: 18.sp,
-                              color: Colors.red,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                notification.title,
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  fontWeight: notification.isRead
+                                      ? FontWeight.w500
+                                      : FontWeight.w700,
+                                  color: const Color(0xFF1A1A2E),
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
                             ),
+                            if (!notification.isRead)
+                              Container(
+                                width: 10.w,
+                                height: 10.h,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.primaryColor,
+                                      theme.primaryColor.withOpacity(0.7),
+                                    ],
+                                  ),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.primaryColor.withOpacity(0.4),
+                                      blurRadius: 6,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              )
+                              .animate(onPlay: (c) => c.repeat(reverse: true))
+                              .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 1000.ms),
+                          ],
+                        ),
+                        SizedBox(height: 6.h),
+                        Text(
+                          notification.message,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.grey.shade600,
+                            height: 1.4,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 12.h),
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.access_time_rounded,
+                                    size: 12.sp,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    _formatTime(notification.createdAt),
+                                    style: TextStyle(
+                                      fontSize: 11.sp,
+                                      color: Colors.grey.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(),
+                            // Swipe hint
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.swipe_left_rounded,
+                                  size: 14.sp,
+                                  color: Colors.grey.shade400,
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  'Swipe to delete',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
-    );
+    )
+    .animate()
+    .fadeIn(duration: 400.ms, delay: (index * 80).ms)
+    .slideX(begin: 0.1, end: 0, delay: (index * 80).ms);
   }
 
   String _formatTime(DateTime time) {

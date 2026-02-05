@@ -634,10 +634,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             final selectedDayEvents =
                 monthData.eventsByDay[effectiveSelection.day];
 
-            return Column(
-              children: [
-                // Month/Year Display
-                Padding(
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // Month/Year Display
+                  Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 20.w,
                         vertical: 10.h,
@@ -817,32 +819,22 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   _buildCalendarIntegrationsBanner(context, theme, isDark, state),
 
                 // Events List
-                Expanded(
-                  child: _buildEventsList(
-                    selectedDayEvents,
-                    theme,
-                    isDark,
-                    context,
-                  ),
+                _buildEventsList(
+                  selectedDayEvents,
+                  theme,
+                  isDark,
+                  context,
                 ),
+                
+                SizedBox(height: 100.h), // Space for bottom nav
               ],
-            );
+            ),
+          );
           }
 
           return const SizedBox();
         },
       ),
-      floatingActionButton: Padding(
-            padding: EdgeInsets.only(bottom: 85.h),
-            child: FloatingActionButton(
-              onPressed: () => _showAddTaskSheet(context),
-              backgroundColor: theme.colorScheme.primary,
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
-          )
-          .animate()
-          .fadeIn(duration: 600.ms, delay: 500.ms)
-          .scale(begin: const Offset(0.5, 0.5)),
     );
   }
 
@@ -1111,7 +1103,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
-      physics: const BouncingScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       children: [
         // Google Calendar Events (if showing)
         if (_showGoogleEvents && googleEvents.isNotEmpty) ...[

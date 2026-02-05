@@ -96,10 +96,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                           ),
                         ),
                       ],
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .slideX(begin: -0.2, end: 0),
+                    ),
                 IconButton(
                       onPressed: () {},
                       icon: Icon(
@@ -107,10 +104,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                         // 5. Use Theme Icon Color
                         color: theme.colorScheme.onSurface,
                       ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms, delay: 100.ms)
-                    .scale(begin: const Offset(0.8, 0.8)),
+                    ),
               ],
             ),
           ),
@@ -160,10 +154,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                     // Progress Card
                     // Only show progress card if viewing "All" (optional decision)
                     // or show progress for the current filter
-                    _buildProgressCard(context, progressValue, progressPercent)
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 200.ms)
-                        .slideY(begin: 0.2, end: 0),
+                    _buildProgressCard(context, progressValue, progressPercent),
 
                     SizedBox(height: 24.h),
 
@@ -206,10 +197,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                               ),
                             );
                           },
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 300.ms)
-                        .slideX(begin: -0.2, end: 0),
+                        ),
 
                     SizedBox(height: 24.h),
 
@@ -223,7 +211,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                               backgroundColor: theme.colorScheme.primary
                                   .withOpacity(0.1),
                               color: theme.colorScheme.primary,
-                            ).animate().fadeIn(),
+                            ),
                       ),
 
                     // Task List
@@ -278,78 +266,33 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                               children: [
                                 if (todayTasks.isNotEmpty) ...[
                                   _buildSectionHeader(context, "Today"),
-                                  ...todayTasks.asMap().entries.map(
-                                    (entry) => _buildTaskItem(
+                                  ...todayTasks.map(
+                                    (task) => _buildTaskItem(
                                           context,
-                                          entry.value,
+                                          task,
                                           state.availableTags,
-                                        )
-                                        .animate()
-                                        .fadeIn(
-                                          duration: 400.ms,
-                                          delay: Duration(
-                                            milliseconds: 50 * entry.key,
-                                          ),
-                                        )
-                                        .slideX(
-                                          begin: -0.2,
-                                          end: 0,
-                                          duration: 400.ms,
-                                          delay: Duration(
-                                            milliseconds: 50 * entry.key,
-                                          ),
                                         ),
                                   ),
                                 ],
                                 if (tomorrowTasks.isNotEmpty) ...[
                                   SizedBox(height: 20.h),
                                   _buildSectionHeader(context, "Tomorrow"),
-                                  ...tomorrowTasks.asMap().entries.map(
-                                    (entry) => _buildTaskItem(
+                                  ...tomorrowTasks.map(
+                                    (task) => _buildTaskItem(
                                           context,
-                                          entry.value,
+                                          task,
                                           state.availableTags,
-                                        )
-                                        .animate()
-                                        .fadeIn(
-                                          duration: 400.ms,
-                                          delay: Duration(
-                                            milliseconds: 50 * entry.key,
-                                          ),
-                                        )
-                                        .slideX(
-                                          begin: -0.2,
-                                          end: 0,
-                                          duration: 400.ms,
-                                          delay: Duration(
-                                            milliseconds: 50 * entry.key,
-                                          ),
                                         ),
                                   ),
                                 ],
                                 if (laterTasks.isNotEmpty) ...[
                                   SizedBox(height: 20.h),
                                   _buildSectionHeader(context, "Later"),
-                                  ...laterTasks.asMap().entries.map(
-                                    (entry) => _buildTaskItem(
+                                  ...laterTasks.map(
+                                    (task) => _buildTaskItem(
                                           context,
-                                          entry.value,
+                                          task,
                                           state.availableTags,
-                                        )
-                                        .animate()
-                                        .fadeIn(
-                                          duration: 400.ms,
-                                          delay: Duration(
-                                            milliseconds: 50 * entry.key,
-                                          ),
-                                        )
-                                        .slideX(
-                                          begin: -0.2,
-                                          end: 0,
-                                          duration: 400.ms,
-                                          delay: Duration(
-                                            milliseconds: 50 * entry.key,
-                                          ),
                                         ),
                                   ),
                                 ],
@@ -643,6 +586,6 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
+    );
   }
 }

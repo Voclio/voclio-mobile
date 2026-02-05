@@ -2,16 +2,20 @@ import 'package:voclio_app/features/reminders/domain/entities/reminder_entity.da
 
 class ReminderModel {
   final String id;
-  final String taskId;
-  final DateTime reminderTime;
+  final String title;
+  final String? description;
+  final DateTime remindAt;
+  final int? taskId;
   final String reminderType;
   final bool isActive;
   final DateTime createdAt;
 
   ReminderModel({
     required this.id,
-    required this.taskId,
-    required this.reminderTime,
+    required this.title,
+    this.description,
+    required this.remindAt,
+    this.taskId,
     required this.reminderType,
     required this.isActive,
     required this.createdAt,
@@ -19,9 +23,11 @@ class ReminderModel {
 
   factory ReminderModel.fromJson(Map<String, dynamic> json) {
     return ReminderModel(
-      id: json['reminder_id'] ?? json['id'] ?? '',
-      taskId: json['task_id'] ?? '',
-      reminderTime: DateTime.parse(json['reminder_time']),
+      id: (json['reminder_id'] ?? json['id'] ?? '').toString(),
+      title: json['title'] ?? '',
+      description: json['description'],
+      remindAt: DateTime.parse(json['remind_at']),
+      taskId: json['task_id'],
       reminderType: json['reminder_type'] ?? 'one_time',
       isActive: json['is_active'] ?? true,
       createdAt:
@@ -32,18 +38,27 @@ class ReminderModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    if (taskId == null) {
+      throw ArgumentError('task_id is required to create a reminder');
+    }
+    final json = <String, dynamic>{
+      'title': title,
+      'remind_at': remindAt.toUtc().toIso8601String(),
       'task_id': taskId,
-      'reminder_time': reminderTime.toIso8601String(),
-      'reminder_type': reminderType,
     };
+    if (description != null && description!.isNotEmpty) {
+      json['description'] = description;
+    }
+    return json;
   }
 
   ReminderEntity toEntity() {
     return ReminderEntity(
       id: id,
+      title: title,
+      description: description,
+      remindAt: remindAt,
       taskId: taskId,
-      reminderTime: reminderTime,
       reminderType: reminderType,
       isActive: isActive,
       createdAt: createdAt,
@@ -53,8 +68,10 @@ class ReminderModel {
   factory ReminderModel.fromEntity(ReminderEntity entity) {
     return ReminderModel(
       id: entity.id,
+      title: entity.title,
+      description: entity.description,
+      remindAt: entity.remindAt,
       taskId: entity.taskId,
-      reminderTime: entity.reminderTime,
       reminderType: entity.reminderType,
       isActive: entity.isActive,
       createdAt: entity.createdAt,

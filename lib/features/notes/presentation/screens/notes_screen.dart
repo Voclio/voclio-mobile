@@ -82,10 +82,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                             },
                           ),
                         ],
-                      )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .slideX(begin: -0.2, end: 0),
+                      ),
                   // Grid/List Toggle
                   Container(
                         decoration: BoxDecoration(
@@ -114,10 +111,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                             ),
                           ],
                         ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 100.ms)
-                      .scale(begin: const Offset(0.8, 0.8)),
+                      ),
                 ],
               ),
 
@@ -153,10 +147,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                         vertical: 16.h,
                       ),
                     ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 600.ms, delay: 200.ms)
-                  .slideY(begin: 0.2, end: 0),
+                  ),
 
               SizedBox(height: 20.h),
 
@@ -177,10 +168,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                             ),
                           ],
                         ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 600.ms, delay: 300.ms)
-                      .slideX(begin: -0.2, end: 0);
+                      );
                 },
               ),
 
@@ -199,7 +187,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                             backgroundColor: theme.colorScheme.primary
                                 .withOpacity(0.1),
                             color: theme.colorScheme.primary,
-                          ).animate().fadeIn(),
+                          ),
                     );
                   }
                   return const SizedBox.shrink();
@@ -327,6 +315,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                       itemCount: filteredNotes.length,
                                       itemBuilder:
                                           (context, index) => NoteCard(
+                                                key: ValueKey(filteredNotes[index].id),
                                                 note: filteredNotes[index],
                                                 onTap: () {
                                                   Navigator.push(
@@ -349,21 +338,6 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                                     ),
                                                   );
                                                 },
-                                              )
-                                              .animate()
-                                              .fadeIn(
-                                                duration: 400.ms,
-                                                delay: Duration(
-                                                  milliseconds: 50 * index,
-                                                ),
-                                              )
-                                              .slideY(
-                                                begin: 0.2,
-                                                end: 0,
-                                                duration: 400.ms,
-                                                delay: Duration(
-                                                  milliseconds: 50 * index,
-                                                ),
                                               ),
                                     );
                                   },
@@ -379,6 +353,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                       (_, __) => SizedBox(height: 16.h),
                                   itemBuilder:
                                       (context, index) => NoteCard(
+                                            key: ValueKey(filteredNotes[index].id),
                                             note: filteredNotes[index],
                                             onTap: () {
                                               Navigator.push(
@@ -400,21 +375,6 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                                 ),
                                               );
                                             },
-                                          )
-                                          .animate()
-                                          .fadeIn(
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * index,
-                                            ),
-                                          )
-                                          .slideY(
-                                            begin: 0.2,
-                                            end: 0,
-                                            duration: 400.ms,
-                                            delay: Duration(
-                                              milliseconds: 50 * index,
-                                            ),
                                           ),
                                 ),
                       );

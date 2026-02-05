@@ -765,10 +765,8 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
     int delay,
   ) {
     final isTask = label == 'Tasks';
-    final gradientColors = isTask
-        ? [theme.primaryColor, theme.primaryColor.withOpacity(0.85)]
-        : [const Color(0xFF6366F1), const Color(0xFF8B5CF6)];
-    final shadowColor = isTask ? theme.primaryColor : const Color(0xFF6366F1);
+    final gradientColors = [theme.primaryColor, theme.primaryColor.withOpacity(0.85)];
+    final shadowColor = theme.primaryColor;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),

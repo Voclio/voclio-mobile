@@ -52,6 +52,12 @@ class HomeListTile extends StatelessWidget {
         ),
         _buildMenuItem(
           context,
+          icon: Icons.notifications_active_outlined,
+          title: 'Reminders',
+          value: 'reminders',
+        ),
+        _buildMenuItem(
+          context,
           icon: Icons.timer_outlined,
           title: 'Focus Timer',
           value: 'focusTimer',
@@ -89,6 +95,9 @@ class HomeListTile extends StatelessWidget {
           break;
         case 'calendar':
           context.push(AppRouter.calendar);
+          break;
+        case 'reminders':
+          context.push(AppRouter.reminders);
           break;
         case 'focusTimer':
           context.push(AppRouter.focusTimer);
