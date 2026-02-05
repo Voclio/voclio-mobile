@@ -33,8 +33,8 @@ class AuthResponseModel extends AuthResponse {
             as String;
 
     // Calculate expiration
-    // Default to 24 hours if not provided
-    final expiresIn = tokensMap['expires_in'] as int? ?? 86400;
+    // Default to 7 days if not provided for longer session persistence
+    final expiresIn = tokensMap['expires_in'] as int? ?? 604800;
     final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
 
     // Handle case where userMap might be empty if API response structure is unexpected

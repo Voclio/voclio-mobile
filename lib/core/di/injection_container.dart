@@ -29,6 +29,10 @@ import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
 import 'package:voclio_app/features/auth/data/datasources/auth_remote_datasource_impl.dart'
     as auth_impl;
 
+// Widget Config
+import 'package:voclio_app/features/widget_config/data/services/widget_config_service.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
+
 // Settings
 import 'package:voclio_app/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:voclio_app/features/settings/data/datasources/settings_remote_datasource.dart';
@@ -552,5 +556,13 @@ Future<void> setupDependencies() async {
     () => CalendarCubit(
       getCalendarMonthUseCase: getIt<GetCalendarMonthUseCase>(),
     ),
+  );
+
+  // Widget Config
+  getIt.registerLazySingleton<WidgetConfigService>(
+    () => WidgetConfigService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<WidgetConfigCubit>(
+    () => WidgetConfigCubit(getIt<WidgetConfigService>()),
   );
 }

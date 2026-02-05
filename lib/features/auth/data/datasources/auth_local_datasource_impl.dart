@@ -91,7 +91,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       }
 
       // Calculate expires_in from persisted expiration time
-      int expiresIn = 86400; // Default 24 hours
+      int expiresIn = 604800; // Default 7 days
       DateTime? expiresAt;
       
       if (expiresAtString != null) {

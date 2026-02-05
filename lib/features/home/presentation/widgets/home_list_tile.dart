@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:voclio_app/core/language/lang_keys.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
@@ -11,6 +10,20 @@ import '../../../notifications/presentation/widgets/notification_badge.dart';
 
 class HomeListTile extends StatelessWidget {
   const HomeListTile({super.key});
+
+  /// Returns dynamic greeting based on time of day
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour < 12) {
+      return 'Good Morning';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Good Afternoon';
+    } else if (hour >= 17 && hour < 21) {
+      return 'Good Evening';
+    } else {
+      return 'Good Night';
+    }
+  }
 
   void _showProfileMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
@@ -288,7 +301,7 @@ class HomeListTile extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          context.translate(LangKeys.welcoming),
+                          _getGreeting(),
                           style: context.textStyle.copyWith(
                             fontSize: 13.sp,
                             fontWeight: FontWeight.w500,

@@ -6,6 +6,7 @@ import 'package:voclio_app/core/app/connectivily_control.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/language_controller.dart';
 import 'package:voclio_app/core/di/injection_container.dart';
+import 'package:voclio_app/features/widget_config/data/services/home_screen_widget_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,10 @@ void main() async {
   await ConnectivityControler.instance.init();
   await ThemeController.instance.init();
   await LanguageController.instance.init();
+
+  // Initialize Home Screen Widget
+  await HomeScreenWidgetService.initialize();
+  await HomeScreenWidgetService.registerBackgroundCallback();
 
   runApp(const VoclioApp());
 }

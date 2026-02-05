@@ -12,6 +12,7 @@ import 'package:voclio_app/features/tasks/domain/usecases/get_tasks_by_category_
 import 'package:voclio_app/features/tasks/domain/usecases/get_categories_use_case.dart';
 import 'package:voclio_app/core/domain/usecases/get_tags_use_case.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
+import 'package:voclio_app/features/widget_config/data/services/home_screen_widget_service.dart';
 
 class TasksCubit extends Cubit<TasksState> {
   final GetAllTasksUseCase getAllTasksUseCase;
@@ -93,6 +94,8 @@ class TasksCubit extends Cubit<TasksState> {
       (tasks) {
         print('Successfully fetched ${tasks.length} tasks');
         emit(state.copyWith(status: TasksStatus.success, tasks: tasks));
+        // Update home screen widget with today's tasks
+        HomeScreenWidgetService.updateTodayTasks(tasks);
       },
     );
   }

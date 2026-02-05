@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
+import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -49,8 +51,20 @@ class _LoginScreenState extends State<LoginScreen> {
           return;
         }
         if (state is AuthSuccess) {
-          // Go directly to home
-          context.goRoute(AppRouter.home);
+          // Check if widget setup should be shown
+          final widgetConfigCubit = context.read<WidgetConfigCubit>();
+          if (widgetConfigCubit.shouldShowSetupDialog()) {
+            // Show widget setup dialog
+            WidgetSetupDialog.show(context, cubit: widgetConfigCubit).then((_) {
+              // Navigate to home after dialog is closed
+              if (context.mounted) {
+                context.goRoute(AppRouter.home);
+              }
+            });
+          } else {
+            // Go directly to home
+            context.goRoute(AppRouter.home);
+          }
         } else if (state is AuthError) {
           // Check if error is due to unverified email
           final message = state.message.toLowerCase();

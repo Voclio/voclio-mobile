@@ -10,6 +10,12 @@ class AuthInterceptor extends Interceptor {
   // Prevent concurrent token refreshes
   static Future<String?>? _refreshFuture;
   static bool _isRefreshing = false;
+  
+  // Token refresh buffer - refresh 5 minutes before expiration
+  static const int _tokenRefreshBufferSeconds = 300; // 5 minutes
+  
+  // Maximum retry attempts for failed requests
+  static const int _maxRetryAttempts = 3;
 
   static const List<String> _publicEndpoints = [
     '/auth/login',
@@ -58,14 +64,19 @@ class AuthInterceptor extends Interceptor {
         onTimeout: () => null,
       );
 
-      // Check if token is expired or expiring soon
+      // Check if token is expired or expiring soon (proactive refresh)
       bool needsRefresh = false;
       if (expiresAtString != null) {
         final expiresAt = DateTime.tryParse(expiresAtString);
         if (expiresAt != null) {
-          // Refresh only if expired (not preemptively)
-          needsRefresh = expiresAt.isBefore(DateTime.now());
+          // Refresh if token will expire within the buffer time (proactive refresh)
+          final bufferTime = Duration(seconds: _tokenRefreshBufferSeconds);
+          final refreshThreshold = expiresAt.subtract(bufferTime);
+          needsRefresh = DateTime.now().isAfter(refreshThreshold);
         }
+      } else {
+        // No expiration stored, refresh to be safe
+        needsRefresh = true;
       }
 
       // Refresh token if needed
@@ -102,10 +113,10 @@ class AuthInterceptor extends Interceptor {
     // Handle 401 Unauthorized - Token expired or invalid
     if (err.response?.statusCode == 401) {
       try {
-        // Check if already tried to refresh (prevent infinite loop)
-        final alreadyRetried = err.requestOptions.extra['_retry'] == true;
-        if (alreadyRetried) {
-          // Already retried, clear tokens and fail
+        // Check retry count (prevent infinite loop)
+        final retryCount = (err.requestOptions.extra['_retryCount'] as int?) ?? 0;
+        if (retryCount >= _maxRetryAttempts) {
+          // Max retries reached, clear tokens and fail
           await _clearTokens();
           return handler.next(err);
         }
@@ -116,15 +127,22 @@ class AuthInterceptor extends Interceptor {
           // Retry the original request with new token
           final originalRequest = err.requestOptions;
           originalRequest.headers['Authorization'] = 'Bearer $newAccessToken';
-          originalRequest.extra['_retry'] = true; // Mark as retried
+          originalRequest.extra['_retryCount'] = retryCount + 1;
 
           try {
+            // Add a small delay before retry to prevent rapid retries
+            await Future.delayed(const Duration(milliseconds: 100));
             final retryResponse = await _dio.fetch(originalRequest);
             return handler.resolve(retryResponse);
-          } catch (retryError) {
-            // Retry failed, clear tokens
+          } on DioException catch (retryError) {
+            // If retry fails with 401 again, don't clear tokens yet, let it retry
+            if (retryError.response?.statusCode == 401 && retryCount < _maxRetryAttempts - 1) {
+              // Recursive handling will occur
+              return handler.next(retryError);
+            }
+            // Other errors or max retries, clear tokens
             await _clearTokens();
-            return handler.next(err);
+            return handler.next(retryError);
           }
         } else {
           // Refresh failed, clear tokens
@@ -174,11 +192,11 @@ class AuthInterceptor extends Interceptor {
         data: {'refresh_token': refreshToken},
         options: Options(
           headers: {'Authorization': null},
-          sendTimeout: const Duration(seconds: 5),
-          receiveTimeout: const Duration(seconds: 5),
+          sendTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
         ),
       ).timeout(
-        const Duration(seconds: 8),
+        const Duration(seconds: 15),
         onTimeout: () => throw TimeoutException('Token refresh timed out'),
       );
 
@@ -207,22 +225,27 @@ class AuthInterceptor extends Interceptor {
           (tokens['refresh_token'] ?? tokens['refreshToken'] ?? '').toString().trim();
 
       // Validate tokens
-      if (newAccessToken.isEmpty || newRefreshToken.isEmpty) {
+      if (newAccessToken.isEmpty) {
         await _clearTokens();
         return null;
       }
 
       // Save new tokens
       await _storage.write(key: 'access_token', value: newAccessToken);
-      await _storage.write(key: 'refresh_token', value: newRefreshToken);
+      
+      // Only update refresh token if a new one was provided
+      if (newRefreshToken.isNotEmpty) {
+        await _storage.write(key: 'refresh_token', value: newRefreshToken);
+      }
 
       // Calculate and save expiration
+      // Backend provides expires_in in seconds, use a generous default (7 days) if not provided
       final expiresIn = tokens['expires_in'] is int
           ? tokens['expires_in'] as int
-          : int.tryParse(tokens['expires_in']?.toString() ?? '86400');
+          : int.tryParse(tokens['expires_in']?.toString() ?? '') ?? 604800; // 7 days default
       
       final expiresAt = DateTime.now().add(
-        Duration(seconds: expiresIn ?? 86400),
+        Duration(seconds: expiresIn),
       );
       
       await _storage.write(
@@ -239,8 +262,7 @@ class AuthInterceptor extends Interceptor {
       }
       return null;
     } catch (e) {
-      // Any other error, clear tokens
-      await _clearTokens();
+      // Don't clear tokens for network/timeout errors - might be temporary
       return null;
     }
   }

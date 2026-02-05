@@ -4,12 +4,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:get_it/get_it.dart';
 import 'package:voclio_app/features/home/presentation/widgets/home_list_tile.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_state.dart';
 import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart';
 import 'package:voclio_app/features/productivity/presentation/widgets/ai_suggestions_widget.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
+import 'package:voclio_app/features/widget_config/presentation/widgets/home_widgets.dart';
+import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
+import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
+import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -37,6 +44,8 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
   void initState() {
     super.initState();
     context.read<DashboardCubit>().loadDashboardStats();
+    
+    // Widget config is initialized via BlocProvider in VoclioApp
 
     // Only fetch profile if user is already logged in (has valid auth state)
     final authState = context.read<AuthBloc>().state;
@@ -190,6 +199,84 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
               ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
 
               SizedBox(height: 20.h),
+
+              // Quick Access Section
+              BlocBuilder<WidgetConfigCubit, WidgetConfigState>(
+                builder: (context, widgetState) {
+                  if (widgetState.enabledWidgets.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(left: 36.w, right: 20.w),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8.w),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [const Color(0xFF6366F1), const Color(0xFF8B5CF6)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10.r),
+                                  ),
+                                  child: Icon(
+                                    Icons.dashboard_customize_rounded,
+                                    color: Colors.white,
+                                    size: 16.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Text(
+                                  'At a Glance',
+                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1A1A2E),
+                                    fontSize: 18.sp,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                WidgetSetupDialog.show(
+                                  context,
+                                  cubit: context.read<WidgetConfigCubit>(),
+                                );
+                              },
+                              icon: Icon(
+                                Icons.tune_rounded,
+                                color: theme.primaryColor,
+                                size: 22.sp,
+                              ),
+                              tooltip: 'Customize',
+                            ),
+                          ],
+                        ),
+                      ).animate().fadeIn(duration: 600.ms, delay: 250.ms),
+                      SizedBox(height: 12.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: MultiBlocProvider(
+                          providers: [
+                            BlocProvider.value(value: GetIt.I<TasksCubit>()),
+                            BlocProvider.value(value: GetIt.I<NotesCubit>()),
+                            BlocProvider.value(value: context.read<WidgetConfigCubit>()),
+                          ],
+                          child: HomeWidgetsContainer(
+                            onTabChange: widget.onTabChange,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                    ],
+                  );
+                },
+              ),
 
               // Stats Cards
               BlocBuilder<DashboardCubit, DashboardState>(
@@ -383,362 +470,6 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                     ),
                   ).animate().fadeIn(duration: 600.ms, delay: 600.ms);
                 },
-              ),
-
-              SizedBox(height: 28.h),
-
-              // Upcoming Tasks Section
-              BlocBuilder<DashboardCubit, DashboardState>(
-                builder: (context, state) {
-                  final tasks =
-                      state is DashboardStatsLoaded
-                          ? state.stats.upcomingTasks
-                          : <TaskEntity>[];
-
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(8.w),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.task_alt_rounded,
-                                    color: Colors.white,
-                                    size: 16.sp,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Text(
-                                  'Upcoming Tasks',
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF1A1A2E),
-                                        fontSize: 18.sp,
-                                        letterSpacing: -0.3,
-                                      ),
-                                ),
-                                if (tasks.isNotEmpty) ...[
-                                  SizedBox(width: 8.w),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8.w,
-                                      vertical: 3.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.primaryColor.withOpacity(
-                                        0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(6.r),
-                                    ),
-                                    child: Text(
-                                      '${tasks.length}',
-                                      style: TextStyle(
-                                        color: theme.primaryColor,
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            TextButton(
-                              onPressed: () => widget.onTabChange?.call(1),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
-                                  vertical: 6.h,
-                                ),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'View All',
-                                style: TextStyle(
-                                  color: theme.primaryColor,
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn(duration: 600.ms, delay: 700.ms),
-                      SizedBox(height: 12.h),
-                      if (tasks.isEmpty && state is DashboardStatsLoaded)
-                        Padding(
-                          padding: EdgeInsets.all(20.w),
-                          child: Text(
-                            'No upcoming tasks',
-                            style: TextStyle(color: Colors.grey.shade500),
-                          ),
-                        )
-                      else if (state is DashboardLoading)
-                        Padding(
-                          padding: EdgeInsets.all(20.w),
-                          child: const CircularProgressIndicator(),
-                        )
-                      else
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          child: Column(
-                            children:
-                                tasks
-                                    .take(3)
-                                    .map(
-                                      (task) => Padding(
-                                        padding: EdgeInsets.only(bottom: 12.h),
-                                        child: _buildTaskItem(
-                                              task.title,
-                                              task.dueDate != null
-                                                  ? DateFormat(
-                                                    'MMM d, h:mm a',
-                                                  ).format(task.dueDate!)
-                                                  : 'No due date',
-                                              task.priority.toLowerCase() ==
-                                                      'high'
-                                                  ? Colors.red.shade400
-                                                  : theme.primaryColor,
-                                              task.status.toLowerCase() ==
-                                                  'completed',
-                                            )
-                                            .animate()
-                                            .fadeIn(duration: 600.ms)
-                                            .slideX(begin: -0.1),
-                                      ),
-                                    )
-                                    .toList(),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-
-              SizedBox(height: 28.h),
-
-              // Recent Notes Section
-              BlocBuilder<DashboardCubit, DashboardState>(
-                builder: (context, state) {
-                  final notes =
-                      state is DashboardStatsLoaded
-                          ? state.stats.recentNotes
-                          : <NoteEntity>[];
-
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(8.w),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.note_alt_rounded,
-                                    color: Colors.white,
-                                    size: 16.sp,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Text(
-                                  'Recent Notes',
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF1A1A2E),
-                                        fontSize: 18.sp,
-                                        letterSpacing: -0.3,
-                                      ),
-                                ),
-                                if (notes.isNotEmpty) ...[
-                                  SizedBox(width: 8.w),
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8.w,
-                                      vertical: 3.h,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.primaryColor.withOpacity(
-                                        0.1,
-                                      ),
-                                      borderRadius: BorderRadius.circular(6.r),
-                                    ),
-                                    child: Text(
-                                      '${notes.length}',
-                                      style: TextStyle(
-                                        color: theme.primaryColor,
-                                        fontSize: 11.sp,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            TextButton(
-                              onPressed: () => widget.onTabChange?.call(3),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12.w,
-                                  vertical: 6.h,
-                                ),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                'View All',
-                                style: TextStyle(
-                                  color: theme.primaryColor,
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn(duration: 600.ms, delay: 1100.ms),
-                      SizedBox(height: 12.h),
-                      if (notes.isEmpty && state is DashboardStatsLoaded)
-                        Padding(
-                          padding: EdgeInsets.all(20.w),
-                          child: Text(
-                            'No recent notes',
-                            style: TextStyle(color: Colors.grey.shade500),
-                          ),
-                        )
-                      else if (state is DashboardLoading)
-                        Padding(
-                          padding: EdgeInsets.all(20.w),
-                          child: const CircularProgressIndicator(),
-                        )
-                      else
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          child: Column(
-                            children:
-                                notes
-                                    .take(2)
-                                    .map(
-                                      (note) => Padding(
-                                        padding: EdgeInsets.only(bottom: 12.h),
-                                        child: _buildNoteItem(
-                                              note.title,
-                                              note.preview,
-                                              DateFormat(
-                                                'MMM d, yyyy',
-                                              ).format(note.createdAt),
-                                              theme.primaryColor,
-                                            )
-                                            .animate()
-                                            .fadeIn(duration: 600.ms)
-                                            .slideX(begin: -0.1),
-                                      ),
-                                    )
-                                    .toList(),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-
-              SizedBox(height: 28.h),
-
-              // Quick Actions Section
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4ECDC4), Color(0xFF44B09E)],
-                        ),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Icon(
-                        Icons.bolt_rounded,
-                        color: Colors.white,
-                        size: 16.sp,
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Text(
-                      'Quick Actions',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A2E),
-                        fontSize: 18.sp,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 600.ms, delay: 600.ms),
-
-              SizedBox(height: 16.h),
-
-              // Action Cards
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  children: [
-                    _buildActionCard(
-                          context,
-                          'Record Voice Note',
-                          'Capture your thoughts instantly',
-                          Icons.mic_rounded,
-                          theme.primaryColor,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 700.ms)
-                        .slideX(begin: -0.2),
-                    SizedBox(height: 12.h),
-                    _buildActionCard(
-                          context,
-                          'Create Task',
-                          'Add a new task to your list',
-                          Icons.add_task_rounded,
-                          theme.primaryColor,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 800.ms)
-                        .slideY(begin: 0.2),
-                    SizedBox(height: 12.h),
-                    _buildActionCard(
-                          context,
-                          'View Calendar',
-                          'Check your upcoming events',
-                          Icons.calendar_month_rounded,
-                          theme.primaryColor,
-                        )
-                        .animate()
-                        .fadeIn(duration: 600.ms, delay: 900.ms)
-                        .slideX(begin: 0.2),
-                  ],
-                ),
               ),
 
               SizedBox(height: 28.h),
