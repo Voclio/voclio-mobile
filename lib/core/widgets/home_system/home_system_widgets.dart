@@ -19,34 +19,44 @@ class HomeCanvas extends StatelessWidget {
 class HomeScreenHeader extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
   final Color accent;
   final List<Widget> actions;
+  final bool compact;
 
   const HomeScreenHeader({
     super.key,
     required this.title,
     required this.subtitle,
-    required this.icon,
+    this.icon,
     this.accent = HomeSystemTokens.purple,
     this.actions = const [],
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final titleSize = compact ? 20.sp : 22.sp;
+    final subtitleSize = compact ? 12.sp : 13.sp;
+    final iconBox = compact ? 36.r : 40.r;
+    final iconSize = compact ? 18.sp : 20.sp;
+
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          width: 44.r,
-          height: 44.r,
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(HomeSystemTokens.radiusMd.r),
+        if (icon != null) ...[
+          Container(
+            width: iconBox,
+            height: iconBox,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius:
+                  BorderRadius.circular(HomeSystemTokens.radiusSm.r),
+            ),
+            child: Icon(icon, color: accent, size: iconSize),
           ),
-          child: Icon(icon, color: accent, size: 22.sp),
-        ),
-        SizedBox(width: 12.w),
+          SizedBox(width: 10.w),
+        ],
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,22 +64,27 @@ class HomeScreenHeader extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 26.sp,
-                  fontWeight: FontWeight.w800,
+                  fontSize: titleSize,
+                  fontWeight: FontWeight.w700,
                   color: HomeSystemTokens.ink,
-                  letterSpacing: -0.5,
-                  height: 1.1,
+                  letterSpacing: -0.3,
+                  height: 1.15,
                 ),
               ),
-              SizedBox(height: 4.h),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: HomeSystemTokens.inkMuted,
-                  fontWeight: FontWeight.w500,
+              if (subtitle.isNotEmpty) ...[
+                SizedBox(height: 2.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: subtitleSize,
+                    color: HomeSystemTokens.inkMuted,
+                    fontWeight: FontWeight.w400,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -213,14 +228,17 @@ class HomeSearchField extends StatelessWidget {
   }
 }
 
-class HomeFilterPill extends StatelessWidget {
+/// Filter chip with label + circular count badge (calendar style).
+class HomeCountedFilterPill extends StatelessWidget {
   final String label;
+  final int count;
   final bool selected;
   final VoidCallback onTap;
 
-  const HomeFilterPill({
+  const HomeCountedFilterPill({
     super.key,
     required this.label,
+    required this.count,
     required this.selected,
     required this.onTap,
   });
@@ -232,19 +250,52 @@ class HomeFilterPill extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: EdgeInsets.only(right: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 9.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
         decoration: BoxDecoration(
-          color: selected ? HomeSystemTokens.purple : HomeSystemTokens.card,
-          borderRadius: BorderRadius.circular(24.r),
-          boxShadow: selected ? null : HomeSystemTokens.cardShadow(opacity: 0.03),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : HomeSystemTokens.inkSoft,
-            fontSize: 13.sp,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          color: selected
+              ? HomeSystemTokens.purple.withValues(alpha: 0.1)
+              : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(100.r),
+          border: Border.all(
+            color: selected ? HomeSystemTokens.purple : Colors.transparent,
+            width: 1,
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected
+                    ? HomeSystemTokens.purple
+                    : HomeSystemTokens.inkSoft,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            Container(
+              width: 18.r,
+              height: 18.r,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: selected
+                    ? HomeSystemTokens.purple
+                    : const Color(0xFFE5E7EB),
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.w700,
+                  color: selected ? Colors.white : HomeSystemTokens.inkSoft,
+                  height: 1,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -266,13 +317,13 @@ class HomeSectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(left: 2.w, bottom: 12.h),
+      padding: EdgeInsets.only(left: 2.w, bottom: 8.h),
       child: Row(
         children: [
           Text(
             title,
             style: TextStyle(
-              fontSize: 17.sp,
+              fontSize: 15.sp,
               fontWeight: FontWeight.w700,
               color: HomeSystemTokens.ink,
               letterSpacing: -0.2,
@@ -318,23 +369,25 @@ class HomeBackButton extends StatelessWidget {
 class HomeSecondaryScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final IconData icon;
+  final IconData? icon;
   final Color accent;
   final Widget body;
   final List<Widget> actions;
   final bool showBack;
+  final bool compact;
   final Widget? floatingActionButton;
   final PreferredSizeWidget? bottom;
 
   const HomeSecondaryScaffold({
     super.key,
     required this.title,
-    required this.icon,
     required this.body,
     this.subtitle,
+    this.icon,
     this.accent = HomeSystemTokens.purple,
     this.actions = const [],
     this.showBack = true,
+    this.compact = true,
     this.floatingActionButton,
     this.bottom,
   });
@@ -350,11 +403,17 @@ class HomeSecondaryScaffold extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: EdgeInsets.fromLTRB(showBack ? 8.w : 20.w, 8.h, 20.w, 0),
+                padding: EdgeInsets.fromLTRB(
+                  showBack ? 8.w : 20.w,
+                  4.h,
+                  20.w,
+                  8.h,
+                ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    if (showBack && Navigator.canPop(context)) const HomeBackButton(),
+                    if (showBack && Navigator.canPop(context))
+                      const HomeBackButton(),
                     Expanded(
                       child: HomeScreenHeader(
                         title: title,
@@ -362,6 +421,7 @@ class HomeSecondaryScaffold extends StatelessWidget {
                         icon: icon,
                         accent: accent,
                         actions: actions,
+                        compact: compact,
                       ),
                     ),
                   ],

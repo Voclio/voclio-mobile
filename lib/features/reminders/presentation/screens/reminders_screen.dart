@@ -19,6 +19,8 @@ class RemindersScreen extends StatefulWidget {
 
 class _RemindersScreenState extends State<RemindersScreen> {
   int _currentTab = 0;
+  int _allRemindersCount = 0;
+  int _upcomingRemindersCount = 0;
 
   void _loadReminders() {
     final cubit = context.read<RemindersCubit>();
@@ -117,7 +119,19 @@ class _RemindersScreenState extends State<RemindersScreen> {
     return BlocProvider(
       create: (context) => getIt<RemindersCubit>()..loadReminders(),
       child: Builder(
-        builder: (context) => HomeSecondaryScaffold(
+        builder: (context) => BlocListener<RemindersCubit, RemindersState>(
+          listener: (context, state) {
+            if (state is RemindersLoaded) {
+              setState(() {
+                if (_currentTab == 0) {
+                  _allRemindersCount = state.reminders.length;
+                } else {
+                  _upcomingRemindersCount = state.reminders.length;
+                }
+              });
+            }
+          },
+          child: HomeSecondaryScaffold(
           title: 'Reminders',
           subtitle: _currentTab == 0 ? 'All reminders' : 'Upcoming only',
           icon: Icons.alarm_rounded,
@@ -143,13 +157,14 @@ class _RemindersScreenState extends State<RemindersScreen> {
               Padding(
                 padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
                 child: SizedBox(
-                  height: 42.h,
+                  height: 32.h,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     children: [
-                      HomeFilterPill(
+                      HomeCountedFilterPill(
                         label: 'All',
+                        count: _allRemindersCount,
                         selected: _currentTab == 0,
                         onTap: () {
                           if (_currentTab == 0) return;
@@ -157,8 +172,9 @@ class _RemindersScreenState extends State<RemindersScreen> {
                           _loadReminders();
                         },
                       ),
-                      HomeFilterPill(
+                      HomeCountedFilterPill(
                         label: 'Upcoming',
+                        count: _upcomingRemindersCount,
                         selected: _currentTab == 1,
                         onTap: () {
                           if (_currentTab == 1) return;
@@ -224,6 +240,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

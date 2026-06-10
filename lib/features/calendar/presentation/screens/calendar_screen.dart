@@ -8,6 +8,7 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/presentation/screens/task_details_screen.dart';
 import '../../../tasks/presentation/bloc/tasks_cubit.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
+import '../../../../core/widgets/home_system/home_system_widgets.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -377,110 +378,38 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final overdueCount =
         events.where((t) => !t.isDone && t.date.isBefore(now)).length;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
+    return SizedBox(
+      height: 32.h,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         children: [
-          _buildFilterChip('All', 'all', events.length, theme, isDark),
-          SizedBox(width: 8.w),
-          _buildFilterChip(
-            'Pending',
-            'pending',
-            pendingCount,
-            theme,
-            isDark,
-            color: Colors.orange,
+          HomeCountedFilterPill(
+            label: 'All',
+            count: events.length,
+            selected: _selectedFilter == 'all',
+            onTap: () => setState(() => _selectedFilter = 'all'),
           ),
-          SizedBox(width: 8.w),
-          _buildFilterChip(
-            'Completed',
-            'completed',
-            completedCount,
-            theme,
-            isDark,
-            color: Colors.green,
+          HomeCountedFilterPill(
+            label: 'Pending',
+            count: pendingCount,
+            selected: _selectedFilter == 'pending',
+            onTap: () => setState(() => _selectedFilter = 'pending'),
           ),
-          SizedBox(width: 8.w),
+          HomeCountedFilterPill(
+            label: 'Done',
+            count: completedCount,
+            selected: _selectedFilter == 'completed',
+            onTap: () => setState(() => _selectedFilter = 'completed'),
+          ),
           if (overdueCount > 0)
-            _buildFilterChip(
-              'Overdue',
-              'overdue',
-              overdueCount,
-              theme,
-              isDark,
-              color: Colors.red,
+            HomeCountedFilterPill(
+              label: 'Overdue',
+              count: overdueCount,
+              selected: _selectedFilter == 'overdue',
+              onTap: () => setState(() => _selectedFilter = 'overdue'),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(
-    String label,
-    String value,
-    int count,
-    ThemeData theme,
-    bool isDark, {
-    Color? color,
-  }) {
-    final isSelected = _selectedFilter == value;
-    final chipColor = color ?? theme.colorScheme.primary;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedFilter = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? chipColor.withOpacity(0.15)
-                  : isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color: isSelected ? chipColor : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : theme.colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(width: 6.w),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-              decoration: BoxDecoration(
-                color:
-                    isSelected
-                        ? chipColor.withOpacity(0.2)
-                        : theme.colorScheme.secondary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? chipColor : theme.colorScheme.secondary,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

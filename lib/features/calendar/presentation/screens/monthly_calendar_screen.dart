@@ -794,58 +794,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
                   SizedBox(height: 20.h),
 
-                  // Selected Day info with filter chips
+                  // Selected day tasks header + filter chips
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              isSameDay(effectiveSelection, DateTime.now())
-                                  ? 'Today\'s Tasks'
-                                  : 'Tasks for ${DateFormat('MMM d').format(effectiveSelection)}',
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.sp,
-                              ),
-                            ),
-                            if (selectedDayEvents != null &&
-                                selectedDayEvents.count > 0)
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10.w,
-                                  vertical: 4.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary.withOpacity(
-                                    0.1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20.r),
-                                ),
-                                child: Text(
-                                  '${_getFilteredTasks(selectedDayEvents.tasks).length}/${selectedDayEvents.count}',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12.sp,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        if (selectedDayEvents != null &&
-                            selectedDayEvents.tasks.isNotEmpty) ...[
-                          SizedBox(height: 12.h),
-                          _buildFilterChips(
-                            theme,
-                            isDark,
-                            selectedDayEvents.tasks,
-                          ),
-                        ],
-                      ],
+                    child: _buildDayTasksHeader(
+                      effectiveSelection,
+                      selectedDayEvents?.tasks ?? [],
                     ),
                   ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
 
@@ -888,122 +842,96 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     );
   }
 
-  Widget _buildFilterChips(
-    ThemeData theme,
-    bool isDark,
+  Widget _buildDayTasksHeader(
+    DateTime selectedDay,
     List<CalendarTaskEntity> tasks,
   ) {
-    final now = DateTime.now();
-    final pendingCount = tasks.where((t) => !t.isCompleted).length;
-    final completedCount = tasks.where((t) => t.isCompleted).length;
-    final overdueCount =
-        tasks.where((t) => !t.isCompleted && t.dueDate.isBefore(now)).length;
+    final isToday = isSameDay(selectedDay, DateTime.now());
+    final title =
+        isToday
+            ? 'Today\'s Tasks'
+            : 'Tasks for ${DateFormat('MMM d').format(selectedDay)}';
+    final filtered = _getFilteredTasks(tasks);
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: [
-          _buildFilterChip('All', 'all', tasks.length, theme, isDark),
-          SizedBox(width: 8.w),
-          _buildFilterChip(
-            'Pending',
-            'pending',
-            pendingCount,
-            theme,
-            isDark,
-            color: Colors.orange,
-          ),
-          SizedBox(width: 8.w),
-          _buildFilterChip(
-            'Done',
-            'completed',
-            completedCount,
-            theme,
-            isDark,
-            color: Colors.green,
-          ),
-          if (overdueCount > 0) ...[
-            SizedBox(width: 8.w),
-            _buildFilterChip(
-              'Overdue',
-              'overdue',
-              overdueCount,
-              theme,
-              isDark,
-              color: Colors.red,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(
-    String label,
-    String value,
-    int count,
-    ThemeData theme,
-    bool isDark, {
-    Color? color,
-  }) {
-    final isSelected = _selectedFilter == value;
-    final chipColor = color ?? theme.colorScheme.primary;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedFilter = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-        decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? chipColor.withOpacity(0.15)
-                  : isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(
-            color: isSelected ? chipColor : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? chipColor : theme.colorScheme.onSurface,
-              ),
-            ),
-            SizedBox(width: 4.w),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
-              decoration: BoxDecoration(
-                color:
-                    isSelected
-                        ? chipColor.withOpacity(0.2)
-                        : theme.colorScheme.secondary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+            Expanded(
               child: Text(
-                '$count',
+                title,
                 style: TextStyle(
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? chipColor : theme.colorScheme.secondary,
+                  fontSize: 17.sp,
+                  fontWeight: FontWeight.w700,
+                  color: HomeSystemTokens.ink,
+                  letterSpacing: -0.2,
                 ),
               ),
             ),
+            if (tasks.isNotEmpty)
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: HomeSystemTokens.purple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(100.r),
+                ),
+                child: Text(
+                  '${filtered.length}/${tasks.length}',
+                  style: TextStyle(
+                    color: HomeSystemTokens.purple,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ),
           ],
         ),
+        SizedBox(height: 10.h),
+        _buildFilterChips(tasks),
+      ],
+    );
+  }
+
+  Widget _buildFilterChips(List<CalendarTaskEntity> tasks) {
+    final now = DateTime.now();
+    final pendingCount = tasks.where((t) => !t.isCompleted).length;
+    final completedCount = tasks.where((t) => t.isCompleted).length;
+
+    return SizedBox(
+      height: 32.h,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        children: [
+          HomeCountedFilterPill(
+            label: 'All',
+            count: tasks.length,
+            selected: _selectedFilter == 'all',
+            onTap: () => setState(() => _selectedFilter = 'all'),
+          ),
+          HomeCountedFilterPill(
+            label: 'Pending',
+            count: pendingCount,
+            selected: _selectedFilter == 'pending',
+            onTap: () => setState(() => _selectedFilter = 'pending'),
+          ),
+          HomeCountedFilterPill(
+            label: 'Done',
+            count: completedCount,
+            selected: _selectedFilter == 'completed',
+            onTap: () => setState(() => _selectedFilter = 'completed'),
+          ),
+          if (tasks.any((t) => !t.isCompleted && t.dueDate.isBefore(now)))
+            HomeCountedFilterPill(
+              label: 'Overdue',
+              count: tasks
+                  .where((t) => !t.isCompleted && t.dueDate.isBefore(now))
+                  .length,
+              selected: _selectedFilter == 'overdue',
+              onTap: () => setState(() => _selectedFilter = 'overdue'),
+            ),
+        ],
       ),
     );
   }

@@ -6,6 +6,7 @@ class DashboardStatsEntity extends Equatable {
   final List<NoteEntity> recentNotes;
   final ProductivityStats productivity;
   final List<QuickActionEntity> quickActions;
+  final List<DashboardReminderEntity> upcomingReminders;
 
   const DashboardStatsEntity({
     required this.overview,
@@ -13,6 +14,7 @@ class DashboardStatsEntity extends Equatable {
     required this.recentNotes,
     required this.productivity,
     required this.quickActions,
+    this.upcomingReminders = const [],
   });
 
   @override
@@ -22,6 +24,7 @@ class DashboardStatsEntity extends Equatable {
     recentNotes,
     productivity,
     quickActions,
+    upcomingReminders,
   ];
 }
 
@@ -125,4 +128,19 @@ class QuickActionEntity extends Equatable {
 
   @override
   List<Object?> get props => [id, label, icon];
+}
+
+class DashboardReminderEntity extends Equatable {
+  final String id;
+  final String title;
+  final DateTime remindAt;
+
+  const DashboardReminderEntity({
+    required this.id,
+    required this.title,
+    required this.remindAt,
+  });
+
+  @override
+  List<Object?> get props => [id, title, remindAt];
 }

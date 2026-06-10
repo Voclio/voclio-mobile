@@ -10,28 +10,35 @@ import '../bloc/widget_config_state.dart';
 class WidgetSetupDialog extends StatefulWidget {
   final VoidCallback? onComplete;
   final VoidCallback? onSkip;
+  final bool isEditMode;
 
-  const WidgetSetupDialog({super.key, this.onComplete, this.onSkip});
+  const WidgetSetupDialog({
+    super.key,
+    this.onComplete,
+    this.onSkip,
+    this.isEditMode = false,
+  });
 
   /// Show the widget setup dialog
-  static Future<bool?> show(BuildContext context, {WidgetConfigCubit? cubit}) {
+  static Future<bool?> show(
+    BuildContext context, {
+    WidgetConfigCubit? cubit,
+    bool isEditMode = false,
+  }) {
     return showDialog<bool>(
       context: context,
-      barrierDismissible: false,
-      builder:
-          (context) =>
-              cubit != null
-                  ? BlocProvider.value(
-                    value: cubit,
-                    child: WidgetSetupDialog(
-                      onComplete: () => Navigator.of(context).pop(true),
-                      onSkip: () => Navigator.of(context).pop(false),
-                    ),
-                  )
-                  : WidgetSetupDialog(
-                    onComplete: () => Navigator.of(context).pop(true),
-                    onSkip: () => Navigator.of(context).pop(false),
-                  ),
+      barrierDismissible: isEditMode,
+      builder: (context) {
+        final dialog = WidgetSetupDialog(
+          isEditMode: isEditMode,
+          onComplete: () => Navigator.of(context).pop(true),
+          onSkip: () => Navigator.of(context).pop(false),
+        );
+        if (cubit != null) {
+          return BlocProvider.value(value: cubit, child: dialog);
+        }
+        return dialog;
+      },
     );
   }
 
@@ -47,10 +54,22 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
   @override
   void initState() {
     super.initState();
-    // Initialize with default selections
-    for (final type in WidgetType.values) {
-      _selectedWidgets[type] =
-          type == WidgetType.todayTasks || type == WidgetType.upcomingTasks;
+    if (widget.isEditMode) {
+      final preferences = context.read<WidgetConfigCubit>().state.preferences;
+      for (final config in preferences.widgets) {
+        _selectedWidgets[config.type] = config.isEnabled;
+      }
+      _currentPage = 1;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pageController.hasClients) {
+          _pageController.jumpToPage(1);
+        }
+      });
+    } else {
+      for (final type in WidgetType.values) {
+        _selectedWidgets[type] =
+            type == WidgetType.todayTasks || type == WidgetType.upcomingTasks;
+      }
     }
   }
 
@@ -71,12 +90,17 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
     }
   }
 
-  void _saveAndComplete() {
+  Future<void> _saveAndComplete() async {
     final cubit = context.read<WidgetConfigCubit>();
     cubit.updateWidgetSelections(_selectedWidgets);
-    cubit.completeSetup().then((_) {
+
+    final success = widget.isEditMode
+        ? await cubit.savePreferences()
+        : await cubit.completeSetup();
+
+    if (success && mounted) {
       widget.onComplete?.call();
-    });
+    }
   }
 
   @override
@@ -105,20 +129,21 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                 // Header
                 _buildHeader(theme),
 
-                // Page indicator
-                _buildPageIndicator(theme),
+                if (!widget.isEditMode) _buildPageIndicator(theme),
 
                 // Content
                 Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged:
-                        (index) => setState(() => _currentPage = index),
-                    children: [
-                      _buildWelcomePage(theme),
-                      _buildWidgetSelectionPage(theme),
-                    ],
-                  ),
+                  child: widget.isEditMode
+                      ? _buildWidgetSelectionPage(theme)
+                      : PageView(
+                          controller: _pageController,
+                          onPageChanged: (index) =>
+                              setState(() => _currentPage = index),
+                          children: [
+                            _buildWelcomePage(theme),
+                            _buildWidgetSelectionPage(theme),
+                          ],
+                        ),
                 ),
 
                 // Actions
@@ -171,7 +196,9 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Personalize Your Home',
+                  widget.isEditMode
+                      ? 'Home Widgets'
+                      : 'Personalize Your Home',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18.sp,
@@ -180,7 +207,9 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'Choose what you want to see',
+                  widget.isEditMode
+                      ? 'Choose what appears on your home screen'
+                      : 'Choose what you want to see',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: 13.sp,
@@ -478,7 +507,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
       padding: EdgeInsets.all(20.w),
       child: Row(
         children: [
-          if (_currentPage == 0)
+          if (!widget.isEditMode && _currentPage == 0)
             TextButton(
               onPressed: () {
                 context.read<WidgetConfigCubit>().skipSetup();
@@ -489,7 +518,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14.sp),
               ),
             ),
-          if (_currentPage > 0)
+          if (!widget.isEditMode && _currentPage > 0)
             TextButton(
               onPressed: () {
                 _pageController.previousPage(
@@ -502,12 +531,24 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14.sp),
               ),
             ),
+          if (widget.isEditMode)
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14.sp),
+              ),
+            ),
           const Spacer(),
           BlocBuilder<WidgetConfigCubit, WidgetConfigState>(
             builder: (context, state) {
               final isLoading = state.status == WidgetConfigStatus.saving;
               return ElevatedButton(
-                onPressed: isLoading ? null : _nextPage,
+                onPressed: isLoading
+                    ? null
+                    : widget.isEditMode
+                        ? _saveAndComplete
+                        : _nextPage,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.primaryColor,
                   foregroundColor: Colors.white,
@@ -531,7 +572,9 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                           ),
                         )
                         : Text(
-                          _currentPage == 0 ? 'Next' : 'Done',
+                          widget.isEditMode
+                              ? 'Save'
+                              : (_currentPage == 0 ? 'Next' : 'Done'),
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,

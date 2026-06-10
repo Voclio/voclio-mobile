@@ -8,6 +8,7 @@ enum TasksStatus { initial, loading, success, failure }
 class TasksState extends Equatable {
   final TasksStatus status;
   final List<TaskEntity> tasks;
+  final List<TaskEntity> allTasks;
   final String errorMessage;
   final List<TaskCategoryEntity> categories;
   final String? selectedCategoryId;
@@ -17,6 +18,7 @@ class TasksState extends Equatable {
   const TasksState({
     this.status = TasksStatus.initial,
     this.tasks = const [],
+    this.allTasks = const [],
     this.errorMessage = '',
     this.categories = const [],
     this.selectedCategoryId,
@@ -27,6 +29,7 @@ class TasksState extends Equatable {
   TasksState copyWith({
     TasksStatus? status,
     List<TaskEntity>? tasks,
+    List<TaskEntity>? allTasks,
     String? errorMessage,
     List<TaskCategoryEntity>? categories,
     String? Function()? selectedCategoryId,
@@ -36,6 +39,7 @@ class TasksState extends Equatable {
     return TasksState(
       status: status ?? this.status,
       tasks: tasks ?? this.tasks,
+      allTasks: allTasks ?? this.allTasks,
       errorMessage: errorMessage ?? this.errorMessage,
       categories: categories ?? this.categories,
       selectedCategoryId:
@@ -52,6 +56,7 @@ class TasksState extends Equatable {
   List<Object?> get props => [
     status,
     tasks,
+    allTasks,
     errorMessage,
     categories,
     selectedCategoryId,

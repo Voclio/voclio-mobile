@@ -6,6 +6,7 @@ class DashboardStatsModel {
   final List<NoteModel> recentNotes;
   final ProductivityStatsModel productivity;
   final List<QuickActionModel> quickActions;
+  final List<DashboardReminderModel> upcomingReminders;
 
   DashboardStatsModel({
     required this.overview,
@@ -13,6 +14,7 @@ class DashboardStatsModel {
     required this.recentNotes,
     required this.productivity,
     required this.quickActions,
+    this.upcomingReminders = const [],
   });
 
   factory DashboardStatsModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,9 @@ class DashboardStatsModel {
     final productivityJson =
         json['productivity'] ?? json['productivityStats'] ?? {};
 
+    final remindersRaw =
+        json['upcoming_reminders'] ?? json['upcomingReminders'];
+
     return DashboardStatsModel(
       overview: DashboardOverviewModel.fromJson(overviewJson),
       upcomingTasks: (upcomingRaw as List<dynamic>?)
@@ -55,8 +60,19 @@ class DashboardStatsModel {
         Map<String, dynamic>.from(productivityJson as Map? ?? {}),
       ),
       quickActions:
-          (json['quick_actions'] as List<dynamic>?)
-              ?.map((e) => QuickActionModel.fromJson(e))
+          (json['quick_actions'] as List<dynamic>? ??
+                  json['quickActions'] as List<dynamic>?)
+              ?.map((e) => QuickActionModel.fromJson(
+                    Map<String, dynamic>.from(e as Map),
+                  ))
+              .toList() ??
+          [],
+      upcomingReminders: (remindersRaw as List<dynamic>?)
+              ?.map(
+                (e) => DashboardReminderModel.fromJson(
+                  Map<String, dynamic>.from(e as Map),
+                ),
+              )
               .toList() ??
           [],
     );
@@ -69,6 +85,8 @@ class DashboardStatsModel {
       recentNotes: recentNotes.map((e) => e.toEntity()).toList(),
       productivity: productivity.toEntity(),
       quickActions: quickActions.map((e) => e.toEntity()).toList(),
+      upcomingReminders:
+          upcomingReminders.map((e) => e.toEntity()).toList(),
     );
   }
 }
@@ -237,14 +255,48 @@ class QuickActionModel {
 
   factory QuickActionModel.fromJson(Map<String, dynamic> json) {
     return QuickActionModel(
-      id: json['id'] ?? '',
-      label: json['label'] ?? '',
-      icon: json['icon'] ?? '',
+      id: json['id']?.toString() ?? '',
+      label: json['label']?.toString() ?? '',
+      icon: json['icon']?.toString() ?? '',
     );
   }
 
   QuickActionEntity toEntity() {
     return QuickActionEntity(id: id, label: label, icon: icon);
+  }
+}
+
+class DashboardReminderModel {
+  final String id;
+  final String title;
+  final DateTime remindAt;
+
+  DashboardReminderModel({
+    required this.id,
+    required this.title,
+    required this.remindAt,
+  });
+
+  factory DashboardReminderModel.fromJson(Map<String, dynamic> json) {
+    final taskTitle =
+        json['task'] is Map ? json['task']['title']?.toString() : null;
+    final remindAtRaw = json['remind_at'] ?? json['reminder_time'];
+
+    return DashboardReminderModel(
+      id: (json['reminder_id'] ?? json['id'] ?? '').toString(),
+      title: (json['title'] ?? taskTitle ?? 'Reminder').toString(),
+      remindAt: remindAtRaw != null
+          ? DateTime.parse(remindAtRaw.toString())
+          : DateTime.now(),
+    );
+  }
+
+  DashboardReminderEntity toEntity() {
+    return DashboardReminderEntity(
+      id: id,
+      title: title,
+      remindAt: remindAt,
+    );
   }
 }
 

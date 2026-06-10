@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
 import 'package:voclio_app/features/home/presentation/widgets/home_list_tile.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
@@ -11,6 +12,16 @@ import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_en
     as dashboard;
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/productivity/presentation/widgets/ai_suggestions_widget.dart';
+import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
+import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
+import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart'
+    as task_entities;
+import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
+import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestions_cubit.dart';
+import 'package:voclio_app/features/widget_config/domain/entities/widget_preference.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
+import 'package:voclio_app/features/widget_config/presentation/widgets/home_widgets.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -51,6 +62,21 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
         curve: Curves.easeInOut,
       );
     });
+
+    GetIt.I<TasksCubit>().init();
+
+    final now = DateTime.now();
+    context.read<CalendarCubit>().loadMonth(now.year, now.month);
+  }
+
+  Future<void> _onRefresh() async {
+    final now = DateTime.now();
+    await Future.wait([
+      context.read<DashboardCubit>().refresh(),
+      GetIt.I<TasksCubit>().init(),
+      context.read<CalendarCubit>().loadMonth(now.year, now.month),
+      context.read<AiSuggestionsCubit>().loadAiSuggestions(),
+    ]);
   }
 
   @override
@@ -70,11 +96,15 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
           builder: (context, state) {
             final stats = state is DashboardStatsLoaded ? state.stats : null;
             final overview = stats?.overview;
-            final todayTasks = stats?.upcomingTasks.take(3).toList() ?? [];
             final upcoming = stats?.upcomingTasks;
 
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
+            return RefreshIndicator(
+              color: HomeSystemTokens.purple,
+              onRefresh: _onRefresh,
+              child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -84,22 +114,93 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
                   SizedBox(height: 20.h),
                   _buildStatsRow(overview, stats?.productivity),
                   SizedBox(height: 24.h),
-                  _buildTodaysFocus(todayTasks),
-                  SizedBox(height: 20.h),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: const AiSuggestionsWidget(),
-                  ),
-                  SizedBox(height: 20.h),
-                  _buildUpcoming(upcoming),
+                  _buildConfiguredSections(upcoming),
                   SizedBox(height: 100.h),
                 ],
               ),
+            ),
             );
           },
         ),
       ),
     );
+  }
+
+  Widget _buildConfiguredSections(List<dashboard.TaskEntity>? upcoming) {
+    return BlocBuilder<WidgetConfigCubit, WidgetConfigState>(
+      builder: (context, widgetState) {
+        if (widgetState.status == WidgetConfigStatus.loading) {
+          return const SizedBox.shrink();
+        }
+
+        final enabled = widgetState.enabledWidgets;
+        final sections = enabled.isEmpty
+            ? _defaultHomeSections(upcoming)
+            : enabled
+                .map((config) => _sectionForWidgetType(config.type, upcoming))
+                .toList();
+
+        return BlocProvider<TasksCubit>.value(
+          value: GetIt.I<TasksCubit>(),
+          child: Column(
+            children: [
+              for (var i = 0; i < sections.length; i++) ...[
+                if (i > 0) SizedBox(height: 20.h),
+                sections[i],
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> _defaultHomeSections(List<dashboard.TaskEntity>? upcoming) {
+    return [
+      _buildTodaysFocus(),
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: const AiSuggestionsWidget(),
+      ),
+      _buildUpcoming(upcoming),
+    ];
+  }
+
+  Widget _sectionForWidgetType(
+    WidgetType type,
+    List<dashboard.TaskEntity>? upcoming,
+  ) {
+    switch (type) {
+      case WidgetType.todayTasks:
+        return _buildTodaysFocus();
+      case WidgetType.upcomingTasks:
+        return _buildUpcoming(upcoming);
+      case WidgetType.productivity:
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: const AiSuggestionsWidget(),
+        );
+      case WidgetType.calendar:
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: CalendarWidget(onViewAll: () => widget.onTabChange?.call(2)),
+        );
+      case WidgetType.notes:
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: RecentNotesWidget(onViewAll: () => widget.onTabChange?.call(3)),
+        );
+      case WidgetType.reminders:
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: RemindersWidget(onViewAll: () {}),
+        );
+      case WidgetType.quickActions:
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: QuickActionsWidget(onTabChange: widget.onTabChange),
+        );
+    }
   }
 
   Widget _buildHeroBanner() {
@@ -218,110 +319,141 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
     );
   }
 
-  Widget _buildTodaysFocus(List<dashboard.TaskEntity> tasks) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+  Widget _buildTodaysFocus() {
+    return BlocBuilder<TasksCubit, TasksState>(
+      builder: (context, taskState) {
+        final today = DateTime.now();
+        final tasks = taskState.tasks
+            .where(
+              (t) =>
+                  t.date.year == today.year &&
+                  t.date.month == today.month &&
+                  t.date.day == today.day,
+            )
+            .take(5)
+            .toList();
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: HomeSystemTokens.purple.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Icon(Icons.calendar_today_rounded, color: HomeSystemTokens.purple, size: 18.sp),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Today's Focus",
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF111827),
-                        ),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        color: HomeSystemTokens.purple.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10.r),
                       ),
-                      Text(
-                        '${tasks.length} tasks scheduled',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: const Color(0xFF9CA3AF),
-                        ),
+                      child: Icon(Icons.calendar_today_rounded,
+                          color: HomeSystemTokens.purple, size: 18.sp),
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Today's Focus",
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                            ),
+                          ),
+                          Text(
+                            '${tasks.length} tasks scheduled',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    GestureDetector(
+                      onTap: () => widget.onTabChange?.call(1),
+                      child: Row(
+                        children: [
+                          Text(
+                            'View all',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              color: HomeSystemTokens.purple,
+                            ),
+                          ),
+                          Icon(Icons.chevron_right_rounded,
+                              color: HomeSystemTokens.purple, size: 18.sp),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                GestureDetector(
-                  onTap: () => widget.onTabChange?.call(1),
-                  child: Row(
-                    children: [
-                      Text(
-                        'View all',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
+                SizedBox(height: 20.h),
+                if (taskState.status == TasksStatus.loading && tasks.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    child: Center(
+                      child: SizedBox(
+                        width: 22.w,
+                        height: 22.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
                           color: HomeSystemTokens.purple,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, color: HomeSystemTokens.purple, size: 18.sp),
-                    ],
+                    ),
+                  )
+                else if (tasks.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    child: Text(
+                      'No tasks scheduled for today',
+                      style: TextStyle(
+                          fontSize: 13.sp, color: const Color(0xFF9CA3AF)),
+                    ),
+                  )
+                else
+                  ...List.generate(tasks.length, (index) {
+                    final task = tasks[index];
+                    final isLast = index == tasks.length - 1;
+                    return _FocusTaskRow(
+                      task: task,
+                      isLast: isLast,
+                    );
+                  }),
+                SizedBox(height: 8.h),
+                GestureDetector(
+                  onTap: () => widget.onTabChange?.call(1),
+                  child: Text(
+                    '+ Add task',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      color: HomeSystemTokens.purple,
+                    ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 20.h),
-            if (tasks.isEmpty)
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-                child: Text(
-                  'No tasks scheduled for today',
-                  style: TextStyle(fontSize: 13.sp, color: const Color(0xFF9CA3AF)),
-                ),
-              )
-            else
-              ...List.generate(tasks.length, (index) {
-                final task = tasks[index];
-                final isLast = index == tasks.length - 1;
-                return _FocusTaskRow(
-                  task: task,
-                  index: index,
-                  isLast: isLast,
-                );
-              }),
-            SizedBox(height: 8.h),
-            GestureDetector(
-              onTap: () => widget.onTabChange?.call(1),
-              child: Text(
-                '+ Add task',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: HomeSystemTokens.purple,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -494,35 +626,22 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _FocusTaskRow extends StatelessWidget {
-  final dashboard.TaskEntity task;
-  final int index;
+  final task_entities.TaskEntity task;
   final bool isLast;
 
   const _FocusTaskRow({
     required this.task,
-    required this.index,
     required this.isLast,
   });
 
-  static const _tagColors = [
-    (Color(0xFF7C5CFC), 'Work'),
-    (Color(0xFF4A8FE7), 'Meeting'),
-    (Color(0xFF34C759), 'Development'),
-  ];
-
-  static const _trailingIcons = [
-    Icons.flag_outlined,
-    Icons.event_note_outlined,
-    Icons.code_rounded,
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final tag = _tagColors[index % _tagColors.length];
-    final time = task.dueDate != null
-        ? DateFormat('h:mm a').format(task.dueDate!)
-        : 'All day';
-    final isDone = task.status.toLowerCase() == 'completed';
+    final tagLabel = task.tags.isNotEmpty
+        ? task.tags.first
+        : task.priority.displayName;
+    final tagColor = task.priority.color;
+    final time = DateFormat('h:mm a').format(task.date);
+    final isDone = task.isDone;
 
     return IntrinsicHeight(
       child: Row(
@@ -588,15 +707,15 @@ class _FocusTaskRow extends StatelessWidget {
                                 vertical: 3.h,
                               ),
                               decoration: BoxDecoration(
-                                color: tag.$1.withOpacity(0.1),
+                                color: tagColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6.r),
                               ),
                               child: Text(
-                                tag.$2,
+                                tagLabel,
                                 style: TextStyle(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: tag.$1,
+                                  color: tagColor,
                                 ),
                               ),
                             ),
@@ -620,9 +739,9 @@ class _FocusTaskRow extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    _trailingIcons[index % _trailingIcons.length],
+                    Icons.flag_outlined,
                     size: 18.sp,
-                    color: tag.$1,
+                    color: tagColor,
                   ),
                 ],
               ),

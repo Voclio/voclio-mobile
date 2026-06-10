@@ -5,6 +5,9 @@ import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
+import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
+import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -41,6 +44,26 @@ class SettingsScreen extends StatelessWidget {
                   : ListView(
                       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
                       children: [
+                        HomeSettingsGroup(
+                          title: 'Home',
+                          children: [
+                            BlocBuilder<WidgetConfigCubit, WidgetConfigState>(
+                              builder: (context, widgetState) {
+                                final count = widgetState.enabledWidgets.length;
+                                return HomeMenuTile(
+                                  icon: Icons.widgets_outlined,
+                                  title: 'Home Widgets',
+                                  subtitle:
+                                      '$count widget${count == 1 ? '' : 's'} enabled',
+                                  iconColor: HomeSystemTokens.purple,
+                                  onTap: () => _openHomeWidgetsSettings(context),
+                                  showDivider: false,
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 24.h),
                         HomeSettingsGroup(
                           title: 'Appearance',
                           children: [
@@ -135,6 +158,22 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openHomeWidgetsSettings(BuildContext context) async {
+    final saved = await WidgetSetupDialog.show(
+      context,
+      isEditMode: true,
+    );
+    if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Home widgets updated'),
+          backgroundColor: HomeSystemTokens.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Widget _buildThemeTile(BuildContext context, String currentTheme) {

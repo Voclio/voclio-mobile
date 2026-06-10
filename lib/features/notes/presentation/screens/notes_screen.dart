@@ -151,19 +151,23 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                 BlocBuilder<NotesCubit, NotesState>(
                   builder: (context, state) {
                     return SizedBox(
-                      height: 42.h,
+                      height: 32.h,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         children: [
-                          HomeFilterPill(
+                          HomeCountedFilterPill(
                             label: 'All',
+                            count: state.notes.length,
                             selected: _selectedTagName == null,
                             onTap: () => setState(() => _selectedTagName = null),
                           ),
                           ...state.availableTags.map(
-                            (tagEntity) => HomeFilterPill(
+                            (tagEntity) => HomeCountedFilterPill(
                               label: tagEntity.name,
+                              count: state.notes
+                                  .where((n) => n.tags.contains(tagEntity.name))
+                                  .length,
                               selected: _selectedTagName == tagEntity.name,
                               onTap: () =>
                                   setState(() => _selectedTagName = tagEntity.name),

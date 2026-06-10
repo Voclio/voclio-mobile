@@ -93,7 +93,13 @@ class TasksCubit extends Cubit<TasksState> {
       },
       (tasks) {
         print('Successfully fetched ${tasks.length} tasks');
-        emit(state.copyWith(status: TasksStatus.success, tasks: tasks));
+        emit(
+          state.copyWith(
+            status: TasksStatus.success,
+            tasks: tasks,
+            allTasks: tasks,
+          ),
+        );
         // Update home screen widget with today's tasks
         HomeScreenWidgetService.updateTodayTasks(tasks);
       },
@@ -160,12 +166,22 @@ class TasksCubit extends Cubit<TasksState> {
       ),
       (tasks) {
         if (tagName == null) {
-          emit(state.copyWith(status: TasksStatus.success, tasks: tasks));
+          emit(
+            state.copyWith(
+              status: TasksStatus.success,
+              tasks: tasks,
+              allTasks: tasks,
+            ),
+          );
         } else {
           final filteredTasks =
               tasks.where((t) => t.tags.contains(tagName)).toList();
           emit(
-            state.copyWith(status: TasksStatus.success, tasks: filteredTasks),
+            state.copyWith(
+              status: TasksStatus.success,
+              tasks: filteredTasks,
+              allTasks: tasks,
+            ),
           );
         }
       },

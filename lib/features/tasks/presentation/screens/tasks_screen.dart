@@ -14,6 +14,12 @@ import 'package:voclio_app/features/tasks/presentation/screens/task_details_scre
 import '../bloc/tasks_cubit.dart';
 import '../widgets/task_tile.dart';
 
+int _taskCountForTag(TasksState state, String? tagName) {
+  final source = state.allTasks.isNotEmpty ? state.allTasks : state.tasks;
+  if (tagName == null) return source.length;
+  return source.where((t) => t.tags.contains(tagName)).length;
+}
+
 class TasksScreen extends StatelessWidget {
   const TasksScreen({super.key});
 
@@ -157,21 +163,23 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                     BlocBuilder<TasksCubit, TasksState>(
                       builder: (context, state) {
                         return SizedBox(
-                          height: 42.h,
+                          height: 32.h,
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             physics: const BouncingScrollPhysics(),
                             children: [
-                              HomeFilterPill(
+                              HomeCountedFilterPill(
                                 label: 'All',
+                                count: _taskCountForTag(state, null),
                                 selected: state.selectedTagName == null,
                                 onTap: () => context
                                     .read<TasksCubit>()
                                     .filterByTag(null),
                               ),
                               ...state.availableTags.map(
-                                (tag) => HomeFilterPill(
+                                (tag) => HomeCountedFilterPill(
                                   label: tag.name,
+                                  count: _taskCountForTag(state, tag.name),
                                   selected: state.selectedTagName == tag.name,
                                   onTap: () => context
                                       .read<TasksCubit>()
