@@ -54,3 +54,16 @@ class TranscribeVoice extends VoiceEvent {
   @override
   List<Object?> get props => [id];
 }
+
+class UpdateTranscription extends VoiceEvent {
+  final String recordingId;
+  final String transcription;
+
+  const UpdateTranscription({
+    required this.recordingId,
+    required this.transcription,
+  });
+
+  @override
+  List<Object?> get props => [recordingId, transcription];
+}

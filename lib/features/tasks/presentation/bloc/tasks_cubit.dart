@@ -272,13 +272,9 @@ class TasksCubit extends Cubit<TasksState> {
 
     final task = state.tasks[taskIndex];
     final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
-    
+
     // 2. Optimistic UI update with temporary subtask
-    final tempSubtask = SubTask(
-      id: tempId,
-      title: title,
-      isDone: false,
-    );
+    final tempSubtask = SubTask(id: tempId, title: title, isDone: false);
     final updatedTask = task.copyWith(
       subtasks: [...task.subtasks, tempSubtask],
     );
@@ -288,7 +284,11 @@ class TasksCubit extends Cubit<TasksState> {
     emit(state.copyWith(tasks: updatedTasks));
 
     // 3. Call API
-    final result = await createSubtaskUseCase(taskId, title, task.subtasks.length);
+    final result = await createSubtaskUseCase(
+      taskId,
+      title,
+      task.subtasks.length,
+    );
 
     result.fold(
       (failure) {
@@ -299,7 +299,7 @@ class TasksCubit extends Cubit<TasksState> {
         final revertedTasks = List<TaskEntity>.from(state.tasks);
         final idx = revertedTasks.indexWhere((t) => t.id == taskId);
         if (idx != -1) revertedTasks[idx] = revertedTask;
-        
+
         emit(
           state.copyWith(
             status: TasksStatus.failure,
@@ -314,18 +314,21 @@ class TasksCubit extends Cubit<TasksState> {
         final idx = currentTasks.indexWhere((t) => t.id == taskId);
         if (idx != -1) {
           final currentTask = currentTasks[idx];
-          final newSubtasks = currentTask.subtasks.map((s) {
-            if (s.id == tempId) {
-              return SubTask(
-                id: subtaskEntity.id,
-                title: subtaskEntity.title,
-                isDone: subtaskEntity.completed,
-              );
-            }
-            return s;
-          }).toList();
+          final newSubtasks =
+              currentTask.subtasks.map((s) {
+                if (s.id == tempId) {
+                  return SubTask(
+                    id: subtaskEntity.id,
+                    title: subtaskEntity.title,
+                    isDone: subtaskEntity.completed,
+                  );
+                }
+                return s;
+              }).toList();
           currentTasks[idx] = currentTask.copyWith(subtasks: newSubtasks);
-          emit(state.copyWith(tasks: currentTasks, status: TasksStatus.success));
+          emit(
+            state.copyWith(tasks: currentTasks, status: TasksStatus.success),
+          );
         }
       },
     );

@@ -16,19 +16,19 @@ class TextApp extends StatelessWidget {
 
   /// The text content to display
   final String text;
-  
+
   /// The text style to apply
   final TextStyle theme;
-  
+
   /// Maximum number of lines for the text
   final int? maxLines;
-  
+
   /// Whether the text should break at soft line breaks
   final bool? softWrap;
-  
+
   /// How visual overflow should be handled
   final TextOverflow? textOverflow;
-  
+
   /// How the text should be aligned horizontally
   final TextAlign? textAlign;
 

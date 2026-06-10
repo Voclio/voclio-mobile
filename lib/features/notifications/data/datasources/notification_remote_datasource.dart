@@ -28,10 +28,14 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   @override
   Future<NotificationModel> getNotificationById(int id) async {
     try {
-      final response = await apiClient.get(ApiEndpoints.notificationById(id.toString()));
+      final response = await apiClient.get(
+        ApiEndpoints.notificationById(id.toString()),
+      );
       final rawData = response.data;
-      
-      if (rawData is Map && rawData['data'] is Map && rawData['data']['notification'] != null) {
+
+      if (rawData is Map &&
+          rawData['data'] is Map &&
+          rawData['data']['notification'] != null) {
         return NotificationModel.fromJson(rawData['data']['notification']);
       } else if (rawData is Map && rawData['data'] != null) {
         return NotificationModel.fromJson(rawData['data']);

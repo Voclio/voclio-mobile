@@ -57,10 +57,11 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => BlocProvider.value(
-        value: context.read<TasksCubit>(),
-        child: const AddTaskBottomSheet(),
-      ),
+      builder:
+          (context) => BlocProvider.value(
+            value: context.read<TasksCubit>(),
+            child: const AddTaskBottomSheet(),
+          ),
     ).then((_) {
       // Refresh calendar after adding task
       context.read<CalendarCubit>().loadMonth(
@@ -70,7 +71,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     });
   }
 
-  void _navigateToTaskDetails(BuildContext context, CalendarTaskEntity calendarTask) {
+  void _navigateToTaskDetails(
+    BuildContext context,
+    CalendarTaskEntity calendarTask,
+  ) {
     // Convert CalendarTaskEntity to TaskEntity for the details screen
     final task = TaskEntity(
       id: calendarTask.id.toString(),
@@ -80,14 +84,15 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       isDone: calendarTask.isCompleted,
       priority: _getPriorityEnum(calendarTask.priority),
     );
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: context.read<TasksCubit>(),
-          child: TaskDetailScreen(task: task),
-        ),
+        builder:
+            (_) => BlocProvider.value(
+              value: context.read<TasksCubit>(),
+              child: TaskDetailScreen(task: task),
+            ),
       ),
     ).then((_) {
       // Refresh calendar after returning from task details
@@ -114,7 +119,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   Future<void> _connectGoogleCalendar(BuildContext context) async {
     final cubit = context.read<CalendarCubit>();
     final urlEntity = await cubit.getGoogleConnectUrl();
-    
+
     if (urlEntity != null && urlEntity.authUrl.isNotEmpty) {
       final uri = Uri.parse(urlEntity.authUrl);
       if (await canLaunchUrl(uri)) {
@@ -132,23 +137,24 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   Future<void> _disconnectGoogleCalendar(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Disconnect Google Calendar?'),
-        content: const Text(
-          'This will remove the Google Calendar sync. Your Google events will no longer appear in the calendar.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Disconnect Google Calendar?'),
+            content: const Text(
+              'This will remove the Google Calendar sync. Your Google events will no longer appear in the calendar.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Disconnect'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Disconnect'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true && context.mounted) {
@@ -159,7 +165,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   Future<void> _connectWebex(BuildContext context) async {
     final cubit = context.read<CalendarCubit>();
     final urlEntity = await cubit.getWebexConnectUrl();
-    
+
     if (urlEntity != null && urlEntity.authUrl.isNotEmpty) {
       final uri = Uri.parse(urlEntity.authUrl);
       if (await canLaunchUrl(uri)) {
@@ -177,23 +183,24 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   Future<void> _disconnectWebex(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Disconnect Webex?'),
-        content: const Text(
-          'This will remove the Webex sync. Your Webex meetings will no longer appear in the calendar.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Disconnect Webex?'),
+            content: const Text(
+              'This will remove the Webex sync. Your Webex meetings will no longer appear in the calendar.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Disconnect'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Disconnect'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true && context.mounted) {
@@ -201,100 +208,112 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     }
   }
 
-  void _showGoogleCalendarMenu(BuildContext context, ThemeData theme, bool isDark) {
+  void _showGoogleCalendarMenu(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.scaffoldBackgroundColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.all(20.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      builder:
+          (ctx) => Padding(
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.all(10.r),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.event_available,
-                    color: Colors.green,
-                    size: 24.sp,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Google Calendar Connected',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10.r),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                      Text(
-                        'Your events are syncing',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: theme.colorScheme.secondary,
-                        ),
+                      child: Icon(
+                        Icons.event_available,
+                        color: Colors.green,
+                        size: 24.sp,
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Google Calendar Connected',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Your events are syncing',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: theme.colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+                SizedBox(height: 20.h),
+                // Toggle show Google events
+                ListTile(
+                  leading: Icon(
+                    _showGoogleEvents ? Icons.visibility : Icons.visibility_off,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: Text(
+                    _showGoogleEvents
+                        ? 'Hide Google Events'
+                        : 'Show Google Events',
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _showGoogleEvents = !_showGoogleEvents;
+                    });
+                    Navigator.pop(ctx);
+                  },
+                ),
+                // Refresh events
+                ListTile(
+                  leading: Icon(
+                    Icons.refresh,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text('Refresh Events'),
+                  onTap: () {
+                    context.read<CalendarCubit>().loadMonth(
+                      _focusedDay.year,
+                      _focusedDay.month,
+                    );
+                    Navigator.pop(ctx);
+                  },
+                ),
+                // Disconnect
+                ListTile(
+                  leading: const Icon(Icons.link_off, color: Colors.red),
+                  title: const Text(
+                    'Disconnect Google Calendar',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _disconnectGoogleCalendar(context);
+                  },
+                ),
+                SizedBox(height: 10.h),
               ],
             ),
-            SizedBox(height: 20.h),
-            // Toggle show Google events
-            ListTile(
-              leading: Icon(
-                _showGoogleEvents ? Icons.visibility : Icons.visibility_off,
-                color: theme.colorScheme.primary,
-              ),
-              title: Text(_showGoogleEvents ? 'Hide Google Events' : 'Show Google Events'),
-              onTap: () {
-                setState(() {
-                  _showGoogleEvents = !_showGoogleEvents;
-                });
-                Navigator.pop(ctx);
-              },
-            ),
-            // Refresh events
-            ListTile(
-              leading: Icon(Icons.refresh, color: theme.colorScheme.primary),
-              title: const Text('Refresh Events'),
-              onTap: () {
-                context.read<CalendarCubit>().loadMonth(
-                  _focusedDay.year,
-                  _focusedDay.month,
-                );
-                Navigator.pop(ctx);
-              },
-            ),
-            // Disconnect
-            ListTile(
-              leading: const Icon(Icons.link_off, color: Colors.red),
-              title: const Text(
-                'Disconnect Google Calendar',
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                _disconnectGoogleCalendar(context);
-              },
-            ),
-            SizedBox(height: 10.h),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -305,79 +324,83 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.all(20.r),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      builder:
+          (ctx) => Padding(
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.all(10.r),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.video_call,
-                    color: Colors.blue,
-                    size: 24.sp,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Webex Connected',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(10.r),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                      Text(
-                        'Your meetings are syncing',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: theme.colorScheme.secondary,
-                        ),
+                      child: Icon(
+                        Icons.video_call,
+                        color: Colors.blue,
+                        size: 24.sp,
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Webex Connected',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Your meetings are syncing',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: theme.colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+                SizedBox(height: 20.h),
+                // Refresh meetings
+                ListTile(
+                  leading: Icon(
+                    Icons.refresh,
+                    color: theme.colorScheme.primary,
+                  ),
+                  title: const Text('Refresh Meetings'),
+                  onTap: () {
+                    context.read<CalendarCubit>().loadMonth(
+                      _focusedDay.year,
+                      _focusedDay.month,
+                    );
+                    Navigator.pop(ctx);
+                  },
+                ),
+                // Disconnect
+                ListTile(
+                  leading: const Icon(Icons.link_off, color: Colors.red),
+                  title: const Text(
+                    'Disconnect Webex',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _disconnectWebex(context);
+                  },
+                ),
+                SizedBox(height: 10.h),
               ],
             ),
-            SizedBox(height: 20.h),
-            // Refresh meetings
-            ListTile(
-              leading: Icon(Icons.refresh, color: theme.colorScheme.primary),
-              title: const Text('Refresh Meetings'),
-              onTap: () {
-                context.read<CalendarCubit>().loadMonth(
-                  _focusedDay.year,
-                  _focusedDay.month,
-                );
-                Navigator.pop(ctx);
-              },
-            ),
-            // Disconnect
-            ListTile(
-              leading: const Icon(Icons.link_off, color: Colors.red),
-              title: const Text(
-                'Disconnect Webex',
-                style: TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                _disconnectWebex(context);
-              },
-            ),
-            SizedBox(height: 10.h),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -389,7 +412,9 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       case 'completed':
         return tasks.where((t) => t.isCompleted).toList();
       case 'overdue':
-        return tasks.where((t) => !t.isCompleted && t.dueDate.isBefore(now)).toList();
+        return tasks
+            .where((t) => !t.isCompleted && t.dueDate.isBefore(now))
+            .toList();
       default:
         return tasks;
     }
@@ -417,10 +442,11 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
         actions: [
           // Google Calendar toggle
           BlocBuilder<CalendarCubit, CalendarState>(
-            buildWhen: (prev, curr) =>
-                curr is GoogleCalendarConnected ||
-                curr is GoogleCalendarDisconnected ||
-                curr is CalendarLoaded,
+            buildWhen:
+                (prev, curr) =>
+                    curr is GoogleCalendarConnected ||
+                    curr is GoogleCalendarDisconnected ||
+                    curr is CalendarLoaded,
             builder: (context, state) {
               bool isConnected = false;
               if (state is CalendarLoaded) {
@@ -432,9 +458,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               return Container(
                 margin: EdgeInsets.only(right: 4.w),
                 decoration: BoxDecoration(
-                  color: isConnected
-                      ? Colors.green.withOpacity(0.15)
-                      : isDark
+                  color:
+                      isConnected
+                          ? Colors.green.withOpacity(0.15)
+                          : isDark
                           ? Colors.white10
                           : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(12.r),
@@ -442,7 +469,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 child: IconButton(
                   icon: Icon(
                     isConnected ? Icons.event_available : Icons.event_busy,
-                    color: isConnected ? Colors.green : theme.colorScheme.secondary,
+                    color:
+                        isConnected
+                            ? Colors.green
+                            : theme.colorScheme.secondary,
                     size: 18.sp,
                   ),
                   onPressed: () {
@@ -459,10 +489,11 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           ),
           // Webex toggle
           BlocBuilder<CalendarCubit, CalendarState>(
-            buildWhen: (prev, curr) =>
-                curr is WebexConnected ||
-                curr is WebexDisconnected ||
-                curr is CalendarLoaded,
+            buildWhen:
+                (prev, curr) =>
+                    curr is WebexConnected ||
+                    curr is WebexDisconnected ||
+                    curr is CalendarLoaded,
             builder: (context, state) {
               bool isConnected = false;
               if (state is CalendarLoaded) {
@@ -474,9 +505,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               return Container(
                 margin: EdgeInsets.only(right: 4.w),
                 decoration: BoxDecoration(
-                  color: isConnected
-                      ? Colors.blue.withOpacity(0.15)
-                      : isDark
+                  color:
+                      isConnected
+                          ? Colors.blue.withOpacity(0.15)
+                          : isDark
                           ? Colors.white10
                           : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(12.r),
@@ -484,7 +516,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 child: IconButton(
                   icon: Icon(
                     isConnected ? Icons.video_call : Icons.video_call_outlined,
-                    color: isConnected ? Colors.blue : theme.colorScheme.secondary,
+                    color:
+                        isConnected ? Colors.blue : theme.colorScheme.secondary,
                     size: 18.sp,
                   ),
                   onPressed: () {
@@ -511,8 +544,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 _calendarFormat == CalendarFormat.month
                     ? Icons.calendar_view_week
                     : _calendarFormat == CalendarFormat.twoWeeks
-                        ? Icons.calendar_view_day
-                        : Icons.calendar_month,
+                    ? Icons.calendar_view_day
+                    : Icons.calendar_month,
                 color: theme.colorScheme.onSurface,
                 size: 18.sp,
               ),
@@ -640,196 +673,209 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 children: [
                   // Month/Year Display
                   Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
-                        vertical: 10.h,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            DateFormat('MMMM yyyy').format(_focusedDay),
-                            style: theme.textTheme.titleMedium?.copyWith(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 10.h,
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              DateFormat('MMMM yyyy').format(_focusedDay),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .slideX(begin: -0.1, end: 0),
+
+                  // Calendar Container
+                  Container(
+                        margin: EdgeInsets.symmetric(horizontal: 16.w),
+                        padding: EdgeInsets.all(12.r),
+                        decoration: BoxDecoration(
+                          color:
+                              isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : Colors.white,
+                          borderRadius: BorderRadius.circular(24.r),
+                          boxShadow:
+                              isDark
+                                  ? []
+                                  : [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                        ),
+                        child: TableCalendar(
+                          firstDay: DateTime.utc(2020, 1, 1),
+                          lastDay: DateTime.utc(2030, 12, 31),
+                          focusedDay: _focusedDay,
+                          calendarFormat: _calendarFormat,
+                          selectedDayPredicate:
+                              (day) => isSameDay(effectiveSelection, day),
+                          eventLoader: (day) {
+                            if (day.month != monthData.month) return [];
+                            return monthData.eventsByDay[day.day]?.tasks ?? [];
+                          },
+                          onDaySelected: (selectedDay, focusedDay) {
+                            setState(() {
+                              _selectedDay = selectedDay;
+                              _focusedDay = focusedDay;
+                            });
+                          },
+                          onFormatChanged: (format) {
+                            setState(() {
+                              _calendarFormat = format;
+                            });
+                          },
+                          onPageChanged: (focusedDay) {
+                            setState(() {
+                              _focusedDay = focusedDay;
+                              _selectedDay =
+                                  null; // Reset selection so listener can pick the best day for the new month
+                            });
+                            context.read<CalendarCubit>().loadMonth(
+                              focusedDay.year,
+                              focusedDay.month,
+                            );
+                          },
+                          calendarStyle: CalendarStyle(
+                            todayDecoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            todayTextStyle: TextStyle(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14.sp,
+                            ),
+                            selectedDecoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            markerDecoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            markersMaxCount: 1,
+                            outsideDaysVisible: false,
+                            defaultTextStyle: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            weekendTextStyle: TextStyle(
+                              color: theme.colorScheme.primary.withOpacity(0.7),
                             ),
                           ),
-                        ],
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 400.ms)
-                    .slideX(begin: -0.1, end: 0),
-
-                // Calendar Container
-                Container(
-                      margin: EdgeInsets.symmetric(horizontal: 16.w),
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color:
-                            isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.white,
-                        borderRadius: BorderRadius.circular(24.r),
-                        boxShadow:
-                            isDark
-                                ? []
-                                : [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                      ),
-                      child: TableCalendar(
-                        firstDay: DateTime.utc(2020, 1, 1),
-                        lastDay: DateTime.utc(2030, 12, 31),
-                        focusedDay: _focusedDay,
-                        calendarFormat: _calendarFormat,
-                        selectedDayPredicate:
-                            (day) => isSameDay(effectiveSelection, day),
-                        eventLoader: (day) {
-                          if (day.month != monthData.month) return [];
-                          return monthData.eventsByDay[day.day]?.tasks ?? [];
-                        },
-                        onDaySelected: (selectedDay, focusedDay) {
-                          setState(() {
-                            _selectedDay = selectedDay;
-                            _focusedDay = focusedDay;
-                          });
-                        },
-                        onFormatChanged: (format) {
-                          setState(() {
-                            _calendarFormat = format;
-                          });
-                        },
-                        onPageChanged: (focusedDay) {
-                          setState(() {
-                            _focusedDay = focusedDay;
-                            _selectedDay =
-                                null; // Reset selection so listener can pick the best day for the new month
-                          });
-                          context.read<CalendarCubit>().loadMonth(
-                            focusedDay.year,
-                            focusedDay.month,
-                          );
-                        },
-                        calendarStyle: CalendarStyle(
-                          todayDecoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          todayTextStyle: TextStyle(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          selectedDecoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          markerDecoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          markersMaxCount: 1,
-                          outsideDaysVisible: false,
-                          defaultTextStyle: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          weekendTextStyle: TextStyle(
-                            color: theme.colorScheme.primary.withOpacity(0.7),
-                          ),
-                        ),
-                        headerStyle: const HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          titleTextStyle: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    )
-                    .animate()
-                    .fadeIn(duration: 600.ms)
-                    .scale(begin: const Offset(0.98, 0.98)),
-
-                SizedBox(height: 20.h),
-
-                // Selected Day info with filter chips
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            isSameDay(effectiveSelection, DateTime.now())
-                                ? 'Today\'s Tasks'
-                                : 'Tasks for ${DateFormat('MMM d').format(effectiveSelection)}',
-                            style: theme.textTheme.titleLarge?.copyWith(
+                          headerStyle: const HeaderStyle(
+                            formatButtonVisible: false,
+                            titleCentered: true,
+                            titleTextStyle: TextStyle(
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontSize: 18.sp,
                             ),
                           ),
-                          if (selectedDayEvents != null &&
-                              selectedDayEvents.count > 0)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10.w,
-                                vertical: 4.h,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .scale(begin: const Offset(0.98, 0.98)),
+
+                  SizedBox(height: 20.h),
+
+                  // Selected Day info with filter chips
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isSameDay(effectiveSelection, DateTime.now())
+                                  ? 'Today\'s Tasks'
+                                  : 'Tasks for ${DateFormat('MMM d').format(effectiveSelection)}',
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18.sp,
                               ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: Text(
-                                '${_getFilteredTasks(selectedDayEvents.tasks).length}/${selectedDayEvents.count}',
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12.sp,
+                            ),
+                            if (selectedDayEvents != null &&
+                                selectedDayEvents.count > 0)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10.w,
+                                  vertical: 4.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(
+                                    0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                ),
+                                child: Text(
+                                  '${_getFilteredTasks(selectedDayEvents.tasks).length}/${selectedDayEvents.count}',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12.sp,
+                                  ),
                                 ),
                               ),
-                            ),
+                          ],
+                        ),
+                        if (selectedDayEvents != null &&
+                            selectedDayEvents.tasks.isNotEmpty) ...[
+                          SizedBox(height: 12.h),
+                          _buildFilterChips(
+                            theme,
+                            isDark,
+                            selectedDayEvents.tasks,
+                          ),
                         ],
-                      ),
-                      if (selectedDayEvents != null && selectedDayEvents.tasks.isNotEmpty) ...[
-                        SizedBox(height: 12.h),
-                        _buildFilterChips(theme, isDark, selectedDayEvents.tasks),
                       ],
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+                    ),
+                  ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
 
-                SizedBox(height: 12.h),
+                  SizedBox(height: 12.h),
 
-                // Today's meetings section (if connected and it's today)
-                if (isSameDay(effectiveSelection, DateTime.now()) &&
-                    state.todayMeetings != null &&
-                    state.todayMeetings!.isNotEmpty)
-                  _buildTodayMeetingsSection(state.todayMeetings!, theme, isDark),
+                  // Today's meetings section (if connected and it's today)
+                  if (isSameDay(effectiveSelection, DateTime.now()) &&
+                      state.todayMeetings != null &&
+                      state.todayMeetings!.isNotEmpty)
+                    _buildTodayMeetingsSection(
+                      state.todayMeetings!,
+                      theme,
+                      isDark,
+                    ),
 
-                // Calendar integrations banner (if not all connected)
-                if ((state.googleStatus == null || !state.googleStatus!.isConnected) ||
-                    (state.webexStatus == null || !state.webexStatus!.isConnected))
-                  _buildCalendarIntegrationsBanner(context, theme, isDark, state),
+                  // Calendar integrations banner (if not all connected)
+                  if ((state.googleStatus == null ||
+                          !state.googleStatus!.isConnected) ||
+                      (state.webexStatus == null ||
+                          !state.webexStatus!.isConnected))
+                    _buildCalendarIntegrationsBanner(
+                      context,
+                      theme,
+                      isDark,
+                      state,
+                    ),
 
-                // Events List
-                _buildEventsList(
-                  selectedDayEvents,
-                  theme,
-                  isDark,
-                  context,
-                ),
-                
-                SizedBox(height: 100.h), // Space for bottom nav
-              ],
-            ),
-          );
+                  // Events List
+                  _buildEventsList(selectedDayEvents, theme, isDark, context),
+
+                  SizedBox(height: 100.h), // Space for bottom nav
+                ],
+              ),
+            );
           }
 
           return const SizedBox();
@@ -838,11 +884,16 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     );
   }
 
-  Widget _buildFilterChips(ThemeData theme, bool isDark, List<CalendarTaskEntity> tasks) {
+  Widget _buildFilterChips(
+    ThemeData theme,
+    bool isDark,
+    List<CalendarTaskEntity> tasks,
+  ) {
     final now = DateTime.now();
     final pendingCount = tasks.where((t) => !t.isCompleted).length;
     final completedCount = tasks.where((t) => t.isCompleted).length;
-    final overdueCount = tasks.where((t) => !t.isCompleted && t.dueDate.isBefore(now)).length;
+    final overdueCount =
+        tasks.where((t) => !t.isCompleted && t.dueDate.isBefore(now)).length;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -851,15 +902,33 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
         children: [
           _buildFilterChip('All', 'all', tasks.length, theme, isDark),
           SizedBox(width: 8.w),
-          _buildFilterChip('Pending', 'pending', pendingCount, theme, isDark,
-              color: Colors.orange),
+          _buildFilterChip(
+            'Pending',
+            'pending',
+            pendingCount,
+            theme,
+            isDark,
+            color: Colors.orange,
+          ),
           SizedBox(width: 8.w),
-          _buildFilterChip('Done', 'completed', completedCount, theme, isDark,
-              color: Colors.green),
+          _buildFilterChip(
+            'Done',
+            'completed',
+            completedCount,
+            theme,
+            isDark,
+            color: Colors.green,
+          ),
           if (overdueCount > 0) ...[
             SizedBox(width: 8.w),
-            _buildFilterChip('Overdue', 'overdue', overdueCount, theme, isDark,
-                color: Colors.red),
+            _buildFilterChip(
+              'Overdue',
+              'overdue',
+              overdueCount,
+              theme,
+              isDark,
+              color: Colors.red,
+            ),
           ],
         ],
       ),
@@ -887,9 +956,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isSelected
-              ? chipColor.withOpacity(0.15)
-              : isDark
+          color:
+              isSelected
+                  ? chipColor.withOpacity(0.15)
+                  : isDark
                   ? Colors.white.withOpacity(0.05)
                   : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(16.r),
@@ -913,9 +983,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 1.h),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? chipColor.withOpacity(0.2)
-                    : theme.colorScheme.secondary.withOpacity(0.1),
+                color:
+                    isSelected
+                        ? chipColor.withOpacity(0.2)
+                        : theme.colorScheme.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -952,22 +1023,25 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
           borderRadius: BorderRadius.circular(20.r),
           border: Border.all(
-            color: isOverdue
-                ? Colors.red.withOpacity(0.4)
-                : priorityColor.withOpacity(0.3),
+            color:
+                isOverdue
+                    ? Colors.red.withOpacity(0.4)
+                    : priorityColor.withOpacity(0.3),
             width: 1.5,
           ),
-          boxShadow: isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: isOverdue
-                        ? Colors.red.withOpacity(0.08)
-                        : priorityColor.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          boxShadow:
+              isDark
+                  ? []
+                  : [
+                    BoxShadow(
+                      color:
+                          isOverdue
+                              ? Colors.red.withOpacity(0.08)
+                              : priorityColor.withOpacity(0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
         ),
         child: Row(
           children: [
@@ -975,15 +1049,17 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             Container(
               padding: EdgeInsets.all(10.r),
               decoration: BoxDecoration(
-                color: (isOverdue ? Colors.red : priorityColor).withOpacity(0.1),
+                color: (isOverdue ? Colors.red : priorityColor).withOpacity(
+                  0.1,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 task.isCompleted
                     ? Icons.check_circle_rounded
                     : isOverdue
-                        ? Icons.warning_amber_rounded
-                        : Icons.task_alt_rounded,
+                    ? Icons.warning_amber_rounded
+                    : Icons.task_alt_rounded,
                 color: isOverdue ? Colors.red : priorityColor,
                 size: 20.sp,
               ),
@@ -1002,11 +1078,14 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w600,
-                            color: task.isCompleted
-                                ? theme.colorScheme.secondary
-                                : theme.colorScheme.onSurface,
+                            color:
+                                task.isCompleted
+                                    ? theme.colorScheme.secondary
+                                    : theme.colorScheme.onSurface,
                             decoration:
-                                task.isCompleted ? TextDecoration.lineThrough : null,
+                                task.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : null,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1014,7 +1093,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       ),
                       if (isOverdue)
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
                           margin: EdgeInsets.only(left: 8.w),
                           decoration: BoxDecoration(
                             color: Colors.red.withOpacity(0.1),
@@ -1037,20 +1119,30 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       Icon(
                         Icons.access_time_rounded,
                         size: 13.sp,
-                        color: isOverdue ? Colors.red : theme.colorScheme.secondary,
+                        color:
+                            isOverdue
+                                ? Colors.red
+                                : theme.colorScheme.secondary,
                       ),
                       SizedBox(width: 4.w),
                       Text(
                         'Due: ${DateFormat('hh:mm a').format(task.dueDate)}',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: isOverdue ? Colors.red : theme.colorScheme.secondary,
-                          fontWeight: isOverdue ? FontWeight.w500 : FontWeight.normal,
+                          color:
+                              isOverdue
+                                  ? Colors.red
+                                  : theme.colorScheme.secondary,
+                          fontWeight:
+                              isOverdue ? FontWeight.w500 : FontWeight.normal,
                         ),
                       ),
                       SizedBox(width: 10.w),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 6.w,
+                          vertical: 2.h,
+                        ),
                         decoration: BoxDecoration(
                           color: priorityColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6.r),
@@ -1093,12 +1185,16 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     final googleEvents = selectedDayEvents?.googleEvents ?? [];
 
     final filteredTasks = _getFilteredTasks(tasks);
-    final hasAnyEvents = filteredTasks.isNotEmpty ||
+    final hasAnyEvents =
+        filteredTasks.isNotEmpty ||
         reminders.isNotEmpty ||
         (_showGoogleEvents && googleEvents.isNotEmpty);
 
     if (!hasAnyEvents) {
-      return _buildEmptyState(theme, isDark).animate().fadeIn(duration: 400.ms, delay: 300.ms);
+      return _buildEmptyState(
+        theme,
+        isDark,
+      ).animate().fadeIn(duration: 400.ms, delay: 300.ms);
     }
 
     return ListView(
@@ -1182,12 +1278,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             ),
           ),
           ...filteredTasks.asMap().entries.map(
-            (entry) => _buildTaskCard(
-              entry.value,
-              theme,
-              isDark,
-              context,
-            ).animate(delay: (entry.key * 80).ms)
+            (entry) => _buildTaskCard(entry.value, theme, isDark, context)
+                .animate(delay: (entry.key * 80).ms)
                 .fadeIn(duration: 300.ms)
                 .slideX(begin: 0.1, end: 0),
           ),
@@ -1242,10 +1334,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           _selectedFilter == 'all'
               ? 'Tap + to add a new task'
               : 'Try changing the filter',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: theme.colorScheme.secondary,
-          ),
+          style: TextStyle(fontSize: 14.sp, color: theme.colorScheme.secondary),
         ),
         if (_selectedFilter != 'all') ...[
           SizedBox(height: 16.h),
@@ -1353,12 +1442,14 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     ThemeData theme,
     bool isDark,
   ) {
-    final startTime = event.startTime != null
-        ? DateFormat('hh:mm a').format(event.startTime!)
-        : 'All day';
-    final endTime = event.endTime != null
-        ? DateFormat('hh:mm a').format(event.endTime!)
-        : '';
+    final startTime =
+        event.startTime != null
+            ? DateFormat('hh:mm a').format(event.startTime!)
+            : 'All day';
+    final endTime =
+        event.endTime != null
+            ? DateFormat('hh:mm a').format(event.endTime!)
+            : '';
     final timeText = endTime.isNotEmpty ? '$startTime - $endTime' : startTime;
 
     return Container(
@@ -1367,19 +1458,17 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(
-          color: Colors.blue.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.08),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1.5),
+        boxShadow:
+            isDark
+                ? []
+                : [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
       ),
       child: Row(
         children: [
@@ -1417,7 +1506,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 6.w,
+                        vertical: 2.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6.r),
@@ -1460,7 +1552,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         color: theme.colorScheme.secondary,
                       ),
                     ),
-                    if (event.location != null && event.location!.isNotEmpty) ...[
+                    if (event.location != null &&
+                        event.location!.isNotEmpty) ...[
                       SizedBox(width: 10.w),
                       Icon(
                         Icons.location_on_outlined,
@@ -1528,9 +1621,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: theme.dividerColor.withOpacity(0.3),
-        ),
+        border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1598,14 +1689,18 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       child: Container(
         padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
-          color: isConnected
-              ? color.withOpacity(0.1)
-              : isDark
+          color:
+              isConnected
+                  ? color.withOpacity(0.1)
+                  : isDark
                   ? Colors.white.withOpacity(0.03)
                   : Colors.white,
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color: isConnected ? color.withOpacity(0.3) : theme.dividerColor.withOpacity(0.2),
+            color:
+                isConnected
+                    ? color.withOpacity(0.3)
+                    : theme.dividerColor.withOpacity(0.2),
           ),
         ),
         child: Column(
@@ -1619,11 +1714,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   size: 20.sp,
                 ),
                 if (isConnected)
-                  Icon(
-                    Icons.check_circle,
-                    color: color,
-                    size: 16.sp,
-                  )
+                  Icon(Icons.check_circle, color: color, size: 16.sp)
                 else
                   Icon(
                     Icons.add_circle_outline,
@@ -1679,9 +1770,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           ],
         ),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
-        ),
+        border: Border.all(color: Colors.blue.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -1755,11 +1844,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Row(
             children: [
-              Icon(
-                Icons.videocam_rounded,
-                color: Colors.green,
-                size: 18.sp,
-              ),
+              Icon(Icons.videocam_rounded, color: Colors.green, size: 18.sp),
               SizedBox(width: 8.w),
               Text(
                 "Today's Meetings",
@@ -1799,66 +1884,69 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             itemBuilder: (ctx, index) {
               final meeting = meetings[index];
               return Container(
-                width: 200.w,
-                margin: EdgeInsets.only(right: 12.w),
-                padding: EdgeInsets.all(12.r),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.green.withOpacity(0.1),
-                      Colors.blue.withOpacity(0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: Colors.green.withOpacity(0.2),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      meeting.title,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.access_time_rounded,
-                          size: 12.sp,
-                          color: theme.colorScheme.secondary,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          meeting.startTime != null
-                              ? DateFormat('hh:mm a').format(meeting.startTime!)
-                              : 'All day',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ),
-                        if (meeting.meetLink != null) ...[
-                          const Spacer(),
-                          Icon(
-                            Icons.videocam_rounded,
-                            size: 14.sp,
-                            color: Colors.green,
-                          ),
+                    width: 200.w,
+                    margin: EdgeInsets.only(right: 12.w),
+                    padding: EdgeInsets.all(12.r),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.green.withOpacity(0.1),
+                          Colors.blue.withOpacity(0.05),
                         ],
+                      ),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(color: Colors.green.withOpacity(0.2)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          meeting.title,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time_rounded,
+                              size: 12.sp,
+                              color: theme.colorScheme.secondary,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              meeting.startTime != null
+                                  ? DateFormat(
+                                    'hh:mm a',
+                                  ).format(meeting.startTime!)
+                                  : 'All day',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: theme.colorScheme.secondary,
+                              ),
+                            ),
+                            if (meeting.meetLink != null) ...[
+                              const Spacer(),
+                              Icon(
+                                Icons.videocam_rounded,
+                                size: 14.sp,
+                                color: Colors.green,
+                              ),
+                            ],
+                          ],
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ).animate(delay: (index * 100).ms).fadeIn().slideX(begin: 0.2, end: 0);
+                  )
+                  .animate(delay: (index * 100).ms)
+                  .fadeIn()
+                  .slideX(begin: 0.2, end: 0);
             },
           ),
         ),

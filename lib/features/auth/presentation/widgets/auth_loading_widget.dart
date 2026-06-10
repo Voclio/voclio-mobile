@@ -9,11 +9,7 @@ class AuthLoadingWidget extends StatefulWidget {
   final String message;
   final double? size;
 
-  const AuthLoadingWidget({
-    super.key,
-    this.message = 'Loading...',
-    this.size,
-  });
+  const AuthLoadingWidget({super.key, this.message = 'Loading...', this.size});
 
   @override
   State<AuthLoadingWidget> createState() => _AuthLoadingWidgetState();
@@ -31,13 +27,9 @@ class _AuthLoadingWidgetState extends State<AuthLoadingWidget>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    _animation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.repeat(reverse: true);
   }
 
@@ -71,8 +63,12 @@ class _AuthLoadingWidgetState extends State<AuthLoadingWidget>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      colors.primary!.withOpacity(0.3 + (_animation.value * 0.4)),
-                      colors.accent!.withOpacity(0.2 + (_animation.value * 0.3)),
+                      colors.primary!.withOpacity(
+                        0.3 + (_animation.value * 0.4),
+                      ),
+                      colors.accent!.withOpacity(
+                        0.2 + (_animation.value * 0.3),
+                      ),
                     ],
                   ),
                 ),
@@ -137,13 +133,9 @@ class _AuthShimmerWidgetState extends State<AuthShimmerWidget>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _animation = Tween<double>(
-      begin: -1.0,
-      end: 2.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _animation = Tween<double>(begin: -1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.repeat();
   }
 
@@ -168,11 +160,12 @@ class _AuthShimmerWidgetState extends State<AuthShimmerWidget>
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              stops: [
-                _animation.value - 0.3,
-                _animation.value,
-                _animation.value + 0.3,
-              ].map((stop) => stop.clamp(0.0, 1.0)).toList(),
+              stops:
+                  [
+                    _animation.value - 0.3,
+                    _animation.value,
+                    _animation.value + 0.3,
+                  ].map((stop) => stop.clamp(0.0, 1.0)).toList(),
               colors: [
                 colors.background!.withOpacity(0.3),
                 colors.primary!.withOpacity(0.1),
@@ -189,10 +182,7 @@ class _AuthShimmerWidgetState extends State<AuthShimmerWidget>
 class AuthLoadingDialog extends StatefulWidget {
   final String message;
 
-  const AuthLoadingDialog({
-    super.key,
-    this.message = 'Loading...',
-  });
+  const AuthLoadingDialog({super.key, this.message = 'Loading...'});
 
   @override
   State<AuthLoadingDialog> createState() => _AuthLoadingDialogState();
@@ -223,7 +213,7 @@ class _AuthLoadingDialogState extends State<AuthLoadingDialog> {
   @override
   Widget build(BuildContext context) {
     final showWarning = _secondsElapsed >= 5;
-    
+
     return Center(
       child: Material(
         color: Colors.transparent,
@@ -244,17 +234,12 @@ class _AuthLoadingDialogState extends State<AuthLoadingDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AuthLoadingWidget(
-                message: widget.message,
-              ),
+              AuthLoadingWidget(message: widget.message),
               if (showWarning) ...[
                 SizedBox(height: 16.h),
                 Text(
                   'Taking longer than expected...',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.orange,
-                  ),
+                  style: TextStyle(fontSize: 12.sp, color: Colors.orange),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8.h),

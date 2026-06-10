@@ -54,10 +54,7 @@ class AuthPhoneField extends StatelessWidget {
           showDropdownIcon: true,
           dropdownIconPosition: IconPosition.trailing,
           flagsButtonPadding: EdgeInsets.only(left: 16.w),
-          dropdownIcon: Icon(
-            Icons.arrow_drop_down,
-            color: primaryColor,
-          ),
+          dropdownIcon: Icon(Icons.arrow_drop_down, color: primaryColor),
           style: TextStyle(
             fontSize: isSmall ? 14.sp : 16.sp,
             color: const Color(0xFF1A1A2E),
@@ -71,10 +68,7 @@ class AuthPhoneField extends StatelessWidget {
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w500,
             ),
-            hintStyle: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey.shade400,
-            ),
+            hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey.shade400),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16.r),
               borderSide: BorderSide.none,

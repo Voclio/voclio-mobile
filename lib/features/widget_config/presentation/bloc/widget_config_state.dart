@@ -17,9 +17,7 @@ class WidgetConfigState extends Equatable {
   });
 
   factory WidgetConfigState.initial() {
-    return WidgetConfigState(
-      preferences: WidgetPreferences.defaultConfig(),
-    );
+    return WidgetConfigState(preferences: WidgetPreferences.defaultConfig());
   }
 
   WidgetConfigState copyWith({
@@ -49,5 +47,10 @@ class WidgetConfigState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, preferences, shouldShowSetup, errorMessage];
+  List<Object?> get props => [
+    status,
+    preferences,
+    shouldShowSetup,
+    errorMessage,
+  ];
 }

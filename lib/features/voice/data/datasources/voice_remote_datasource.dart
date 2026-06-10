@@ -8,4 +8,8 @@ abstract class VoiceRemoteDataSource {
   Future<void> createNoteFromVoice(String id);
   Future<void> createTasksFromVoice(String id);
   Future<String> transcribe(String id);
+  Future<void> updateTranscription({
+    required String recordingId,
+    required String transcription,
+  });
 }

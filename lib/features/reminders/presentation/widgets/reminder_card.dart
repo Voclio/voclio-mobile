@@ -36,9 +36,10 @@ class ReminderCard extends StatelessWidget {
           ),
         ],
         border: Border.all(
-          color: !reminder.isActive
-              ? Colors.grey[300]!
-              : isPast
+          color:
+              !reminder.isActive
+                  ? Colors.grey[300]!
+                  : isPast
                   ? Colors.red[200]!
                   : primaryColor.withOpacity(0.2),
           width: 1,
@@ -59,9 +60,10 @@ class ReminderCard extends StatelessWidget {
                   height: 56.w,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: !reminder.isActive
-                          ? [Colors.grey[400]!, Colors.grey[500]!]
-                          : isPast
+                      colors:
+                          !reminder.isActive
+                              ? [Colors.grey[400]!, Colors.grey[500]!]
+                              : isPast
                               ? [Colors.red[300]!, Colors.red[400]!]
                               : [primaryColor.withOpacity(0.8), primaryColor],
                       begin: Alignment.topLeft,
@@ -73,8 +75,8 @@ class ReminderCard extends StatelessWidget {
                         color: (!reminder.isActive
                                 ? Colors.grey
                                 : isPast
-                                    ? Colors.red
-                                    : primaryColor)
+                                ? Colors.red
+                                : primaryColor)
                             .withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
@@ -82,7 +84,9 @@ class ReminderCard extends StatelessWidget {
                     ],
                   ),
                   child: Icon(
-                    isPast ? Icons.notification_important : Icons.notifications_active,
+                    isPast
+                        ? Icons.notification_important
+                        : Icons.notifications_active,
                     color: Colors.white,
                     size: 28.sp,
                   ),
@@ -101,8 +105,9 @@ class ReminderCard extends StatelessWidget {
                               vertical: 4.h,
                             ),
                             decoration: BoxDecoration(
-                              color: _getTypeColor(reminder.reminderType)
-                                  .withOpacity(0.1),
+                              color: _getTypeColor(
+                                reminder.reminderType,
+                              ).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6.r),
                             ),
                             child: Text(
@@ -143,13 +148,16 @@ class ReminderCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
-                          color: !reminder.isActive ? Colors.grey : Colors.black87,
-                          decoration: !reminder.isActive
-                              ? TextDecoration.lineThrough
-                              : null,
+                          color:
+                              !reminder.isActive ? Colors.grey : Colors.black87,
+                          decoration:
+                              !reminder.isActive
+                                  ? TextDecoration.lineThrough
+                                  : null,
                         ),
                       ),
-                      if (reminder.description != null && reminder.description!.isNotEmpty) ...[
+                      if (reminder.description != null &&
+                          reminder.description!.isNotEmpty) ...[
                         SizedBox(height: 4.h),
                         Text(
                           reminder.description!,
@@ -199,10 +207,7 @@ class ReminderCard extends StatelessWidget {
                 ),
                 // Actions
                 PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: Colors.grey[600],
-                  ),
+                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
                   ),
@@ -219,43 +224,50 @@ class ReminderCard extends StatelessWidget {
                         break;
                     }
                   },
-                  itemBuilder: (context) => [
-                    if (reminder.isActive) ...[
-                      PopupMenuItem(
-                        value: 'snooze',
-                        child: Row(
-                          children: [
-                            Icon(Icons.snooze, color: Colors.orange[700]),
-                            SizedBox(width: 12.w),
-                            const Text('Snooze 15 min'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'dismiss',
-                        child: Row(
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.green[700]),
-                            SizedBox(width: 12.w),
-                            const Text('Mark Complete'),
-                          ],
-                        ),
-                      ),
-                    ],
-                    PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.delete_outline, color: Colors.red),
-                          SizedBox(width: 12.w),
-                          const Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.red),
+                  itemBuilder:
+                      (context) => [
+                        if (reminder.isActive) ...[
+                          PopupMenuItem(
+                            value: 'snooze',
+                            child: Row(
+                              children: [
+                                Icon(Icons.snooze, color: Colors.orange[700]),
+                                SizedBox(width: 12.w),
+                                const Text('Snooze 15 min'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'dismiss',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green[700],
+                                ),
+                                SizedBox(width: 12.w),
+                                const Text('Mark Complete'),
+                              ],
+                            ),
                           ),
                         ],
-                      ),
-                    ),
-                  ],
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                              SizedBox(width: 12.w),
+                              const Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),

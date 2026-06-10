@@ -26,7 +26,8 @@ class TaskDetailScreen extends StatelessWidget {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
         final isCompleted = currentTask.isDone;
-        final isOverdue = !isCompleted && currentTask.date.isBefore(DateTime.now());
+        final isOverdue =
+            !isCompleted && currentTask.date.isBefore(DateTime.now());
 
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
@@ -40,7 +41,8 @@ class TaskDetailScreen extends StatelessWidget {
                   color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
-                child: Icon(Icons.arrow_back_ios_new_rounded, 
+                child: Icon(
+                  Icons.arrow_back_ios_new_rounded,
                   color: theme.colorScheme.onSurface,
                   size: 18.sp,
                 ),
@@ -71,7 +73,8 @@ class TaskDetailScreen extends StatelessWidget {
                     color: theme.colorScheme.surface,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
-                  child: Icon(Icons.more_horiz_rounded, 
+                  child: Icon(
+                    Icons.more_horiz_rounded,
                     color: theme.colorScheme.onSurface,
                     size: 18.sp,
                   ),
@@ -88,12 +91,11 @@ class TaskDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(height: 10.h),
-                
+
                 // Status Banner
                 if (isCompleted || isOverdue)
                   _buildStatusBanner(context, isCompleted, isOverdue),
-                if (isCompleted || isOverdue)
-                  SizedBox(height: 16.h),
+                if (isCompleted || isOverdue) SizedBox(height: 16.h),
 
                 // 1. Header (Title & Tags)
                 _buildHeader(context, currentTask, state),
@@ -136,27 +138,35 @@ class TaskDetailScreen extends StatelessWidget {
   }
 
   // --- Helper Widgets ---
-  
-  Widget _buildStatusBanner(BuildContext context, bool isCompleted, bool isOverdue) {
+
+  Widget _buildStatusBanner(
+    BuildContext context,
+    bool isCompleted,
+    bool isOverdue,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: isCompleted 
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+        color:
+            isCompleted
+                ? Colors.green.withOpacity(0.1)
+                : Colors.red.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isCompleted 
-              ? Colors.green.withOpacity(0.3)
-              : Colors.red.withOpacity(0.3),
+          color:
+              isCompleted
+                  ? Colors.green.withOpacity(0.3)
+                  : Colors.red.withOpacity(0.3),
         ),
       ),
       child: Row(
         children: [
           Icon(
-            isCompleted ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+            isCompleted
+                ? Icons.check_circle_rounded
+                : Icons.warning_amber_rounded,
             color: isCompleted ? Colors.green : Colors.red,
             size: 24.sp,
           ),
@@ -169,17 +179,23 @@ class TaskDetailScreen extends StatelessWidget {
                   isCompleted ? 'Task Completed' : 'Overdue Task',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: isCompleted ? Colors.green.shade700 : Colors.red.shade700,
+                    color:
+                        isCompleted
+                            ? Colors.green.shade700
+                            : Colors.red.shade700,
                     fontSize: 14.sp,
                   ),
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  isCompleted 
+                  isCompleted
                       ? 'Great job! You finished this task.'
                       : 'This task is past its due date.',
                   style: TextStyle(
-                    color: isCompleted ? Colors.green.shade600 : Colors.red.shade600,
+                    color:
+                        isCompleted
+                            ? Colors.green.shade600
+                            : Colors.red.shade600,
                     fontSize: 12.sp,
                   ),
                 ),
@@ -232,11 +248,7 @@ class TaskDetailScreen extends StatelessWidget {
                     color: Colors.green,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 16.sp,
-                  ),
+                  child: Icon(Icons.check, color: Colors.white, size: 16.sp),
                 ),
               ),
             Expanded(
@@ -247,16 +259,17 @@ class TaskDetailScreen extends StatelessWidget {
                   fontSize: 28.sp,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                   decorationColor: Colors.green,
-                  color: isCompleted 
-                      ? theme.colorScheme.onSurface.withOpacity(0.6)
-                      : theme.colorScheme.onSurface,
+                  color:
+                      isCompleted
+                          ? theme.colorScheme.onSurface.withOpacity(0.6)
+                          : theme.colorScheme.onSurface,
                 ),
               ),
             ),
           ],
         ),
         SizedBox(height: 16.h),
-        
+
         // Tags and Priority chips
         Wrap(
           spacing: 10.w,
@@ -264,9 +277,9 @@ class TaskDetailScreen extends StatelessWidget {
           children: [
             if (task.tags.isNotEmpty)
               _buildTagChip(
-                context, 
-                Icons.label_rounded, 
-                tagLabel, 
+                context,
+                Icons.label_rounded,
+                tagLabel,
                 tagBgColor,
                 tagTextColor,
               ),
@@ -303,8 +316,8 @@ class TaskDetailScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            icon, 
-            size: 16.sp, 
+            icon,
+            size: 16.sp,
             color: iconColor ?? theme.colorScheme.secondary,
           ),
           SizedBox(width: 8.w),
@@ -321,7 +334,11 @@ class TaskDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDateSection(BuildContext context, TaskEntity task, bool isOverdue) {
+  Widget _buildDateSection(
+    BuildContext context,
+    TaskEntity task,
+    bool isOverdue,
+  ) {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('MMM d, yyyy');
     final timeFormat = DateFormat('h:mm a');
@@ -335,13 +352,16 @@ class TaskDetailScreen extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(12.r),
                 decoration: BoxDecoration(
-                  color: isOverdue 
-                      ? Colors.red.withOpacity(0.1)
-                      : theme.colorScheme.primary.withOpacity(0.1),
+                  color:
+                      isOverdue
+                          ? Colors.red.withOpacity(0.1)
+                          : theme.colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Icon(
-                  isOverdue ? Icons.event_busy_rounded : Icons.calendar_today_rounded,
+                  isOverdue
+                      ? Icons.event_busy_rounded
+                      : Icons.calendar_today_rounded,
                   color: isOverdue ? Colors.red : theme.colorScheme.primary,
                   size: 22.sp,
                 ),
@@ -421,11 +441,12 @@ class TaskDetailScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildDescriptionSection(BuildContext context, TaskEntity task) {
     final theme = Theme.of(context);
-    final hasDescription = task.description != null && task.description!.isNotEmpty;
-    
+    final hasDescription =
+        task.description != null && task.description!.isNotEmpty;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -448,32 +469,33 @@ class TaskDetailScreen extends StatelessWidget {
         SizedBox(height: 12.h),
         _buildContainer(
           context,
-          child: hasDescription
-              ? Text(
-                  task.description!,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontSize: 14.sp,
-                    height: 1.6,
-                    color: theme.colorScheme.onSurface.withOpacity(0.85),
-                  ),
-                )
-              : Row(
-                  children: [
-                    Icon(
-                      Icons.notes_rounded,
-                      color: theme.colorScheme.secondary.withOpacity(0.5),
-                      size: 20.sp,
+          child:
+              hasDescription
+                  ? Text(
+                    task.description!,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontSize: 14.sp,
+                      height: 1.6,
+                      color: theme.colorScheme.onSurface.withOpacity(0.85),
                     ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      "No description provided",
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.secondary.withOpacity(0.7),
-                        fontStyle: FontStyle.italic,
+                  )
+                  : Row(
+                    children: [
+                      Icon(
+                        Icons.notes_rounded,
+                        color: theme.colorScheme.secondary.withOpacity(0.5),
+                        size: 20.sp,
                       ),
-                    ),
-                  ],
-                ),
+                      SizedBox(width: 12.w),
+                      Text(
+                        "No description provided",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.secondary.withOpacity(0.7),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
         ),
       ],
     );
@@ -482,9 +504,10 @@ class TaskDetailScreen extends StatelessWidget {
   Widget _buildSubtasksSection(BuildContext context, TaskEntity task) {
     final theme = Theme.of(context);
     final hasSubtasks = task.subtasks.isNotEmpty;
-    final progress = task.totalSubtasks > 0 
-        ? task.completedSubtasks / task.totalSubtasks 
-        : 0.0;
+    final progress =
+        task.totalSubtasks > 0
+            ? task.completedSubtasks / task.totalSubtasks
+            : 0.0;
 
     return Column(
       children: [
@@ -510,17 +533,19 @@ class TaskDetailScreen extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: progress == 1.0 
-                    ? Colors.green.withOpacity(0.15)
-                    : theme.colorScheme.primary.withOpacity(0.1),
+                color:
+                    progress == 1.0
+                        ? Colors.green.withOpacity(0.15)
+                        : theme.colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
                 "${task.completedSubtasks}/${task.totalSubtasks}",
                 style: TextStyle(
-                  color: progress == 1.0 
-                      ? Colors.green
-                      : theme.colorScheme.primary,
+                  color:
+                      progress == 1.0
+                          ? Colors.green
+                          : theme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 12.sp,
                 ),
@@ -528,7 +553,7 @@ class TaskDetailScreen extends StatelessWidget {
             ),
           ],
         ),
-        
+
         // Progress bar
         if (hasSubtasks) ...[
           SizedBox(height: 12.h),
@@ -544,7 +569,7 @@ class TaskDetailScreen extends StatelessWidget {
             ),
           ),
         ],
-        
+
         SizedBox(height: 12.h),
         _buildContainer(
           context,
@@ -555,7 +580,7 @@ class TaskDetailScreen extends StatelessWidget {
                 final index = entry.key;
                 final subtask = entry.value;
                 final isTemp = subtask.id.startsWith('temp-');
-                
+
                 return Column(
                   children: [
                     ListTile(
@@ -564,12 +589,15 @@ class TaskDetailScreen extends StatelessWidget {
                         vertical: 4.h,
                       ),
                       leading: GestureDetector(
-                        onTap: isTemp ? null : () {
-                          context.read<TasksCubit>().toggleSubtask(
-                            task.id,
-                            subtask,
-                          );
-                        },
+                        onTap:
+                            isTemp
+                                ? null
+                                : () {
+                                  context.read<TasksCubit>().toggleSubtask(
+                                    task.id,
+                                    subtask,
+                                  );
+                                },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           width: 22.w,
@@ -577,30 +605,35 @@ class TaskDetailScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: subtask.isDone
-                                  ? Colors.green
-                                  : theme.colorScheme.secondary.withOpacity(0.4),
+                              color:
+                                  subtask.isDone
+                                      ? Colors.green
+                                      : theme.colorScheme.secondary.withOpacity(
+                                        0.4,
+                                      ),
                               width: 2,
                             ),
-                            color: subtask.isDone
-                                ? Colors.green
-                                : Colors.transparent,
+                            color:
+                                subtask.isDone
+                                    ? Colors.green
+                                    : Colors.transparent,
                           ),
-                          child: subtask.isDone
-                              ? Icon(
-                                  Icons.check,
-                                  size: 14.sp,
-                                  color: Colors.white,
-                                )
-                              : isTemp
+                          child:
+                              subtask.isDone
+                                  ? Icon(
+                                    Icons.check,
+                                    size: 14.sp,
+                                    color: Colors.white,
+                                  )
+                                  : isTemp
                                   ? SizedBox(
-                                      width: 12.w,
-                                      height: 12.h,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: theme.colorScheme.primary,
-                                      ),
-                                    )
+                                    width: 12.w,
+                                    height: 12.h,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  )
                                   : null,
                         ),
                       ),
@@ -612,21 +645,27 @@ class TaskDetailScreen extends StatelessWidget {
                             subtask.isDone ? 0.5 : 1.0,
                           ),
                           decoration:
-                              subtask.isDone ? TextDecoration.lineThrough : null,
+                              subtask.isDone
+                                  ? TextDecoration.lineThrough
+                                  : null,
                           decorationColor: Colors.green,
-                          fontWeight: subtask.isDone ? FontWeight.normal : FontWeight.w500,
+                          fontWeight:
+                              subtask.isDone
+                                  ? FontWeight.normal
+                                  : FontWeight.w500,
                         ),
                       ),
-                      trailing: isTemp
-                          ? Text(
-                              'Saving...',
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: theme.colorScheme.secondary,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            )
-                          : null,
+                      trailing:
+                          isTemp
+                              ? Text(
+                                'Saving...',
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: theme.colorScheme.secondary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              )
+                              : null,
                     ),
                     if (index < task.subtasks.length - 1)
                       Divider(
@@ -821,7 +860,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isCompleted = task.isDone;
-    
+
     return Column(
       children: [
         // Complete/Incomplete Button
@@ -834,23 +873,20 @@ class ActionButtonsTaskDetails extends StatelessWidget {
               Navigator.pop(context);
             },
             icon: Icon(
-              isCompleted ? Icons.refresh_rounded : Icons.check_circle_outline_rounded,
+              isCompleted
+                  ? Icons.refresh_rounded
+                  : Icons.check_circle_outline_rounded,
               size: 22.sp,
             ),
             label: Text(
               isCompleted ? "Mark as Incomplete" : "Mark as Complete",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15.sp,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isCompleted 
-                  ? Colors.orange.shade100
-                  : Colors.green.shade100,
-              foregroundColor: isCompleted 
-                  ? Colors.orange.shade800
-                  : Colors.green.shade800,
+              backgroundColor:
+                  isCompleted ? Colors.orange.shade100 : Colors.green.shade100,
+              foregroundColor:
+                  isCompleted ? Colors.orange.shade800 : Colors.green.shade800,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16.r),
@@ -859,7 +895,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           ),
         ),
         SizedBox(height: 12.h),
-        
+
         // Edit Button
         SizedBox(
           width: double.infinity,
@@ -871,10 +907,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
             icon: Icon(Icons.edit_outlined, size: 20.sp),
             label: Text(
               "Edit Task",
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 15.sp,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15.sp),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: theme.colorScheme.primary,
@@ -889,7 +922,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           ),
         ),
         SizedBox(height: 12.h),
-        
+
         // Delete Button
         SizedBox(
           width: double.infinity,
@@ -901,10 +934,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
             icon: Icon(Icons.delete_outline_rounded, size: 20.sp),
             label: Text(
               "Delete Task",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15.sp,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.sp),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade50,
@@ -919,57 +949,58 @@ class ActionButtonsTaskDetails extends StatelessWidget {
       ],
     );
   }
-  
+
   void _showDeleteConfirmation(BuildContext context) {
     final theme = Theme.of(context);
     final cubit = context.read<TasksCubit>();
-    
+
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.red.shade400,
-              size: 28.sp,
+      builder:
+          (dialogContext) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.r),
             ),
-            SizedBox(width: 12.w),
-            const Text('Delete Task?'),
-          ],
-        ),
-        content: Text(
-          'This action cannot be undone. Are you sure you want to delete "${task.title}"?',
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: theme.colorScheme.secondary),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red.shade400,
+                  size: 28.sp,
+                ),
+                SizedBox(width: 12.w),
+                const Text('Delete Task?'),
+              ],
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.pop(context);
-              cubit.deleteTask(task.id);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+            content: Text(
+              'This action cannot be undone. Are you sure you want to delete "${task.title}"?',
+              style: theme.textTheme.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: theme.colorScheme.secondary),
+                ),
               ),
-            ),
-            child: const Text('Delete'),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  Navigator.pop(context);
+                  cubit.deleteTask(task.id);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade400,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

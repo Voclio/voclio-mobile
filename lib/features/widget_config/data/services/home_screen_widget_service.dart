@@ -17,27 +17,32 @@ class HomeScreenWidgetService {
   /// Update the widget with today's tasks
   static Future<void> updateTodayTasks(List<TaskEntity> allTasks) async {
     final now = DateTime.now();
-    
+
     // Filter tasks for today that are not done
-    final todayTasks = allTasks.where((task) {
-      return task.date.year == now.year &&
-             task.date.month == now.month &&
-             task.date.day == now.day &&
-             !task.isDone;
-    }).take(3).toList();
+    final todayTasks =
+        allTasks
+            .where((task) {
+              return task.date.year == now.year &&
+                  task.date.month == now.month &&
+                  task.date.day == now.day &&
+                  !task.isDone;
+            })
+            .take(3)
+            .toList();
 
     // Convert to JSON format for the widget
-    final tasksJson = todayTasks.map((task) {
-      return {
-        'title': task.title,
-        'time': DateFormat('h:mm a').format(task.date),
-        'priority': task.priority.toString().split('.').last,
-      };
-    }).toList();
+    final tasksJson =
+        todayTasks.map((task) {
+          return {
+            'title': task.title,
+            'time': DateFormat('h:mm a').format(task.date),
+            'priority': task.priority.toString().split('.').last,
+          };
+        }).toList();
 
     await HomeWidget.saveWidgetData<String>('tasks', jsonEncode(tasksJson));
     await HomeWidget.saveWidgetData<String>('widget_title', "Today's Tasks");
-    
+
     await _updateWidget();
   }
 
@@ -45,26 +50,31 @@ class HomeScreenWidgetService {
   static Future<void> updateUpcomingTasks(List<TaskEntity> allTasks) async {
     final now = DateTime.now();
     final weekFromNow = now.add(const Duration(days: 7));
-    
+
     // Filter upcoming tasks
-    final upcomingTasks = allTasks.where((task) {
-      return task.date.isAfter(now) &&
-             task.date.isBefore(weekFromNow) &&
-             !task.isDone;
-    }).take(3).toList();
+    final upcomingTasks =
+        allTasks
+            .where((task) {
+              return task.date.isAfter(now) &&
+                  task.date.isBefore(weekFromNow) &&
+                  !task.isDone;
+            })
+            .take(3)
+            .toList();
 
     // Convert to JSON format for the widget
-    final tasksJson = upcomingTasks.map((task) {
-      return {
-        'title': task.title,
-        'time': DateFormat('EEE, MMM d').format(task.date),
-        'priority': task.priority.toString().split('.').last,
-      };
-    }).toList();
+    final tasksJson =
+        upcomingTasks.map((task) {
+          return {
+            'title': task.title,
+            'time': DateFormat('EEE, MMM d').format(task.date),
+            'priority': task.priority.toString().split('.').last,
+          };
+        }).toList();
 
     await HomeWidget.saveWidgetData<String>('tasks', jsonEncode(tasksJson));
     await HomeWidget.saveWidgetData<String>('widget_title', 'Upcoming Tasks');
-    
+
     await _updateWidget();
   }
 
@@ -75,7 +85,7 @@ class HomeScreenWidgetService {
   }) async {
     await HomeWidget.saveWidgetData<String>('tasks', jsonEncode(items));
     await HomeWidget.saveWidgetData<String>('widget_title', title);
-    
+
     await _updateWidget();
   }
 

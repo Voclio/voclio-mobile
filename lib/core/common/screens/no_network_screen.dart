@@ -14,8 +14,12 @@ class NoNetworkScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.signal_wifi_bad,size: 150,color: context.colors.primary),
-            SizedBox(height: 15,),
+            Icon(
+              Icons.signal_wifi_bad,
+              size: 150,
+              color: context.colors.primary,
+            ),
+            SizedBox(height: 15),
             TextApp(
               text: 'No Network Please Open Internet',
               theme: context.textStyle.copyWith(

@@ -89,11 +89,7 @@ class CustomFadeInRight extends StatelessWidget {
 
 /// CustomFadeIn widget that re-animates when language changes
 class CustomFadeIn extends StatefulWidget {
-  const CustomFadeIn({
-    required this.child,
-    this.duration = 600,
-    super.key,
-  });
+  const CustomFadeIn({required this.child, this.duration = 600, super.key});
 
   final Widget child;
   final int duration;
@@ -136,10 +132,7 @@ class _CustomFadeInState extends State<CustomFadeIn>
         _controller.reset();
         _controller.forward();
       },
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: widget.child,
-      ),
+      child: FadeTransition(opacity: _fadeAnimation, child: widget.child),
     );
   }
 }

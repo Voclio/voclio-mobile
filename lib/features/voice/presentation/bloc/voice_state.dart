@@ -3,7 +3,7 @@ import '../../domain/entities/voice_recording.dart';
 
 abstract class VoiceState extends Equatable {
   const VoiceState();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -36,6 +36,19 @@ class VoiceTranscriptionLoaded extends VoiceState {
 
   @override
   List<Object?> get props => [transcription, recordingId];
+}
+
+class VoiceTranscriptionUpdated extends VoiceState {
+  final String recordingId;
+  final String message;
+
+  const VoiceTranscriptionUpdated({
+    required this.recordingId,
+    this.message = 'Transcription updated successfully',
+  });
+
+  @override
+  List<Object?> get props => [recordingId, message];
 }
 
 class VoiceOperationSuccess extends VoiceState {

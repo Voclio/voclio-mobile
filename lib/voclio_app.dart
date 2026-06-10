@@ -69,7 +69,8 @@ class VoclioApp extends StatelessWidget {
                                       ..loadAiSuggestions(),
                           ),
                           BlocProvider<WidgetConfigCubit>(
-                            create: (context) => getIt<WidgetConfigCubit>()..init(),
+                            create:
+                                (context) => getIt<WidgetConfigCubit>()..init(),
                           ),
                         ],
                         child: MaterialApp.router(

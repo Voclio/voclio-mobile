@@ -132,4 +132,19 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     // Return empty string if transcription is missing
     return '';
   }
+
+  @override
+  Future<void> updateTranscription({
+    required String recordingId,
+    required String transcription,
+  }) async {
+    debugPrint("UPDATING TRANSCRIPTION FOR ID: $recordingId");
+
+    await apiClient.put(
+      ApiEndpoints.voiceUpdateTranscription,
+      data: {'recording_id': recordingId, 'transcription': transcription},
+    );
+
+    debugPrint("TRANSCRIPTION UPDATED SUCCESSFULLY");
+  }
 }

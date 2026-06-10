@@ -183,10 +183,7 @@ class HomeListTile extends StatelessWidget {
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.white,
-                context.colors.primary!.withOpacity(0.03),
-              ],
+              colors: [Colors.white, context.colors.primary!.withOpacity(0.03)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -239,7 +236,9 @@ class HomeListTile extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: context.colors.primary!.withOpacity(0.15),
+                                color: context.colors.primary!.withOpacity(
+                                  0.15,
+                                ),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -251,11 +250,14 @@ class HomeListTile extends StatelessWidget {
                                     ? Image.network(
                                       avatarUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
                                         return Container(
-                                          color: context.colors.primary!.withOpacity(
-                                            0.1,
-                                          ),
+                                          color: context.colors.primary!
+                                              .withOpacity(0.1),
                                           child: Icon(
                                             Icons.person_rounded,
                                             size: 26.sp,
@@ -265,7 +267,8 @@ class HomeListTile extends StatelessWidget {
                                       },
                                     )
                                     : Container(
-                                      color: context.colors.primary!.withOpacity(0.05),
+                                      color: context.colors.primary!
+                                          .withOpacity(0.05),
                                       child: Icon(
                                         Icons.person_rounded,
                                         size: 26.sp,
@@ -310,10 +313,7 @@ class HomeListTile extends StatelessWidget {
                           ),
                         ),
                         SizedBox(width: 4.w),
-                        Text(
-                          '👋',
-                          style: TextStyle(fontSize: 14.sp),
-                        ),
+                        Text('👋', style: TextStyle(fontSize: 14.sp)),
                       ],
                     ),
                     SizedBox(height: 4.h),

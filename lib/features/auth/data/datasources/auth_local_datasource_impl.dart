@@ -48,24 +48,21 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   Future<AuthResponseModel?> getAuthData() async {
     try {
       final userString = _prefs.getString('auth_user');
-      
+
       // Read tokens with timeout to prevent hanging
-      final accessToken = await _storage.read(key: 'access_token').timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => null,
-      );
-      final refreshToken = await _storage.read(key: 'refresh_token').timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => null,
-      );
-      final expiresAtString = await _storage.read(key: 'token_expires_at').timeout(
-        const Duration(seconds: 1),
-        onTimeout: () => null,
-      );
+      final accessToken = await _storage
+          .read(key: 'access_token')
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      final refreshToken = await _storage
+          .read(key: 'refresh_token')
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      final expiresAtString = await _storage
+          .read(key: 'token_expires_at')
+          .timeout(const Duration(seconds: 1), onTimeout: () => null);
 
       // Validate all required data exists
-      if (userString == null || 
-          accessToken == null || 
+      if (userString == null ||
+          accessToken == null ||
           refreshToken == null ||
           accessToken.isEmpty ||
           refreshToken.isEmpty) {
@@ -93,7 +90,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       // Calculate expires_in from persisted expiration time
       int expiresIn = 604800; // Default 7 days
       DateTime? expiresAt;
-      
+
       if (expiresAtString != null) {
         expiresAt = DateTime.tryParse(expiresAtString);
         if (expiresAt != null) {
@@ -127,15 +124,15 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     try {
       await _prefs.remove('auth_user');
     } catch (_) {}
-    
+
     try {
       await _storage.delete(key: 'access_token');
     } catch (_) {}
-    
+
     try {
       await _storage.delete(key: 'refresh_token');
     } catch (_) {}
-    
+
     try {
       await _storage.delete(key: 'token_expires_at');
     } catch (_) {}

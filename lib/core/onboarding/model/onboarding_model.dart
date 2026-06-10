@@ -13,11 +13,9 @@ class OnboardingModel {
 }
 
 const List<OnboardingModel> onboardingData = [
-
   OnboardingModel(
     image: 'assets/images/onboarding2.png',
     titleKey: 'smart_organization',
     subtitleKey: 'smart_organization_subtitle',
   ),
-
 ];

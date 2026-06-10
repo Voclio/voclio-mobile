@@ -5,7 +5,12 @@ import '../models/task_extensions_models.dart';
 abstract class TaskExtensionsDataSource {
   Future<List<SubtaskModel>> getSubtasks(String taskId);
   Future<SubtaskModel> createSubtask(String taskId, String title, int order);
-  Future<void> updateSubtask(String taskId, String subtaskId, String title, bool completed);
+  Future<void> updateSubtask(
+    String taskId,
+    String subtaskId,
+    String title,
+    bool completed,
+  );
   Future<void> deleteSubtask(String taskId, String subtaskId);
 
   Future<List<TaskCategoryModel>> getCategories();

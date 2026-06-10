@@ -11,8 +11,9 @@ class UnreadBadge extends StatelessWidget {
     return BlocBuilder<NotificationsCubit, NotificationsState>(
       builder: (context, state) {
         if (state is NotificationsLoaded) {
-          final unreadCount = state.notifications.where((n) => !n.isRead).length;
-          
+          final unreadCount =
+              state.notifications.where((n) => !n.isRead).length;
+
           if (unreadCount > 0) {
             return Container(
               padding: const EdgeInsets.all(4),

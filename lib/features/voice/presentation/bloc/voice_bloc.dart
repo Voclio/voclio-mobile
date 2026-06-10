@@ -6,6 +6,7 @@ import '../../domain/usecases/delete_voice_usecase.dart';
 import '../../domain/usecases/create_note_from_voice_usecase.dart';
 import '../../domain/usecases/create_tasks_from_voice_usecase.dart';
 import '../../domain/usecases/transcribe_voice_usecase.dart';
+import '../../domain/usecases/update_transcription_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'voice_event.dart';
 import 'voice_state.dart';
@@ -17,6 +18,7 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
   final CreateNoteFromVoiceUseCase createNoteFromVoiceUseCase;
   final CreateTasksFromVoiceUseCase createTasksFromVoiceUseCase;
   final TranscribeVoiceUseCase transcribeVoiceUseCase;
+  final UpdateTranscriptionUseCase updateTranscriptionUseCase;
 
   VoiceBloc({
     required this.getVoiceRecordingsUseCase,
@@ -25,6 +27,7 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
     required this.createNoteFromVoiceUseCase,
     required this.createTasksFromVoiceUseCase,
     required this.transcribeVoiceUseCase,
+    required this.updateTranscriptionUseCase,
   }) : super(VoiceInitial()) {
     on<LoadVoiceRecordings>(_onLoadVoiceRecordings);
     on<UploadVoiceFile>(_onUploadVoiceFile);
@@ -32,6 +35,7 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
     on<CreateNoteFromVoice>(_onCreateNoteFromVoice);
     on<CreateTasksFromVoice>(_onCreateTasksFromVoice);
     on<TranscribeVoice>(_onTranscribeVoice);
+    on<UpdateTranscription>(_onUpdateTranscription);
   }
 
   Future<void> _onLoadVoiceRecordings(
@@ -130,6 +134,22 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
       emit(const VoiceOperationSuccess('Tasks created from voice'));
       // Trigger tasks refresh automatically
       GetIt.I<TasksCubit>().getTasks();
+      add(LoadVoiceRecordings());
+    });
+  }
+
+  Future<void> _onUpdateTranscription(
+    UpdateTranscription event,
+    Emitter<VoiceState> emit,
+  ) async {
+    emit(const VoiceLoading('Updating transcription...'));
+    final result = await updateTranscriptionUseCase(
+      recordingId: event.recordingId,
+      transcription: event.transcription,
+    );
+    result.fold((failure) => emit(VoiceError(failure.message)), (_) {
+      emit(VoiceTranscriptionUpdated(recordingId: event.recordingId));
+      // Refresh the recordings list to show updated transcription
       add(LoadVoiceRecordings());
     });
   }

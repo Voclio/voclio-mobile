@@ -7,12 +7,12 @@ part 'app_state.dart';
 
 class AppCubit extends Cubit<AppState> {
   final SharedPreferences _prefs;
-  
+
   static const String _languageKey = 'selected_language';
 
   AppCubit({required SharedPreferences prefs})
-      : _prefs = prefs,
-        super(AppInitial(const Locale('en'))) {
+    : _prefs = prefs,
+      super(AppInitial(const Locale('en'))) {
     _loadLanguage();
   }
 
@@ -31,9 +31,10 @@ class AppCubit extends Cubit<AppState> {
 
   /// Toggle between Arabic and English languages
   Future<void> toggleLanguage() async {
-    final newLocale = state.locale.languageCode == 'en' 
-        ? const Locale('ar') 
-        : const Locale('en');
+    final newLocale =
+        state.locale.languageCode == 'en'
+            ? const Locale('ar')
+            : const Locale('en');
     await changeLanguage(newLocale);
   }
 
@@ -42,8 +43,7 @@ class AppCubit extends Cubit<AppState> {
 
   /// Check if current language is Arabic
   bool get isArabic => state.locale.languageCode == 'ar';
-  
+
   /// Check if current language is English
   bool get isEnglish => state.locale.languageCode == 'en';
 }
-

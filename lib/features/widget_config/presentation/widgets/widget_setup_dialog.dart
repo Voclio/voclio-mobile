@@ -11,29 +11,27 @@ class WidgetSetupDialog extends StatefulWidget {
   final VoidCallback? onComplete;
   final VoidCallback? onSkip;
 
-  const WidgetSetupDialog({
-    super.key,
-    this.onComplete,
-    this.onSkip,
-  });
+  const WidgetSetupDialog({super.key, this.onComplete, this.onSkip});
 
   /// Show the widget setup dialog
   static Future<bool?> show(BuildContext context, {WidgetConfigCubit? cubit}) {
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => cubit != null
-          ? BlocProvider.value(
-              value: cubit,
-              child: WidgetSetupDialog(
-                onComplete: () => Navigator.of(context).pop(true),
-                onSkip: () => Navigator.of(context).pop(false),
-              ),
-            )
-          : WidgetSetupDialog(
-              onComplete: () => Navigator.of(context).pop(true),
-              onSkip: () => Navigator.of(context).pop(false),
-            ),
+      builder:
+          (context) =>
+              cubit != null
+                  ? BlocProvider.value(
+                    value: cubit,
+                    child: WidgetSetupDialog(
+                      onComplete: () => Navigator.of(context).pop(true),
+                      onSkip: () => Navigator.of(context).pop(false),
+                    ),
+                  )
+                  : WidgetSetupDialog(
+                    onComplete: () => Navigator.of(context).pop(true),
+                    onSkip: () => Navigator.of(context).pop(false),
+                  ),
     );
   }
 
@@ -51,8 +49,8 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
     super.initState();
     // Initialize with default selections
     for (final type in WidgetType.values) {
-      _selectedWidgets[type] = type == WidgetType.todayTasks || 
-                                type == WidgetType.upcomingTasks;
+      _selectedWidgets[type] =
+          type == WidgetType.todayTasks || type == WidgetType.upcomingTasks;
     }
   }
 
@@ -84,55 +82,59 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
-      child: Container(
-        constraints: BoxConstraints(maxHeight: 600.h),
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: BorderRadius.circular(24.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 40.h),
+          child: Container(
+            constraints: BoxConstraints(maxHeight: 600.h),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(24.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            _buildHeader(theme),
-            
-            // Page indicator
-            _buildPageIndicator(theme),
-            
-            // Content
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                children: [
-                  _buildWelcomePage(theme),
-                  _buildWidgetSelectionPage(theme),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                _buildHeader(theme),
+
+                // Page indicator
+                _buildPageIndicator(theme),
+
+                // Content
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged:
+                        (index) => setState(() => _currentPage = index),
+                    children: [
+                      _buildWelcomePage(theme),
+                      _buildWidgetSelectionPage(theme),
+                    ],
+                  ),
+                ),
+
+                // Actions
+                _buildActions(theme),
+              ],
             ),
-            
-            // Actions
-            _buildActions(theme),
-          ],
-        ),
-      ),
-    ).animate().scale(
-      begin: const Offset(0.9, 0.9),
-      end: const Offset(1, 1),
-      duration: 300.ms,
-      curve: Curves.easeOutBack,
-    ).fadeIn(duration: 200.ms);
+          ),
+        )
+        .animate()
+        .scale(
+          begin: const Offset(0.9, 0.9),
+          end: const Offset(1, 1),
+          duration: 300.ms,
+          curve: Curves.easeOutBack,
+        )
+        .fadeIn(duration: 200.ms);
   }
 
   Widget _buildHeader(ThemeData theme) {
@@ -140,10 +142,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            theme.primaryColor,
-            theme.primaryColor.withOpacity(0.8),
-          ],
+          colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -308,11 +307,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               color: theme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10.r),
             ),
-            child: Icon(
-              icon,
-              color: theme.primaryColor,
-              size: 22.sp,
-            ),
+            child: Icon(icon, color: theme.primaryColor, size: 22.sp),
           ),
           SizedBox(width: 14.w),
           Expanded(
@@ -361,10 +356,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
           SizedBox(height: 4.h),
           Text(
             'Tap to enable or disable',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
           ),
           SizedBox(height: 16.h),
           ...WidgetType.values.map((type) => _buildWidgetOption(theme, type)),
@@ -375,7 +367,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
 
   Widget _buildWidgetOption(ThemeData theme, WidgetType type) {
     final isSelected = _selectedWidgets[type] ?? false;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -387,7 +379,8 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
+          color:
+              isSelected ? theme.primaryColor.withOpacity(0.08) : Colors.white,
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
             color: isSelected ? theme.primaryColor : Colors.grey.shade200,
@@ -400,9 +393,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? theme.primaryColor 
-                    : Colors.grey.shade100,
+                color: isSelected ? theme.primaryColor : Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(
@@ -421,9 +412,10 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
-                      color: isSelected 
-                          ? theme.primaryColor 
-                          : theme.colorScheme.onSurface,
+                      color:
+                          isSelected
+                              ? theme.primaryColor
+                              : theme.colorScheme.onSurface,
                     ),
                   ),
                   SizedBox(height: 2.h),
@@ -451,13 +443,10 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                   width: 2,
                 ),
               ),
-              child: isSelected
-                  ? Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 16.sp,
-                    )
-                  : null,
+              child:
+                  isSelected
+                      ? Icon(Icons.check, color: Colors.white, size: 16.sp)
+                      : null,
             ),
           ],
         ),
@@ -497,10 +486,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               },
               child: Text(
                 'Skip',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14.sp,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14.sp),
               ),
             ),
           if (_currentPage > 0)
@@ -513,10 +499,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               },
               child: Text(
                 'Back',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14.sp,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14.sp),
               ),
             ),
           const Spacer(),
@@ -528,28 +511,32 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.primaryColor,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 28.w,
+                    vertical: 14.h,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   elevation: 0,
                 ),
-                child: isLoading
-                    ? SizedBox(
-                        width: 20.w,
-                        height: 20.w,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                child:
+                    isLoading
+                        ? SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                        : Text(
+                          _currentPage == 0 ? 'Next' : 'Done',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : Text(
-                        _currentPage == 0 ? 'Next' : 'Done',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
               );
             },
           ),

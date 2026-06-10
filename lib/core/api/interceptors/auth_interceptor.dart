@@ -6,14 +6,14 @@ import 'dart:async';
 class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Dio _dio;
-  
+
   // Prevent concurrent token refreshes
   static Future<String?>? _refreshFuture;
   static bool _isRefreshing = false;
-  
+
   // Token refresh buffer - refresh 5 minutes before expiration
   static const int _tokenRefreshBufferSeconds = 300; // 5 minutes
-  
+
   // Maximum retry attempts for failed requests
   static const int _maxRetryAttempts = 3;
 
@@ -47,11 +47,10 @@ class AuthInterceptor extends Interceptor {
 
     try {
       // Get current token with timeout
-      final token = await _storage.read(key: 'access_token').timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => null,
-      );
-      
+      final token = await _storage
+          .read(key: 'access_token')
+          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+
       // Check if token exists and is valid
       if (token == null || token.isEmpty) {
         // No token, proceed without auth (let server handle it)
@@ -59,10 +58,9 @@ class AuthInterceptor extends Interceptor {
       }
 
       // Get expiration with timeout
-      final expiresAtString = await _storage.read(key: 'token_expires_at').timeout(
-        const Duration(seconds: 1),
-        onTimeout: () => null,
-      );
+      final expiresAtString = await _storage
+          .read(key: 'token_expires_at')
+          .timeout(const Duration(seconds: 1), onTimeout: () => null);
 
       // Check if token is expired or expiring soon (proactive refresh)
       bool needsRefresh = false;
@@ -114,7 +112,8 @@ class AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       try {
         // Check retry count (prevent infinite loop)
-        final retryCount = (err.requestOptions.extra['_retryCount'] as int?) ?? 0;
+        final retryCount =
+            (err.requestOptions.extra['_retryCount'] as int?) ?? 0;
         if (retryCount >= _maxRetryAttempts) {
           // Max retries reached, clear tokens and fail
           await _clearTokens();
@@ -136,7 +135,8 @@ class AuthInterceptor extends Interceptor {
             return handler.resolve(retryResponse);
           } on DioException catch (retryError) {
             // If retry fails with 401 again, don't clear tokens yet, let it retry
-            if (retryError.response?.statusCode == 401 && retryCount < _maxRetryAttempts - 1) {
+            if (retryError.response?.statusCode == 401 &&
+                retryCount < _maxRetryAttempts - 1) {
               // Recursive handling will occur
               return handler.next(retryError);
             }
@@ -179,7 +179,7 @@ class AuthInterceptor extends Interceptor {
   Future<String?> _performRefresh() async {
     try {
       final refreshToken = await _storage.read(key: 'refresh_token');
-      
+
       // Validate refresh token exists
       if (refreshToken == null || refreshToken.isEmpty) {
         await _clearTokens();
@@ -187,18 +187,20 @@ class AuthInterceptor extends Interceptor {
       }
 
       // Call refresh endpoint with timeout
-      final response = await _dio.post(
-        ApiEndpoints.refreshToken,
-        data: {'refresh_token': refreshToken},
-        options: Options(
-          headers: {'Authorization': null},
-          sendTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
-        ),
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => throw TimeoutException('Token refresh timed out'),
-      );
+      final response = await _dio
+          .post(
+            ApiEndpoints.refreshToken,
+            data: {'refresh_token': refreshToken},
+            options: Options(
+              headers: {'Authorization': null},
+              sendTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            ),
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException('Token refresh timed out'),
+          );
 
       // Validate response
       if (response.statusCode != 200 || response.data == null) {
@@ -207,22 +209,27 @@ class AuthInterceptor extends Interceptor {
       }
 
       // Parse response
-      final data = response.data is Map<String, dynamic>
-          ? response.data as Map<String, dynamic>
-          : <String, dynamic>{};
-      
-      final payload = data['data'] is Map<String, dynamic>
-          ? data['data'] as Map<String, dynamic>
-          : data;
+      final data =
+          response.data is Map<String, dynamic>
+              ? response.data as Map<String, dynamic>
+              : <String, dynamic>{};
 
-      final tokens = payload['tokens'] is Map<String, dynamic>
-          ? payload['tokens'] as Map<String, dynamic>
-          : payload;
+      final payload =
+          data['data'] is Map<String, dynamic>
+              ? data['data'] as Map<String, dynamic>
+              : data;
+
+      final tokens =
+          payload['tokens'] is Map<String, dynamic>
+              ? payload['tokens'] as Map<String, dynamic>
+              : payload;
 
       final newAccessToken =
           (tokens['access_token'] ?? tokens['token'] ?? '').toString().trim();
       final newRefreshToken =
-          (tokens['refresh_token'] ?? tokens['refreshToken'] ?? '').toString().trim();
+          (tokens['refresh_token'] ?? tokens['refreshToken'] ?? '')
+              .toString()
+              .trim();
 
       // Validate tokens
       if (newAccessToken.isEmpty) {
@@ -232,7 +239,7 @@ class AuthInterceptor extends Interceptor {
 
       // Save new tokens
       await _storage.write(key: 'access_token', value: newAccessToken);
-      
+
       // Only update refresh token if a new one was provided
       if (newRefreshToken.isNotEmpty) {
         await _storage.write(key: 'refresh_token', value: newRefreshToken);
@@ -240,14 +247,14 @@ class AuthInterceptor extends Interceptor {
 
       // Calculate and save expiration
       // Backend provides expires_in in seconds, use a generous default (7 days) if not provided
-      final expiresIn = tokens['expires_in'] is int
-          ? tokens['expires_in'] as int
-          : int.tryParse(tokens['expires_in']?.toString() ?? '') ?? 604800; // 7 days default
-      
-      final expiresAt = DateTime.now().add(
-        Duration(seconds: expiresIn),
-      );
-      
+      final expiresIn =
+          tokens['expires_in'] is int
+              ? tokens['expires_in'] as int
+              : int.tryParse(tokens['expires_in']?.toString() ?? '') ??
+                  604800; // 7 days default
+
+      final expiresAt = DateTime.now().add(Duration(seconds: expiresIn));
+
       await _storage.write(
         key: 'token_expires_at',
         value: expiresAt.toIso8601String(),

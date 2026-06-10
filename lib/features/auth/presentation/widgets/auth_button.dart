@@ -47,15 +47,16 @@ class AuthButton extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          boxShadow: isEnabled && !isLoading
-              ? [
-                  BoxShadow(
-                    color: effectiveBackgroundColor.withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ]
-              : [],
+          boxShadow:
+              isEnabled && !isLoading
+                  ? [
+                    BoxShadow(
+                      color: effectiveBackgroundColor.withOpacity(0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                  : [],
         ),
         child: ElevatedButton(
           onPressed: isEnabled && !isLoading ? onPressed : null,
@@ -67,38 +68,35 @@ class AuthButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16.r),
             ),
           ),
-          child: isLoading
-              ? SizedBox(
-                  height: 24.h,
-                  width: 24.w,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      effectiveTextColor,
-                    ),
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(
-                        icon,
-                        size: 20.sp,
-                        color: effectiveTextColor,
+          child:
+              isLoading
+                  ? SizedBox(
+                    height: 24.h,
+                    width: 24.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        effectiveTextColor,
                       ),
-                      SizedBox(width: 10.w),
+                    ),
+                  )
+                  : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(icon, size: 20.sp, color: effectiveTextColor),
+                        SizedBox(width: 10.w),
+                      ],
+                      Text(
+                        text,
+                        style: TextStyle(
+                          fontSize: isSmall ? 16.sp : 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: effectiveTextColor,
+                        ),
+                      ),
                     ],
-                    Text(
-                      text,
-                      style: TextStyle(
-                        fontSize: isSmall ? 16.sp : 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: effectiveTextColor,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
         ),
       ),
     );

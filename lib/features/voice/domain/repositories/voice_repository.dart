@@ -10,4 +10,8 @@ abstract class VoiceRepository {
   Future<Either<Failure, void>> createNoteFromVoice(String id);
   Future<Either<Failure, void>> createTasksFromVoice(String id);
   Future<Either<Failure, String>> transcribe(String id);
+  Future<Either<Failure, void>> updateTranscription({
+    required String recordingId,
+    required String transcription,
+  });
 }

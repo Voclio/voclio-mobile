@@ -205,7 +205,10 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteSubtask(String taskId, String subtaskId) async {
+  Future<Either<Failure, void>> deleteSubtask(
+    String taskId,
+    String subtaskId,
+  ) async {
     try {
       await remoteDataSource.deleteSubtask(taskId, subtaskId);
       return const Right(null);

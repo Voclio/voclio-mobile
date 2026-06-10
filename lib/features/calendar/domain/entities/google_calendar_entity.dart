@@ -93,10 +93,7 @@ class GoogleOAuthUrlEntity extends Equatable {
   final String authUrl;
   final String message;
 
-  const GoogleOAuthUrlEntity({
-    required this.authUrl,
-    required this.message,
-  });
+  const GoogleOAuthUrlEntity({required this.authUrl, required this.message});
 
   @override
   List<Object?> get props => [authUrl, message];
@@ -124,7 +121,13 @@ class WebexStatusEntity extends Equatable {
   bool get isConnected => connected;
 
   @override
-  List<Object?> get props => [connected, email, displayName, connectedAt, errorMessage];
+  List<Object?> get props => [
+    connected,
+    email,
+    displayName,
+    connectedAt,
+    errorMessage,
+  ];
 }
 
 /// Webex meeting entity

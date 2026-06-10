@@ -107,10 +107,11 @@ class AppRouter {
       ),
       GoRoute(
         path: addReminder,
-        builder: (context, state) => BlocProvider(
-          create: (context) => getIt<RemindersCubit>(),
-          child: const AddReminderScreen(),
-        ),
+        builder:
+            (context, state) => BlocProvider(
+              create: (context) => getIt<RemindersCubit>(),
+              child: const AddReminderScreen(),
+            ),
       ),
       GoRoute(
         path: reminders,

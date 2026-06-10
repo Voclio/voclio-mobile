@@ -11,7 +11,7 @@ class NetworkChecker {
           receiveTimeout: const Duration(seconds: 5),
         ),
       );
-      
+
       // Try to ping a health endpoint or the base URL
       final response = await dio.get('/');
       return response.statusCode == 200 || response.statusCode == 404;
@@ -28,7 +28,7 @@ class NetworkChecker {
           receiveTimeout: const Duration(seconds: 5),
         ),
       );
-      
+
       // Try to reach a reliable public endpoint
       final response = await dio.get('https://www.google.com');
       return response.statusCode == 200;

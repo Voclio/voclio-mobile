@@ -11,7 +11,7 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       body: SafeArea(
@@ -19,7 +19,7 @@ class NotificationsScreen extends StatelessWidget {
           children: [
             // Custom Header
             _buildHeader(context, theme),
-            
+
             // Notifications List
             Expanded(
               child: BlocBuilder<NotificationsCubit, NotificationsState>(
@@ -37,7 +37,9 @@ class NotificationsScreen extends StatelessWidget {
                             ),
                             child: CircularProgressIndicator(
                               strokeWidth: 3,
-                              valueColor: AlwaysStoppedAnimation(theme.primaryColor),
+                              valueColor: AlwaysStoppedAnimation(
+                                theme.primaryColor,
+                              ),
                             ),
                           ),
                           SizedBox(height: 16.h),
@@ -53,19 +55,25 @@ class NotificationsScreen extends StatelessWidget {
                     ).animate().fadeIn(duration: 300.ms);
                   }
 
-                  if (state is NotificationsError || 
-                      (state is NotificationsLoaded && state.notifications.isEmpty)) {
+                  if (state is NotificationsError ||
+                      (state is NotificationsLoaded &&
+                          state.notifications.isEmpty)) {
                     return _buildEmptyState(theme);
                   }
 
                   if (state is NotificationsLoaded) {
                     return RefreshIndicator(
                       onRefresh: () async {
-                        await context.read<NotificationsCubit>().loadNotifications();
+                        await context
+                            .read<NotificationsCubit>()
+                            .loadNotifications();
                       },
                       color: theme.primaryColor,
                       child: ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 12.h,
+                        ),
                         physics: const BouncingScrollPhysics(),
                         itemCount: state.notifications.length,
                         itemBuilder: (context, index) {
@@ -81,9 +89,9 @@ class NotificationsScreen extends StatelessWidget {
                               }
                             },
                             onDelete: () {
-                              context.read<NotificationsCubit>().deleteNotification(
-                                notification.id,
-                              );
+                              context
+                                  .read<NotificationsCubit>()
+                                  .deleteNotification(notification.id);
                             },
                           );
                         },
@@ -157,30 +165,42 @@ class NotificationsScreen extends StatelessWidget {
                   final cubit = context.read<NotificationsCubit>();
                   final unreadCount = cubit.unreadCount;
                   return Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: unreadCount > 0 
-                        ? theme.primaryColor.withOpacity(0.1)
-                        : Colors.green.withOpacity(0.1),
+                      color:
+                          unreadCount > 0
+                              ? theme.primaryColor.withOpacity(0.1)
+                              : Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          unreadCount > 0 ? Icons.mark_email_unread_rounded : Icons.check_circle_rounded,
+                          unreadCount > 0
+                              ? Icons.mark_email_unread_rounded
+                              : Icons.check_circle_rounded,
                           size: 14.sp,
-                          color: unreadCount > 0 ? theme.primaryColor : Colors.green,
+                          color:
+                              unreadCount > 0
+                                  ? theme.primaryColor
+                                  : Colors.green,
                         ),
                         SizedBox(width: 6.w),
                         Text(
-                          unreadCount > 0 
-                            ? '$unreadCount unread'
-                            : 'All caught up!',
+                          unreadCount > 0
+                              ? '$unreadCount unread'
+                              : 'All caught up!',
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.w600,
-                            color: unreadCount > 0 ? theme.primaryColor : Colors.green,
+                            color:
+                                unreadCount > 0
+                                    ? theme.primaryColor
+                                    : Colors.green,
                           ),
                         ),
                       ],
@@ -205,7 +225,7 @@ class NotificationsScreen extends StatelessWidget {
                           color: theme.primaryColor,
                           onTap: () => cubit.markAllAsRead(),
                         ),
-                      if (hasNotifications) ...[                        
+                      if (hasNotifications) ...[
                         SizedBox(width: 8.w),
                         _buildActionButton(
                           icon: Icons.delete_sweep_rounded,
@@ -246,41 +266,58 @@ class NotificationsScreen extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context, NotificationsCubit cubit) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(10.r),
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(
+                    Icons.delete_forever_rounded,
+                    color: Colors.red.shade400,
+                    size: 24.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                const Text('Clear All'),
+              ],
+            ),
+            content: const Text(
+              'Are you sure you want to delete all notifications? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
               ),
-              child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade400, size: 24.sp),
-            ),
-            SizedBox(width: 12.w),
-            const Text('Clear All'),
-          ],
-        ),
-        content: const Text('Are you sure you want to delete all notifications? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+              ElevatedButton(
+                onPressed: () {
+                  cubit.deleteAllNotifications();
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade400,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
+                child: const Text(
+                  'Delete All',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              cubit.deleteAllNotifications();
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
-            child: const Text('Delete All', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -290,26 +327,30 @@ class NotificationsScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(32.w),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  theme.primaryColor.withOpacity(0.1),
-                  theme.primaryColor.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                padding: EdgeInsets.all(32.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.primaryColor.withOpacity(0.1),
+                      theme.primaryColor.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.notifications_off_outlined,
+                  size: 64.sp,
+                  color: theme.primaryColor.withOpacity(0.5),
+                ),
+              )
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.05, 1.05),
+                duration: 2000.ms,
               ),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.notifications_off_outlined,
-              size: 64.sp,
-              color: theme.primaryColor.withOpacity(0.5),
-            ),
-          )
-          .animate(onPlay: (c) => c.repeat(reverse: true))
-          .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 2000.ms),
           SizedBox(height: 24.h),
           Text(
             'All Caught Up! 🎉',

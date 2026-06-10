@@ -24,9 +24,7 @@ class TagChipWidget extends StatelessWidget {
           int.parse(tag.color.replaceFirst('#', '0xFF')),
         ).withValues(alpha: 0.2),
         labelStyle: TextStyle(
-          color: Color(
-            int.parse(tag.color.replaceFirst('#', '0xFF')),
-          ),
+          color: Color(int.parse(tag.color.replaceFirst('#', '0xFF'))),
           fontSize: 12.sp,
         ),
         deleteIcon: onDelete != null ? const Icon(Icons.close, size: 16) : null,

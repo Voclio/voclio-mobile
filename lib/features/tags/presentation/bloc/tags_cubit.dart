@@ -21,9 +21,9 @@ class TagsCubit extends Cubit<TagsState> {
 
   Future<void> loadTags() async {
     emit(TagsLoading());
-    
+
     final result = await getTagsUseCase();
-    
+
     result.fold(
       (failure) => emit(TagsError('Failed to load tags')),
       (tags) => emit(TagsLoaded(tags)),
@@ -32,37 +32,32 @@ class TagsCubit extends Cubit<TagsState> {
 
   Future<void> createTag(TagEntity tag) async {
     final result = await createTagUseCase(tag);
-    
-    result.fold(
-      (failure) => emit(TagsError('Failed to create tag')),
-      (createdTag) {
-        emit(TagCreated(createdTag));
-        loadTags(); // Refresh list
-      },
-    );
+
+    result.fold((failure) => emit(TagsError('Failed to create tag')), (
+      createdTag,
+    ) {
+      emit(TagCreated(createdTag));
+      loadTags(); // Refresh list
+    });
   }
 
   Future<void> updateTag(TagEntity tag) async {
     final result = await updateTagUseCase(tag);
-    
-    result.fold(
-      (failure) => emit(TagsError('Failed to update tag')),
-      (updatedTag) {
-        emit(TagUpdated(updatedTag));
-        loadTags(); // Refresh list
-      },
-    );
+
+    result.fold((failure) => emit(TagsError('Failed to update tag')), (
+      updatedTag,
+    ) {
+      emit(TagUpdated(updatedTag));
+      loadTags(); // Refresh list
+    });
   }
 
   Future<void> deleteTag(String id) async {
     final result = await deleteTagUseCase(id);
-    
-    result.fold(
-      (failure) => emit(TagsError('Failed to delete tag')),
-      (_) {
-        emit(TagDeleted(id));
-        loadTags(); // Refresh list
-      },
-    );
+
+    result.fold((failure) => emit(TagsError('Failed to delete tag')), (_) {
+      emit(TagDeleted(id));
+      loadTags(); // Refresh list
+    });
   }
 }

@@ -5,10 +5,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
-import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart' as task_entities;
+import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart'
+    as task_entities;
 import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
-import 'package:voclio_app/features/notes/domain/entities/note_entity.dart' as note_entities;
+import 'package:voclio_app/features/notes/domain/entities/note_entity.dart'
+    as note_entities;
 import '../../domain/entities/widget_preference.dart';
 import '../bloc/widget_config_cubit.dart';
 import '../bloc/widget_config_state.dart';
@@ -43,7 +45,10 @@ class HomeWidgetsContainer extends StatelessWidget {
                 child: _buildWidget(context, config)
                     .animate()
                     .fadeIn(delay: Duration(milliseconds: 100 * index))
-                    .slideY(begin: 0.1, delay: Duration(milliseconds: 100 * index)),
+                    .slideY(
+                      begin: 0.1,
+                      delay: Duration(milliseconds: 100 * index),
+                    ),
               );
             }),
           ],
@@ -80,10 +85,7 @@ class HomeWidgetsContainer extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(
             'Go to settings to customize your home screen',
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade500),
             textAlign: TextAlign.center,
           ),
         ],
@@ -174,7 +176,10 @@ class _BaseWidgetCard extends StatelessWidget {
                   TextButton(
                     onPressed: onViewAll,
                     style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 4.h,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -208,21 +213,26 @@ class TodayTasksWidget extends StatelessWidget {
     return BlocBuilder<TasksCubit, TasksState>(
       builder: (context, state) {
         final today = DateTime.now();
-        final todayTasks = state.tasks.where((task) {
-          return task.date.year == today.year &&
-                 task.date.month == today.month &&
-                 task.date.day == today.day &&
-                 !task.isDone;
-        }).take(5).toList();
+        final todayTasks =
+            state.tasks
+                .where((task) {
+                  return task.date.year == today.year &&
+                      task.date.month == today.month &&
+                      task.date.day == today.day &&
+                      !task.isDone;
+                })
+                .take(5)
+                .toList();
 
         return _BaseWidgetCard(
           title: "Today's Tasks",
           icon: Icons.today_rounded,
           onViewAll: onViewAll,
           accentColor: Colors.blue,
-          child: todayTasks.isEmpty
-              ? _buildEmptyTasks('No tasks for today')
-              : _buildTasksList(context, todayTasks),
+          child:
+              todayTasks.isEmpty
+                  ? _buildEmptyTasks('No tasks for today')
+                  : _buildTasksList(context, todayTasks),
         );
       },
     );
@@ -239,14 +249,15 @@ class TodayTasksWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.check_circle_outline, color: Colors.grey.shade400, size: 24.sp),
+            Icon(
+              Icons.check_circle_outline,
+              color: Colors.grey.shade400,
+              size: 24.sp,
+            ),
             SizedBox(width: 12.w),
             Text(
               message,
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -254,7 +265,10 @@ class TodayTasksWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildTasksList(BuildContext context, List<task_entities.TaskEntity> tasks) {
+  Widget _buildTasksList(
+    BuildContext context,
+    List<task_entities.TaskEntity> tasks,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
       child: Column(
@@ -278,20 +292,25 @@ class UpcomingTasksWidget extends StatelessWidget {
         final tomorrow = now.add(const Duration(days: 1));
         final weekFromNow = now.add(const Duration(days: 7));
 
-        final upcomingTasks = state.tasks.where((task) {
-          return task.date.isAfter(now) &&
-                 task.date.isBefore(weekFromNow) &&
-                 !task.isDone;
-        }).take(5).toList();
+        final upcomingTasks =
+            state.tasks
+                .where((task) {
+                  return task.date.isAfter(now) &&
+                      task.date.isBefore(weekFromNow) &&
+                      !task.isDone;
+                })
+                .take(5)
+                .toList();
 
         return _BaseWidgetCard(
           title: 'Upcoming Tasks',
           icon: Icons.upcoming_rounded,
           onViewAll: onViewAll,
           accentColor: Colors.orange,
-          child: upcomingTasks.isEmpty
-              ? _buildEmptyState()
-              : _buildUpcomingList(context, upcomingTasks),
+          child:
+              upcomingTasks.isEmpty
+                  ? _buildEmptyState()
+                  : _buildUpcomingList(context, upcomingTasks),
         );
       },
     );
@@ -308,14 +327,15 @@ class UpcomingTasksWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.event_available, color: Colors.grey.shade400, size: 24.sp),
+            Icon(
+              Icons.event_available,
+              color: Colors.grey.shade400,
+              size: 24.sp,
+            ),
             SizedBox(width: 12.w),
             Text(
               'No upcoming tasks this week',
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -323,11 +343,15 @@ class UpcomingTasksWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildUpcomingList(BuildContext context, List<task_entities.TaskEntity> tasks) {
+  Widget _buildUpcomingList(
+    BuildContext context,
+    List<task_entities.TaskEntity> tasks,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
       child: Column(
-        children: tasks.map((task) => _TaskItem(task: task, showDate: true)).toList(),
+        children:
+            tasks.map((task) => _TaskItem(task: task, showDate: true)).toList(),
       ),
     );
   }
@@ -343,7 +367,7 @@ class _TaskItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
@@ -439,7 +463,7 @@ class CalendarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final theme = Theme.of(context);
-    
+
     return _BaseWidgetCard(
       title: 'Calendar',
       icon: Icons.calendar_month_rounded,
@@ -451,7 +475,7 @@ class CalendarWidget extends StatelessWidget {
           children: List.generate(7, (index) {
             final date = now.add(Duration(days: index));
             final isToday = index == 0;
-            
+
             return Expanded(
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: 2.w),
@@ -475,7 +499,10 @@ class CalendarWidget extends StatelessWidget {
                       date.day.toString(),
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: isToday ? Colors.white : theme.colorScheme.onSurface,
+                        color:
+                            isToday
+                                ? Colors.white
+                                : theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -500,18 +527,21 @@ class RecentNotesWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<NotesCubit, NotesState>(
       builder: (context, state) {
-        final recentNotes = (state.notes.toList()
-          ..sort((a, b) => b.lastEditDate.compareTo(a.lastEditDate)))
-          .take(3).toList();
+        final recentNotes =
+            (state.notes.toList()
+                  ..sort((a, b) => b.lastEditDate.compareTo(a.lastEditDate)))
+                .take(3)
+                .toList();
 
         return _BaseWidgetCard(
           title: 'Recent Notes',
           icon: Icons.note_alt_rounded,
           onViewAll: onViewAll,
           accentColor: Colors.teal,
-          child: recentNotes.isEmpty
-              ? _buildEmptyState()
-              : _buildNotesList(context, recentNotes),
+          child:
+              recentNotes.isEmpty
+                  ? _buildEmptyState()
+                  : _buildNotesList(context, recentNotes),
         );
       },
     );
@@ -528,14 +558,15 @@ class RecentNotesWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.note_add_outlined, color: Colors.grey.shade400, size: 24.sp),
+            Icon(
+              Icons.note_add_outlined,
+              color: Colors.grey.shade400,
+              size: 24.sp,
+            ),
             SizedBox(width: 12.w),
             Text(
               'No notes yet',
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -543,7 +574,10 @@ class RecentNotesWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildNotesList(BuildContext context, List<note_entities.NoteEntity> notes) {
+  Widget _buildNotesList(
+    BuildContext context,
+    List<note_entities.NoteEntity> notes,
+  ) {
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
       child: Column(
@@ -562,7 +596,7 @@ class _NoteItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
@@ -655,14 +689,15 @@ class RemindersWidget extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.notifications_none, color: Colors.grey.shade400, size: 24.sp),
+              Icon(
+                Icons.notifications_none,
+                color: Colors.grey.shade400,
+                size: 24.sp,
+              ),
               SizedBox(width: 12.w),
               Text(
                 'No active reminders',
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: Colors.grey.shade500,
-                ),
+                style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade500),
               ),
             ],
           ),
@@ -763,10 +798,7 @@ class _StatCard extends StatelessWidget {
           SizedBox(height: 4.h),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 10.sp, color: Colors.grey.shade600),
           ),
         ],
       ),

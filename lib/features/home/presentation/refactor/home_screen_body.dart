@@ -44,7 +44,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
   void initState() {
     super.initState();
     context.read<DashboardCubit>().loadDashboardStats();
-    
+
     // Widget config is initialized via BlocProvider in VoclioApp
 
     // Only fetch profile if user is already logged in (has valid auth state)
@@ -92,111 +92,115 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
 
               // Welcome Section with decorative background
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 20.w),
-                padding: EdgeInsets.all(20.w),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.primaryColor.withOpacity(0.08),
-                      theme.primaryColor.withOpacity(0.03),
-                      Colors.white,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(24.r),
-                  border: Border.all(
-                    color: theme.primaryColor.withOpacity(0.1),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                    margin: EdgeInsets.symmetric(horizontal: 20.w),
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.primaryColor.withOpacity(0.08),
+                          theme.primaryColor.withOpacity(0.03),
+                          Colors.white,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(
+                        color: theme.primaryColor.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: EdgeInsets.all(10.w),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.primaryColor.withOpacity(0.2),
-                                theme.primaryColor.withOpacity(0.1),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Icon(
-                            Icons.auto_graph_rounded,
-                            color: theme.primaryColor,
-                            size: 20.sp,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Your Activity',
-                                style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF1A1A2E),
-                                  fontSize: 18.sp,
-                                  letterSpacing: -0.5,
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(10.w),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.primaryColor.withOpacity(0.2),
+                                    theme.primaryColor.withOpacity(0.1),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
-                              Text(
-                                'Track progress & stay organized',
+                              child: Icon(
+                                Icons.auto_graph_rounded,
+                                color: theme.primaryColor,
+                                size: 20.sp,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Your Activity',
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: const Color(0xFF1A1A2E),
+                                          fontSize: 18.sp,
+                                          letterSpacing: -0.5,
+                                        ),
+                                  ),
+                                  Text(
+                                    'Track progress & stay organized',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade500,
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 5.h,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.primaryColor,
+                                    theme.primaryColor.withOpacity(0.8),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(20.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.primaryColor.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                'Today',
                                 style: TextStyle(
-                                  color: Colors.grey.shade500,
+                                  color: Colors.white,
                                   fontSize: 11.sp,
-                                  fontWeight: FontWeight.w400,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 5.h,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.primaryColor,
-                                theme.primaryColor.withOpacity(0.8),
-                              ],
                             ),
-                            borderRadius: BorderRadius.circular(20.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.primaryColor.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            'Today',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
+                  )
+                  .animate()
+                  .fadeIn(duration: 600.ms, delay: 200.ms)
+                  .slideY(begin: 0.1),
 
               SizedBox(height: 20.h),
 
@@ -219,7 +223,10 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                                   padding: EdgeInsets.all(8.w),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [const Color(0xFF6366F1), const Color(0xFF8B5CF6)],
+                                      colors: [
+                                        const Color(0xFF6366F1),
+                                        const Color(0xFF8B5CF6),
+                                      ],
                                     ),
                                     borderRadius: BorderRadius.circular(10.r),
                                   ),
@@ -232,12 +239,13 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                                 SizedBox(width: 10.w),
                                 Text(
                                   'At a Glance',
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1A1A2E),
-                                    fontSize: 18.sp,
-                                    letterSpacing: -0.3,
-                                  ),
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF1A1A2E),
+                                        fontSize: 18.sp,
+                                        letterSpacing: -0.3,
+                                      ),
                                 ),
                               ],
                             ),
@@ -265,7 +273,9 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                           providers: [
                             BlocProvider.value(value: GetIt.I<TasksCubit>()),
                             BlocProvider.value(value: GetIt.I<NotesCubit>()),
-                            BlocProvider.value(value: context.read<WidgetConfigCubit>()),
+                            BlocProvider.value(
+                              value: context.read<WidgetConfigCubit>(),
+                            ),
                           ],
                           child: HomeWidgetsContainer(
                             onTabChange: widget.onTabChange,
@@ -421,20 +431,28 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
                                 child: Stack(
                                   children: [
                                     FractionallySizedBox(
-                                      widthFactor: (progress / 100).clamp(0.0, 1.0),
+                                      widthFactor: (progress / 100).clamp(
+                                        0.0,
+                                        1.0,
+                                      ),
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(10.r),
+                                          borderRadius: BorderRadius.circular(
+                                            10.r,
+                                          ),
                                           gradient: LinearGradient(
                                             colors: [
                                               theme.primaryColor,
-                                              theme.primaryColor.withOpacity(0.7),
+                                              theme.primaryColor.withOpacity(
+                                                0.7,
+                                              ),
                                               const Color(0xFF667EEA),
                                             ],
                                           ),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: theme.primaryColor.withOpacity(0.4),
+                                              color: theme.primaryColor
+                                                  .withOpacity(0.4),
                                               blurRadius: 6,
                                               offset: const Offset(0, 2),
                                             ),
@@ -496,110 +514,118 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
     int delay,
   ) {
     final isTask = label == 'Tasks';
-    final gradientColors = [theme.primaryColor, theme.primaryColor.withOpacity(0.85)];
+    final gradientColors = [
+      theme.primaryColor,
+      theme.primaryColor.withOpacity(0.85),
+    ];
     final shadowColor = theme.primaryColor;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: gradientColors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24.r),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor.withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-            spreadRadius: -2,
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Decorative circles
-          Positioned(
-            right: -20.w,
-            top: -20.h,
-            child: Container(
-              width: 80.r,
-              height: 80.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
-              ),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ),
-          Positioned(
-            right: 10.w,
-            bottom: -30.h,
-            child: Container(
-              width: 60.r,
-              height: 60.r,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(24.r),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor.withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+                spreadRadius: -2,
               ),
-            ),
+            ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+          child: Stack(
             children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(14.r),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
+              // Decorative circles
+              Positioned(
+                right: -20.w,
+                top: -20.h,
+                child: Container(
+                  width: 80.r,
+                  height: 80.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.1),
                   ),
                 ),
-                child: Icon(icon, color: Colors.white, size: 24.sp),
               ),
-              SizedBox(height: 16.h),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 36.sp,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: -1,
-                      height: 1,
-                    ),
+              Positioned(
+                right: 10.w,
+                bottom: -30.h,
+                child: Container(
+                  width: 60.r,
+                  height: 60.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.08),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(left: 4.w, bottom: 4.h),
-                    child: Icon(
-                      isTask ? Icons.trending_up_rounded : Icons.auto_awesome,
-                      color: Colors.white.withOpacity(0.8),
-                      size: 18.sp,
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(10.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(icon, color: Colors.white, size: 24.sp),
+                  ),
+                  SizedBox(height: 16.h),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 36.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -1,
+                          height: 1,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 4.w, bottom: 4.h),
+                        child: Icon(
+                          isTask
+                              ? Icons.trending_up_rounded
+                              : Icons.auto_awesome,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 18.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.white.withOpacity(0.95),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 6.h),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.white.withOpacity(0.95),
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
             ],
           ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 600.ms, delay: delay.ms).scale(begin: const Offset(0.9, 0.9));
+        )
+        .animate()
+        .fadeIn(duration: 600.ms, delay: delay.ms)
+        .scale(begin: const Offset(0.9, 0.9));
   }
 
   Widget _buildProgressStat(
@@ -666,9 +692,10 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
         borderRadius: BorderRadius.circular(18.r),
         boxShadow: [
           BoxShadow(
-            color: isCompleted
-                ? Colors.green.withOpacity(0.08)
-                : color.withOpacity(0.1),
+            color:
+                isCompleted
+                    ? Colors.green.withOpacity(0.08)
+                    : color.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 6),
           ),
@@ -685,32 +712,35 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
             width: 42.r,
             height: 42.r,
             decoration: BoxDecoration(
-              gradient: isCompleted
-                  ? const LinearGradient(
-                      colors: [Color(0xFF4ECDC4), Color(0xFF44B09E)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : LinearGradient(
-                      colors: [color.withOpacity(0.15), color.withOpacity(0.08)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: isCompleted
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFF4ECDC4).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+              gradient:
+                  isCompleted
+                      ? const LinearGradient(
+                        colors: [Color(0xFF4ECDC4), Color(0xFF44B09E)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                      : LinearGradient(
+                        colors: [
+                          color.withOpacity(0.15),
+                          color.withOpacity(0.08),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ]
-                  : null,
+              borderRadius: BorderRadius.circular(12.r),
+              boxShadow:
+                  isCompleted
+                      ? [
+                        BoxShadow(
+                          color: const Color(0xFF4ECDC4).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                      : null,
             ),
             child: Icon(
-              isCompleted
-                  ? Icons.check_rounded
-                  : Icons.circle_outlined,
+              isCompleted ? Icons.check_rounded : Icons.circle_outlined,
               color: isCompleted ? Colors.white : color,
               size: 20.sp,
             ),
@@ -898,9 +928,10 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
     IconData icon,
     Color color,
   ) {
-    final gradientColors = icon == Icons.mic_rounded
-        ? [const Color(0xFFFF6B6B), const Color(0xFFFF8E53)]
-        : icon == Icons.add_task_rounded
+    final gradientColors =
+        icon == Icons.mic_rounded
+            ? [const Color(0xFFFF6B6B), const Color(0xFFFF8E53)]
+            : icon == Icons.add_task_rounded
             ? [const Color(0xFF4ECDC4), const Color(0xFF44B09E)]
             : [const Color(0xFF667EEA), const Color(0xFF764BA2)];
 

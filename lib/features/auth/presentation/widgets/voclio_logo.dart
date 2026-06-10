@@ -62,11 +62,7 @@ class VoclioLogoSmall extends StatelessWidget {
   final Color? color;
   final double? size;
 
-  const VoclioLogoSmall({
-    super.key,
-    this.color,
-    this.size,
-  });
+  const VoclioLogoSmall({super.key, this.color, this.size});
 
   @override
   Widget build(BuildContext context) {

@@ -33,23 +33,28 @@ class TaskTile extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: task.isDone 
-              ? (isDark ? Colors.green.withOpacity(0.1) : Colors.green.withOpacity(0.05))
-              : theme.colorScheme.surface,
+          color:
+              task.isDone
+                  ? (isDark
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.green.withOpacity(0.05))
+                  : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: task.isDone 
-                ? Colors.green.withOpacity(0.3)
-                : isOverdue 
+            color:
+                task.isDone
+                    ? Colors.green.withOpacity(0.3)
+                    : isOverdue
                     ? Colors.red.withOpacity(0.3)
                     : theme.colorScheme.onSurface.withOpacity(0.05),
             width: task.isDone || isOverdue ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: task.isDone 
-                  ? Colors.green.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.03),
+              color:
+                  task.isDone
+                      ? Colors.green.withOpacity(0.05)
+                      : Colors.black.withOpacity(0.03),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -67,27 +72,30 @@ class TaskTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: task.isDone
-                        ? Colors.green
-                        : isOverdue
+                    color:
+                        task.isDone
+                            ? Colors.green
+                            : isOverdue
                             ? Colors.red.withOpacity(0.5)
                             : theme.colorScheme.primary.withOpacity(0.4),
                     width: 2,
                   ),
                   color: task.isDone ? Colors.green : Colors.transparent,
-                  boxShadow: task.isDone
-                      ? [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
+                  boxShadow:
+                      task.isDone
+                          ? [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.3),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                          : null,
                 ),
-                child: task.isDone
-                    ? Icon(Icons.check, size: 16.sp, color: Colors.white)
-                    : null,
+                child:
+                    task.isDone
+                        ? Icon(Icons.check, size: 16.sp, color: Colors.white)
+                        : null,
               ),
             ),
             SizedBox(width: 14.w),
@@ -122,7 +130,8 @@ class TaskTile extends StatelessWidget {
                       color: theme.colorScheme.onSurface.withOpacity(opacity),
                       fontWeight: FontWeight.w600,
                       fontSize: 15.sp,
-                      decoration: task.isDone ? TextDecoration.lineThrough : null,
+                      decoration:
+                          task.isDone ? TextDecoration.lineThrough : null,
                       decorationColor: Colors.green,
                     ),
                     maxLines: 1,
@@ -133,21 +142,30 @@ class TaskTile extends StatelessWidget {
                     children: [
                       // Time
                       Icon(
-                        isOverdue ? Icons.warning_amber_rounded : Icons.access_time_rounded,
+                        isOverdue
+                            ? Icons.warning_amber_rounded
+                            : Icons.access_time_rounded,
                         size: 14.sp,
-                        color: isOverdue ? Colors.red : theme.colorScheme.secondary,
+                        color:
+                            isOverdue
+                                ? Colors.red
+                                : theme.colorScheme.secondary,
                       ),
                       SizedBox(width: 4.w),
                       Text(
                         _formatDate(task.date),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isOverdue 
-                              ? Colors.red.withOpacity(0.8)
-                              : theme.colorScheme.secondary.withOpacity(opacity),
-                          fontWeight: isOverdue ? FontWeight.w500 : FontWeight.normal,
+                          color:
+                              isOverdue
+                                  ? Colors.red.withOpacity(0.8)
+                                  : theme.colorScheme.secondary.withOpacity(
+                                    opacity,
+                                  ),
+                          fontWeight:
+                              isOverdue ? FontWeight.w500 : FontWeight.normal,
                         ),
                       ),
-                      
+
                       // Subtasks indicator
                       if (task.subtasks.isNotEmpty) ...[
                         SizedBox(width: 12.w),
@@ -160,47 +178,50 @@ class TaskTile extends StatelessWidget {
                         Text(
                           '${task.completedSubtasks}/${task.totalSubtasks}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.secondary.withOpacity(opacity),
+                            color: theme.colorScheme.secondary.withOpacity(
+                              opacity,
+                            ),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ],
                   ),
-                  
+
                   // Tags row
                   if (task.tags.isNotEmpty) ...[
                     SizedBox(height: 8.h),
                     Wrap(
                       spacing: 6.w,
                       runSpacing: 4.h,
-                      children: task.tags.take(2).map((tagName) {
-                        final tagColor = _getTagColor(tagName, theme);
-                        return Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: tagColor.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Text(
-                            tagName,
-                            style: TextStyle(
-                              color: tagColor.withOpacity(0.9),
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          task.tags.take(2).map((tagName) {
+                            final tagColor = _getTagColor(tagName, theme);
+                            return Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: tagColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                tagName,
+                                style: TextStyle(
+                                  color: tagColor.withOpacity(0.9),
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ],
                 ],
               ),
             ),
-            
+
             // Arrow indicator
             Icon(
               Icons.chevron_right_rounded,

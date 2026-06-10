@@ -29,7 +29,13 @@ class CalendarLoaded extends CalendarState {
   });
 
   @override
-  List<Object?> get props => [monthData, googleStatus, webexStatus, todayMeetings, todayWebexMeetings];
+  List<Object?> get props => [
+    monthData,
+    googleStatus,
+    webexStatus,
+    todayMeetings,
+    todayWebexMeetings,
+  ];
 }
 
 class CalendarError extends CalendarState {
@@ -46,9 +52,9 @@ class GoogleCalendarConnecting extends CalendarState {}
 
 class GoogleCalendarConnected extends CalendarState {
   final String message;
-  
+
   const GoogleCalendarConnected({required this.message});
-  
+
   @override
   List<Object?> get props => [message];
 }
@@ -57,9 +63,9 @@ class GoogleCalendarDisconnected extends CalendarState {}
 
 class GoogleOAuthUrlLoaded extends CalendarState {
   final GoogleOAuthUrlEntity oauthUrl;
-  
+
   const GoogleOAuthUrlLoaded({required this.oauthUrl});
-  
+
   @override
   List<Object?> get props => [oauthUrl];
 }
@@ -69,9 +75,9 @@ class WebexConnecting extends CalendarState {}
 
 class WebexConnected extends CalendarState {
   final String message;
-  
+
   const WebexConnected({required this.message});
-  
+
   @override
   List<Object?> get props => [message];
 }

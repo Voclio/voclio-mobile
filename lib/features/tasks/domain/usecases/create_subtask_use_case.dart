@@ -8,7 +8,11 @@ class CreateSubtaskUseCase {
 
   CreateSubtaskUseCase(this.taskRepository);
 
-  Future<Either<Failure, SubtaskEntity>> call(String taskId, String title, int order) async {
+  Future<Either<Failure, SubtaskEntity>> call(
+    String taskId,
+    String title,
+    int order,
+  ) async {
     return await taskRepository.createSubtask(taskId, title, order);
   }
 }

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:voclio_app/core/extentions/color_extentions.dart';
 import '../language/app_localizations.dart';
@@ -24,7 +23,7 @@ extension AppExtensions on BuildContext {
   TextStyle get textStyle => Theme.of(this).textTheme.displaySmall!;
 
   // Navigation methods using GoRouter
-  
+
   /// Navigate to a new route (push)
   /// [route] - the route path to navigate to
   /// [extra] - optional object to pass to the route

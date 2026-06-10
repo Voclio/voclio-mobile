@@ -7,25 +7,20 @@ import 'package:voclio_app/core/extentions/color_extentions.dart';
 ThemeData themeLight() {
   return ThemeData(
     // Custom color extensions for consistent theming
-    extensions: <ThemeExtension<dynamic>>[
-      MyColors.light,
-    ],
+    extensions: <ThemeExtension<dynamic>>[MyColors.light],
 
     // Scaffold background color
     scaffoldBackgroundColor: MyColors.light.background,
-    
+
     // Color scheme generated from primary color
     colorScheme: ColorScheme.fromSeed(
       seedColor: MyColors.light.primary!,
       brightness: Brightness.light,
     ),
-    
+
     // Default text theme for the app
     textTheme: const TextTheme(
-      displaySmall: TextStyle(
-        fontSize: 16,
-        color: Colors.black,
-      ),
+      displaySmall: TextStyle(fontSize: 16, color: Colors.black),
     ),
   );
 }

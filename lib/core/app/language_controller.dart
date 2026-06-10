@@ -36,15 +36,16 @@ class LanguageController {
   /// Toggle between Arabic and English languages
   /// Saves the new preference to SharedPreferences
   Future<void> toggleLanguage() async {
-    final newLocale = currentLocale.value.languageCode == 'en' 
-        ? const Locale('ar') 
-        : const Locale('en');
+    final newLocale =
+        currentLocale.value.languageCode == 'en'
+            ? const Locale('ar')
+            : const Locale('en');
     await changeLanguage(newLocale);
   }
 
   /// Check if current language is Arabic
   bool get isArabic => currentLocale.value.languageCode == 'ar';
-  
+
   /// Check if current language is English
   bool get isEnglish => currentLocale.value.languageCode == 'en';
 }

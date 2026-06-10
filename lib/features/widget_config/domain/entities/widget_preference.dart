@@ -137,13 +137,37 @@ class WidgetPreferences extends Equatable {
   factory WidgetPreferences.defaultConfig() {
     return WidgetPreferences(
       widgets: [
-        const WidgetConfig(type: WidgetType.todayTasks, isEnabled: true, order: 0),
-        const WidgetConfig(type: WidgetType.upcomingTasks, isEnabled: true, order: 1),
-        const WidgetConfig(type: WidgetType.calendar, isEnabled: false, order: 2),
+        const WidgetConfig(
+          type: WidgetType.todayTasks,
+          isEnabled: true,
+          order: 0,
+        ),
+        const WidgetConfig(
+          type: WidgetType.upcomingTasks,
+          isEnabled: true,
+          order: 1,
+        ),
+        const WidgetConfig(
+          type: WidgetType.calendar,
+          isEnabled: false,
+          order: 2,
+        ),
         const WidgetConfig(type: WidgetType.notes, isEnabled: false, order: 3),
-        const WidgetConfig(type: WidgetType.reminders, isEnabled: false, order: 4),
-        const WidgetConfig(type: WidgetType.productivity, isEnabled: false, order: 5),
-        const WidgetConfig(type: WidgetType.quickActions, isEnabled: false, order: 6),
+        const WidgetConfig(
+          type: WidgetType.reminders,
+          isEnabled: false,
+          order: 4,
+        ),
+        const WidgetConfig(
+          type: WidgetType.productivity,
+          isEnabled: false,
+          order: 5,
+        ),
+        const WidgetConfig(
+          type: WidgetType.quickActions,
+          isEnabled: false,
+          order: 6,
+        ),
       ],
       hasCompletedSetup: false,
     );
@@ -177,13 +201,15 @@ class WidgetPreferences extends Equatable {
 
   factory WidgetPreferences.fromJson(Map<String, dynamic> json) {
     return WidgetPreferences(
-      widgets: (json['widgets'] as List<dynamic>)
-          .map((w) => WidgetConfig.fromJson(w as Map<String, dynamic>))
-          .toList(),
+      widgets:
+          (json['widgets'] as List<dynamic>)
+              .map((w) => WidgetConfig.fromJson(w as Map<String, dynamic>))
+              .toList(),
       hasCompletedSetup: json['hasCompletedSetup'] as bool? ?? false,
-      lastUpdated: json['lastUpdated'] != null
-          ? DateTime.parse(json['lastUpdated'] as String)
-          : null,
+      lastUpdated:
+          json['lastUpdated'] != null
+              ? DateTime.parse(json['lastUpdated'] as String)
+              : null,
     );
   }
 

@@ -12,9 +12,10 @@ class NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     // Calculate word count for preview
-    final wordCount = note.content.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+    final wordCount =
+        note.content.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
     final isNew = DateTime.now().difference(note.creationDate).inHours < 24;
 
     return GestureDetector(
@@ -24,18 +25,20 @@ class NoteCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16.r),
-          border: isDark
-              ? Border.all(color: Colors.white.withOpacity(0.08))
-              : Border.all(color: Colors.grey.shade200),
-          boxShadow: isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+          border:
+              isDark
+                  ? Border.all(color: Colors.white.withOpacity(0.08))
+                  : Border.all(color: Colors.grey.shade200),
+          boxShadow:
+              isDark
+                  ? []
+                  : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +95,10 @@ class NoteCard extends StatelessWidget {
                 // New badge
                 if (isNew)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(isDark ? 0.2 : 0.1),
                       borderRadius: BorderRadius.circular(8.r),
@@ -117,9 +123,10 @@ class NoteCard extends StatelessWidget {
               width: double.infinity,
               padding: EdgeInsets.all(12.r),
               decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withOpacity(0.03)
-                    : theme.colorScheme.primary.withOpacity(0.03),
+                color:
+                    isDark
+                        ? Colors.white.withOpacity(0.03)
+                        : theme.colorScheme.primary.withOpacity(0.03),
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Text(
@@ -127,14 +134,18 @@ class NoteCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                    height: 1.5,
-                    fontSize: 13.sp,
-                    color: note.content.isEmpty
-                        ? theme.colorScheme.onSurface.withOpacity(0.4)
-                        : theme.colorScheme.onSurface.withOpacity(0.7),
-                    fontStyle: note.content.isEmpty ? FontStyle.italic : FontStyle.normal,
-                  ),
+                  height: 1.5,
+                  fontSize: 13.sp,
+                  color:
+                      note.content.isEmpty
+                          ? theme.colorScheme.onSurface.withOpacity(0.4)
+                          : theme.colorScheme.onSurface.withOpacity(0.7),
+                  fontStyle:
+                      note.content.isEmpty
+                          ? FontStyle.italic
+                          : FontStyle.normal,
                 ),
+              ),
             ),
 
             SizedBox(height: 12.h),
@@ -144,51 +155,58 @@ class NoteCard extends StatelessWidget {
               children: [
                 // Tags section
                 Expanded(
-                  child: note.tags.isEmpty
-                      ? Text(
-                          'No tags',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: theme.colorScheme.onSurface.withOpacity(0.4),
-                            fontStyle: FontStyle.italic,
-                          ),
-                        )
-                      : SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              ...note.tags.take(2).map(
-                                (tag) => Padding(
-                                  padding: EdgeInsets.only(right: 6.w),
-                                  child: _buildMiniTag(context, tag),
-                                ),
+                  child:
+                      note.tags.isEmpty
+                          ? Text(
+                            'No tags',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.4,
                               ),
-                              if (note.tags.length > 2)
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 6.w,
-                                    vertical: 3.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.onSurface.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(6.r),
-                                  ),
-                                  child: Text(
-                                    '+${note.tags.length - 2}',
-                                    style: TextStyle(
-                                      fontSize: 10.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          )
+                          : SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                ...note.tags
+                                    .take(2)
+                                    .map(
+                                      (tag) => Padding(
+                                        padding: EdgeInsets.only(right: 6.w),
+                                        child: _buildMiniTag(context, tag),
+                                      ),
+                                    ),
+                                if (note.tags.length > 2)
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 6.w,
+                                      vertical: 3.h,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(6.r),
+                                    ),
+                                    child: Text(
+                                      '+${note.tags.length - 2}',
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: theme.colorScheme.onSurface
+                                            .withOpacity(0.6),
+                                      ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
                 ),
-                
+
                 SizedBox(width: 8.w),
-                
+
                 // Timestamp with icon
                 Row(
                   mainAxisSize: MainAxisSize.min,

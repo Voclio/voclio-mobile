@@ -44,8 +44,6 @@ class AuthTopControls extends StatelessWidget {
               colorBlendMode: BlendMode.srcIn,
             ),
           ),
-
-
         ],
       ),
     );

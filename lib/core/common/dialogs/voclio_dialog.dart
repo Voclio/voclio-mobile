@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-enum VoclioDialogType {
-  info,
-  success,
-  error,
-  warning,
-  confirm,
-}
+enum VoclioDialogType { info, success, error, warning, confirm }
 
 class VoclioDialog extends StatelessWidget {
   final String title;
@@ -63,14 +57,8 @@ class VoclioDialog extends StatelessWidget {
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
         return ScaleTransition(
-          scale: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutBack,
-          ),
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          child: FadeTransition(opacity: animation, child: child),
         );
       },
     );
@@ -194,10 +182,7 @@ class VoclioDialog extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 24.h),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      _primaryColor,
-                      _primaryColor.withOpacity(0.8),
-                    ],
+                    colors: [_primaryColor, _primaryColor.withOpacity(0.8)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -252,11 +237,7 @@ class VoclioDialog extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        _icon,
-                        size: 32.sp,
-                        color: _primaryColor,
-                      ),
+                      child: Icon(_icon, size: 32.sp, color: _primaryColor),
                     ),
                   ],
                 ),
@@ -298,10 +279,15 @@ class VoclioDialog extends StatelessWidget {
                     if (secondaryButtonText != null) ...[
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: onSecondaryPressed ?? () => Navigator.of(context).pop(false),
+                          onPressed:
+                              onSecondaryPressed ??
+                              () => Navigator.of(context).pop(false),
                           style: OutlinedButton.styleFrom(
                             padding: EdgeInsets.symmetric(vertical: 14.h),
-                            side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                            side: BorderSide(
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.r),
                             ),
@@ -339,7 +325,9 @@ class VoclioDialog extends StatelessWidget {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: onPrimaryPressed ?? () => Navigator.of(context).pop(true),
+                          onPressed:
+                              onPrimaryPressed ??
+                              () => Navigator.of(context).pop(true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,

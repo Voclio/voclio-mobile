@@ -11,10 +11,13 @@ abstract class CalendarRemoteDataSource {
     bool includeGoogle = true,
   });
   Future<List<Map<String, dynamic>>> getDayEvents(String date);
-  
+
   // Google Calendar APIs
   Future<GoogleCalendarStatusEntity> getGoogleCalendarStatus();
-  Future<GoogleOAuthUrlEntity> getGoogleConnectUrl({bool isMobile = false, String? customScheme});
+  Future<GoogleOAuthUrlEntity> getGoogleConnectUrl({
+    bool isMobile = false,
+    String? customScheme,
+  });
   Future<void> disconnectGoogleCalendar();
   Future<List<GoogleCalendarEventEntity>> getGoogleCalendarEvents({
     String? startDate,
@@ -124,15 +127,16 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     try {
       final response = await apiClient.get(ApiEndpoints.googleCalendarStatus);
       final data = response.data['data'] ?? response.data;
-      
+
       return GoogleCalendarStatusEntity(
         connected: data['connected'] ?? false,
         syncEnabled: data['sync_enabled'] ?? false,
         syncStatus: data['sync_status'] ?? 'disconnected',
         calendarName: data['calendar_name'],
-        lastSyncAt: data['last_sync_at'] != null 
-            ? DateTime.parse(data['last_sync_at']) 
-            : null,
+        lastSyncAt:
+            data['last_sync_at'] != null
+                ? DateTime.parse(data['last_sync_at'])
+                : null,
         errorMessage: data['error_message'],
       );
     } catch (e) {
@@ -148,23 +152,25 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
 
   @override
   Future<GoogleOAuthUrlEntity> getGoogleConnectUrl({
-    bool isMobile = false, 
+    bool isMobile = false,
     String? customScheme,
   }) async {
     try {
-      final endpoint = isMobile 
-          ? ApiEndpoints.googleCalendarConnectMobile 
-          : ApiEndpoints.googleCalendarConnect;
-      
+      final endpoint =
+          isMobile
+              ? ApiEndpoints.googleCalendarConnectMobile
+              : ApiEndpoints.googleCalendarConnect;
+
       final response = await apiClient.get(
         endpoint,
-        queryParameters: isMobile && customScheme != null 
-            ? {'custom_scheme': customScheme} 
-            : null,
+        queryParameters:
+            isMobile && customScheme != null
+                ? {'custom_scheme': customScheme}
+                : null,
       );
-      
+
       final data = response.data['data'] ?? response.data;
-      
+
       return GoogleOAuthUrlEntity(
         authUrl: data['auth_url'] ?? '',
         message: data['message'] ?? 'Connect your Google Calendar',
@@ -196,7 +202,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
           if (endDate != null) 'end_date': endDate,
         },
       );
-      
+
       return _parseGoogleEvents(response.data);
     } catch (e) {
       return []; // Return empty list if not connected or error
@@ -214,7 +220,9 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
   }
 
   @override
-  Future<List<GoogleCalendarEventEntity>> getUpcomingMeetings({int days = 7}) async {
+  Future<List<GoogleCalendarEventEntity>> getUpcomingMeetings({
+    int days = 7,
+  }) async {
     try {
       final response = await apiClient.get(
         ApiEndpoints.googleCalendarUpcoming,
@@ -243,10 +251,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     try {
       await apiClient.post(
         ApiEndpoints.googleCalendarCallbackMobile,
-        data: {
-          'code': code,
-          'custom_scheme': customScheme,
-        },
+        data: {'code': code, 'custom_scheme': customScheme},
       );
     } catch (e) {
       throw Exception('Failed to handle mobile OAuth callback: $e');
@@ -255,7 +260,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
 
   List<GoogleCalendarEventEntity> _parseGoogleEvents(dynamic rawData) {
     List<dynamic> eventsList = [];
-    
+
     if (rawData is Map && rawData['data'] != null) {
       final data = rawData['data'];
       if (data is Map && data['meetings'] != null) {
@@ -278,9 +283,11 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
         startTime: _parseDateTime(event['start'] ?? event['startTime']),
         endTime: _parseDateTime(event['end'] ?? event['endTime']),
         location: event['location'],
-        attendees: (event['attendees'] as List<dynamic>?)
-            ?.map((a) => a.toString())
-            .toList() ?? [],
+        attendees:
+            (event['attendees'] as List<dynamic>?)
+                ?.map((a) => a.toString())
+                .toList() ??
+            [],
         htmlLink: event['htmlLink'],
         isAllDay: event['is_all_day'] ?? event['isAllDay'] ?? false,
         colorId: event['colorId'],
@@ -307,14 +314,15 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     try {
       final response = await apiClient.get(ApiEndpoints.webexStatus);
       final data = response.data['data'] ?? response.data;
-      
+
       return WebexStatusEntity(
         connected: data['connected'] ?? false,
         email: data['email'],
         displayName: data['display_name'] ?? data['displayName'],
-        connectedAt: data['connected_at'] != null 
-            ? DateTime.parse(data['connected_at']) 
-            : null,
+        connectedAt:
+            data['connected_at'] != null
+                ? DateTime.parse(data['connected_at'])
+                : null,
         errorMessage: data['error_message'],
       );
     } catch (e) {
@@ -330,7 +338,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     try {
       final response = await apiClient.get(ApiEndpoints.webexAuth);
       final data = response.data['data'] ?? response.data;
-      
+
       return GoogleOAuthUrlEntity(
         authUrl: data['auth_url'] ?? data['authUrl'] ?? '',
         message: data['message'] ?? 'Connect your Webex account',
@@ -395,7 +403,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
           'sendEmail': sendEmail,
         },
       );
-      
+
       final data = response.data['data'] ?? response.data;
       return _parseSingleWebexMeeting(data);
     } catch (e) {
@@ -414,7 +422,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
 
   List<WebexMeetingEntity> _parseWebexMeetings(dynamic rawData) {
     List<dynamic> meetingsList = [];
-    
+
     if (rawData is Map && rawData['data'] != null) {
       final data = rawData['data'];
       if (data is Map && data['meetings'] != null) {
@@ -447,4 +455,3 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
     );
   }
 }
-

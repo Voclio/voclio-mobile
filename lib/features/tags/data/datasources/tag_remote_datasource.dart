@@ -23,7 +23,9 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
       List<dynamic> dataList = [];
 
       // Structure: { "data": { "tags": [...] } }
-      if (rawData is Map && rawData['data'] is Map && rawData['data']['tags'] is List) {
+      if (rawData is Map &&
+          rawData['data'] is Map &&
+          rawData['data']['tags'] is List) {
         dataList = rawData['data']['tags'];
       } else if (rawData is Map && rawData['data'] is List) {
         // Fallback: { "data": [...] }
@@ -61,12 +63,14 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
         data: tag.toJson(),
       );
       final rawData = response.data;
-      
+
       // Structure: { "data": { "tag": {...} } }
-      if (rawData is Map && rawData['data'] is Map && rawData['data']['tag'] != null) {
+      if (rawData is Map &&
+          rawData['data'] is Map &&
+          rawData['data']['tag'] != null) {
         return TagModel.fromJson(rawData['data']['tag']);
       }
-      
+
       final data = rawData['data'];
       return TagModel.fromJson(data);
     } catch (e) {
@@ -82,9 +86,11 @@ class TagRemoteDataSourceImpl implements TagRemoteDataSource {
         data: tag.toJson(),
       );
       final rawData = response.data;
-      
+
       // Structure: { "data": { "tag": {...} } }
-      if (rawData is Map && rawData['data'] is Map && rawData['data']['tag'] != null) {
+      if (rawData is Map &&
+          rawData['data'] is Map &&
+          rawData['data']['tag'] != null) {
         return TagModel.fromJson(rawData['data']['tag']);
       }
 

@@ -303,7 +303,6 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                   SizedBox(height: 8.h),
                   BlocBuilder<TasksCubit, TasksState>(
                     builder: (context, state) {
-
                       final effectiveSelection =
                           _selectedTagName ??
                           (state.availableTags.isNotEmpty

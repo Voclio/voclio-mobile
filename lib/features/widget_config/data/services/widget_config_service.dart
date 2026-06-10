@@ -47,17 +47,22 @@ class WidgetConfigService {
   }
 
   /// Update a single widget configuration
-  Future<bool> updateWidget(WidgetType type, {bool? isEnabled, int? order}) async {
+  Future<bool> updateWidget(
+    WidgetType type, {
+    bool? isEnabled,
+    int? order,
+  }) async {
     final preferences = loadPreferences();
-    final updatedWidgets = preferences.widgets.map((widget) {
-      if (widget.type == type) {
-        return widget.copyWith(
-          isEnabled: isEnabled ?? widget.isEnabled,
-          order: order ?? widget.order,
-        );
-      }
-      return widget;
-    }).toList();
+    final updatedWidgets =
+        preferences.widgets.map((widget) {
+          if (widget.type == type) {
+            return widget.copyWith(
+              isEnabled: isEnabled ?? widget.isEnabled,
+              order: order ?? widget.order,
+            );
+          }
+          return widget;
+        }).toList();
 
     return savePreferences(preferences.copyWith(widgets: updatedWidgets));
   }
@@ -72,10 +77,13 @@ class WidgetConfigService {
   /// Reorder widgets
   Future<bool> reorderWidgets(List<WidgetType> newOrder) async {
     final preferences = loadPreferences();
-    final updatedWidgets = preferences.widgets.map((widget) {
-      final newIndex = newOrder.indexOf(widget.type);
-      return widget.copyWith(order: newIndex >= 0 ? newIndex : widget.order);
-    }).toList();
+    final updatedWidgets =
+        preferences.widgets.map((widget) {
+          final newIndex = newOrder.indexOf(widget.type);
+          return widget.copyWith(
+            order: newIndex >= 0 ? newIndex : widget.order,
+          );
+        }).toList();
 
     return savePreferences(preferences.copyWith(widgets: updatedWidgets));
   }

@@ -77,34 +77,34 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tasks',
-                          // 4. Use Theme Typography
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        Text(
-                          'You have $totalTasks tasks',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.secondary,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                IconButton(
-                      onPressed: () {},
-                      icon: Icon(
-                        Icons.filter_list_rounded,
-                        // 5. Use Theme Icon Color
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tasks',
+                      // 4. Use Theme Typography
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
                       ),
                     ),
+                    Text(
+                      'You have $totalTasks tasks',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  onPressed: () {},
+                  icon: Icon(
+                    Icons.filter_list_rounded,
+                    // 5. Use Theme Icon Color
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
               ],
             ),
           ),
@@ -160,44 +160,44 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
 
                     // Tag Filter Chips (Like Notes Screen)
                     BlocBuilder<TasksCubit, TasksState>(
-                          builder: (context, state) {
-                            return SizedBox(
-                              height: 40.h,
-                              child: ListView(
-                                scrollDirection: Axis.horizontal,
-                                children: [
-                                  // "All" Chip
-                                  _buildFilterChip(
+                      builder: (context, state) {
+                        return SizedBox(
+                          height: 40.h,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              // "All" Chip
+                              _buildFilterChip(
+                                context,
+                                label: 'All',
+                                isSelected: state.selectedTagName == null,
+                                onTap:
+                                    () => context
+                                        .read<TasksCubit>()
+                                        .filterByTag(null),
+                              ),
+                              SizedBox(width: 10.w),
+                              // Dynamic Tag Chips
+                              ...state.availableTags.map((tag) {
+                                return Padding(
+                                  padding: EdgeInsets.only(right: 10.w),
+                                  child: _buildFilterChip(
                                     context,
-                                    label: 'All',
-                                    isSelected: state.selectedTagName == null,
+                                    label: tag.name,
+                                    isSelected:
+                                        state.selectedTagName == tag.name,
                                     onTap:
                                         () => context
                                             .read<TasksCubit>()
-                                            .filterByTag(null),
+                                            .filterByTag(tag.name),
                                   ),
-                                  SizedBox(width: 10.w),
-                                  // Dynamic Tag Chips
-                                  ...state.availableTags.map((tag) {
-                                    return Padding(
-                                      padding: EdgeInsets.only(right: 10.w),
-                                      child: _buildFilterChip(
-                                        context,
-                                        label: tag.name,
-                                        isSelected:
-                                            state.selectedTagName == tag.name,
-                                        onTap:
-                                            () => context
-                                                .read<TasksCubit>()
-                                                .filterByTag(tag.name),
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                                );
+                              }),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
 
                     SizedBox(height: 24.h),
 
@@ -205,13 +205,12 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                     if (state.status == TasksStatus.loading)
                       Padding(
                         padding: EdgeInsets.only(bottom: 12.h),
-                        child:
-                            LinearProgressIndicator(
-                              minHeight: 2.h,
-                              backgroundColor: theme.colorScheme.primary
-                                  .withOpacity(0.1),
-                              color: theme.colorScheme.primary,
-                            ),
+                        child: LinearProgressIndicator(
+                          minHeight: 2.h,
+                          backgroundColor: theme.colorScheme.primary
+                              .withOpacity(0.1),
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
 
                     // Task List
@@ -250,7 +249,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                               child: ListView(
                                 children: [
                                   SizedBox(height: 80.h),
-                                  _buildEmptyState(context, state.selectedTagName),
+                                  _buildEmptyState(
+                                    context,
+                                    state.selectedTagName,
+                                  ),
                                 ],
                               ),
                             );
@@ -268,10 +270,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   _buildSectionHeader(context, "Today"),
                                   ...todayTasks.map(
                                     (task) => _buildTaskItem(
-                                          context,
-                                          task,
-                                          state.availableTags,
-                                        ),
+                                      context,
+                                      task,
+                                      state.availableTags,
+                                    ),
                                   ),
                                 ],
                                 if (tomorrowTasks.isNotEmpty) ...[
@@ -279,10 +281,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   _buildSectionHeader(context, "Tomorrow"),
                                   ...tomorrowTasks.map(
                                     (task) => _buildTaskItem(
-                                          context,
-                                          task,
-                                          state.availableTags,
-                                        ),
+                                      context,
+                                      task,
+                                      state.availableTags,
+                                    ),
                                   ),
                                 ],
                                 if (laterTasks.isNotEmpty) ...[
@@ -290,10 +292,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   _buildSectionHeader(context, "Later"),
                                   ...laterTasks.map(
                                     (task) => _buildTaskItem(
-                                          context,
-                                          task,
-                                          state.availableTags,
-                                        ),
+                                      context,
+                                      task,
+                                      state.availableTags,
+                                    ),
                                   ),
                                 ],
                               ],
@@ -327,32 +329,38 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
       width: double.infinity,
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
-        color: isComplete 
-            ? (isDark ? Colors.green.withOpacity(0.15) : Colors.green.shade50)
-            : theme.colorScheme.surface,
+        color:
+            isComplete
+                ? (isDark
+                    ? Colors.green.withOpacity(0.15)
+                    : Colors.green.shade50)
+                : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24.r),
-        border: isComplete 
-            ? Border.all(color: Colors.green.withOpacity(0.3), width: 1.5)
-            : null,
+        border:
+            isComplete
+                ? Border.all(color: Colors.green.withOpacity(0.3), width: 1.5)
+                : null,
         boxShadow: [
           BoxShadow(
-            color: isComplete 
-                ? Colors.green.withOpacity(0.1)
-                : Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            color:
+                isComplete
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
-        gradient: !isComplete && isDark
-            ? LinearGradient(
-                colors: [
-                  theme.colorScheme.secondary.withOpacity(0.1),
-                  theme.colorScheme.secondary.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
+        gradient:
+            !isComplete && isDark
+                ? LinearGradient(
+                  colors: [
+                    theme.colorScheme.secondary.withOpacity(0.1),
+                    theme.colorScheme.secondary.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+                : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,15 +390,19 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: isComplete
-                      ? Colors.green.withOpacity(0.2)
-                      : theme.colorScheme.primary.withOpacity(0.1),
+                  color:
+                      isComplete
+                          ? Colors.green.withOpacity(0.2)
+                          : theme.colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
                   "$percentage%",
                   style: TextStyle(
-                    color: isComplete ? Colors.green.shade700 : theme.colorScheme.primary,
+                    color:
+                        isComplete
+                            ? Colors.green.shade700
+                            : theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14.sp,
                   ),
@@ -403,9 +415,12 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
             borderRadius: BorderRadius.circular(10.r),
             child: LinearProgressIndicator(
               value: progressValue,
-              backgroundColor: isDark 
-                  ? Colors.white10 
-                  : (isComplete ? Colors.green.shade100 : Colors.deepPurple.shade50),
+              backgroundColor:
+                  isDark
+                      ? Colors.white10
+                      : (isComplete
+                          ? Colors.green.shade100
+                          : Colors.deepPurple.shade50),
               color: isComplete ? Colors.green : theme.colorScheme.primary,
               minHeight: 10.h,
             ),
@@ -506,11 +521,11 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
       ),
     );
   }
-  
+
   Widget _buildEmptyState(BuildContext context, String? selectedTagName) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -531,7 +546,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
           ),
           SizedBox(height: 24.h),
           Text(
-            selectedTagName != null 
+            selectedTagName != null
                 ? 'No tasks in "$selectedTagName"'
                 : 'No tasks yet',
             style: theme.textTheme.titleLarge?.copyWith(
@@ -560,19 +575,17 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
-                builder: (_) => BlocProvider.value(
-                  value: context.read<TasksCubit>(),
-                  child: const AddTaskBottomSheet(),
-                ),
+                builder:
+                    (_) => BlocProvider.value(
+                      value: context.read<TasksCubit>(),
+                      child: const AddTaskBottomSheet(),
+                    ),
               );
             },
             icon: Icon(Icons.add_rounded, size: 20.sp),
             label: Text(
               'Create Task',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14.sp,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,

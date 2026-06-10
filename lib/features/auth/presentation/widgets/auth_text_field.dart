@@ -84,10 +84,7 @@ class AuthTextField extends StatelessWidget {
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w500,
             ),
-            hintStyle: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey.shade400,
-            ),
+            hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey.shade400),
             prefixIcon: Container(
               margin: EdgeInsets.all(12.r),
               padding: EdgeInsets.all(8.r),

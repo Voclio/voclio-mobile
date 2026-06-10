@@ -78,7 +78,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           VoclioDialog.showSuccess(
             context: context,
             title: 'Password Reset!',
-            message: 'Your password has been reset successfully. You can now login with your new password.',
+            message:
+                'Your password has been reset successfully. You can now login with your new password.',
             buttonText: 'Go to Login',
             onPressed: () {
               Navigator.of(context).pop();

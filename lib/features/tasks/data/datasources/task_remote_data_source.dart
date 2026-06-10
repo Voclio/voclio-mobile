@@ -21,7 +21,12 @@ abstract class TaskRemoteDataSource {
   // Subtasks methods
   Future<List<SubtaskModel>> getSubtasks(String taskId);
   Future<SubtaskModel> createSubtask(String taskId, String title, int order);
-  Future<void> updateSubtask(String taskId, String subtaskId, String title, bool completed);
+  Future<void> updateSubtask(
+    String taskId,
+    String subtaskId,
+    String title,
+    bool completed,
+  );
   Future<void> deleteSubtask(String taskId, String subtaskId);
 
   // Categories methods

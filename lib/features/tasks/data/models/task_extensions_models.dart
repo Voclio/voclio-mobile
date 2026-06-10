@@ -26,7 +26,8 @@ class SubtaskModel {
       order: int.tryParse((json['order'] ?? 0).toString()) ?? 0,
       createdAt:
           json['created_at'] != null
-              ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+              ? DateTime.tryParse(json['created_at'].toString()) ??
+                  DateTime.now()
               : DateTime.now(),
     );
   }

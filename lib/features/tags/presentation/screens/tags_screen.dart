@@ -35,9 +35,9 @@ class _TagsScreenState extends State<TagsScreen> {
       body: BlocConsumer<TagsCubit, TagsState>(
         listener: (context, state) {
           if (state is TagsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
           if (state is TagCreated) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -93,7 +93,8 @@ class _TagsScreenState extends State<TagsScreen> {
                       child: const Icon(Icons.label, color: Colors.white),
                     ),
                     title: Text(tag.name),
-                    subtitle: tag.description != null ? Text(tag.description!) : null,
+                    subtitle:
+                        tag.description != null ? Text(tag.description!) : null,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -126,79 +127,85 @@ class _TagsScreenState extends State<TagsScreen> {
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Create Tag'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Tag Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            // Simple color picker (you can use flutter_colorpicker package)
-            Wrap(
-              spacing: 8.w,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Create Tag'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Colors.red,
-                Colors.orange,
-                Colors.yellow,
-                Colors.green,
-                Colors.blue,
-                Colors.purple,
-                Colors.pink,
-              ].map((color) {
-                return GestureDetector(
-                  onTap: () {
-                    selectedColor = color;
-                  },
-                  child: Container(
-                    width: 40.w,
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tag Name',
+                    border: OutlineInputBorder(),
                   ),
-                );
-              }).toList(),
+                ),
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                // Simple color picker (you can use flutter_colorpicker package)
+                Wrap(
+                  spacing: 8.w,
+                  children:
+                      [
+                        Colors.red,
+                        Colors.orange,
+                        Colors.yellow,
+                        Colors.green,
+                        Colors.blue,
+                        Colors.purple,
+                        Colors.pink,
+                      ].map((color) {
+                        return GestureDetector(
+                          onTap: () {
+                            selectedColor = color;
+                          },
+                          child: Container(
+                            width: 40.w,
+                            height: 40.h,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (nameController.text.isNotEmpty) {
+                    final tag = TagEntity(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      name: nameController.text,
+                      color:
+                          '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
+                      description:
+                          descController.text.isEmpty
+                              ? null
+                              : descController.text,
+                      createdAt: DateTime.now(),
+                    );
+                    context.read<TagsCubit>().createTag(tag);
+                    Navigator.pop(dialogContext);
+                  }
+                },
+                child: const Text('Create'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                final tag = TagEntity(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  name: nameController.text,
-                  color: '#${selectedColor.toARGB32().toRadixString(16).substring(2)}',
-                  description: descController.text.isEmpty ? null : descController.text,
-                  createdAt: DateTime.now(),
-                );
-                context.read<TagsCubit>().createTag(tag);
-                Navigator.pop(dialogContext);
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -210,7 +217,8 @@ class _TagsScreenState extends State<TagsScreen> {
     VoclioDialog.showConfirm(
       context: context,
       title: 'Delete Tag',
-      message: 'Are you sure you want to delete this tag? This action cannot be undone.',
+      message:
+          'Are you sure you want to delete this tag? This action cannot be undone.',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       onConfirm: () {

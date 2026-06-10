@@ -8,7 +8,10 @@ class UpdateProfileUseCase {
 
   UpdateProfileUseCase(this._repository);
 
-  Future<Either<Failure, AuthResponse>> call(String name, String phoneNumber) async {
+  Future<Either<Failure, AuthResponse>> call(
+    String name,
+    String phoneNumber,
+  ) async {
     return await _repository.updateProfile(name, phoneNumber);
   }
 }

@@ -401,8 +401,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                       color: isSelected ? primaryColor : Colors.grey[100],
                       borderRadius: BorderRadius.circular(18.r),
                       border: Border.all(
-                        color:
-                            isSelected ? primaryColor : Colors.grey[300]!,
+                        color: isSelected ? primaryColor : Colors.grey[300]!,
                         width: 2,
                       ),
                       boxShadow:
@@ -424,10 +423,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
-                            color:
-                                isSelected
-                                    ? Colors.white
-                                    : Colors.grey[700],
+                            color: isSelected ? Colors.white : Colors.grey[700],
                           ),
                         ),
                         Text(
@@ -435,9 +431,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                           style: TextStyle(
                             fontSize: 11.sp,
                             color:
-                                isSelected
-                                    ? Colors.white70
-                                    : Colors.grey[500],
+                                isSelected ? Colors.white70 : Colors.grey[500],
                           ),
                         ),
                       ],

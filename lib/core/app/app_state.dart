@@ -16,4 +16,3 @@ class AppInitial extends AppState {
 class AppLanguageChanged extends AppState {
   const AppLanguageChanged(super.locale);
 }
-

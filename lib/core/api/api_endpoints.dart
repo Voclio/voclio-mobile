@@ -40,7 +40,8 @@ class ApiEndpoints {
   static String taskWithSubtasks(String id) => '/tasks/$id/with-subtasks';
   static String completeTask(String id) => taskById(id);
   static String subtasks(String taskId) => '/tasks/$taskId/subtasks';
-  static String subtaskById(String taskId, String subtaskId) => '/tasks/$taskId/subtasks/$subtaskId';
+  static String subtaskById(String taskId, String subtaskId) =>
+      '/tasks/$taskId/subtasks/$subtaskId';
   static String taskCategoryById(String id) => '/tasks/categories/$id';
 
   static const String tasksByDate = '/tasks/by-date';
@@ -84,9 +85,12 @@ class ApiEndpoints {
   // ========== Google Calendar ==========
   static const String googleCalendarStatus = '/calendar/google/status';
   static const String googleCalendarConnect = '/calendar/google/connect';
-  static const String googleCalendarConnectMobile = '/calendar/google/connect/mobile';
-  static const String googleCalendarLinkSession = '/calendar/google/link-session';
-  static const String googleCalendarCallbackMobile = '/calendar/google/callback/mobile';
+  static const String googleCalendarConnectMobile =
+      '/calendar/google/connect/mobile';
+  static const String googleCalendarLinkSession =
+      '/calendar/google/link-session';
+  static const String googleCalendarCallbackMobile =
+      '/calendar/google/callback/mobile';
   static const String googleCalendarDisconnect = '/calendar/google/disconnect';
   static const String googleCalendarEvents = '/calendar/google/events';
   static const String googleCalendarToday = '/calendar/google/today';

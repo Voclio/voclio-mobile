@@ -21,9 +21,11 @@ class TagModel {
       name: json['name'] ?? '',
       color: json['color'] ?? '#6B46C1',
       description: json['description'],
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
-          : DateTime.now(),
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.tryParse(json['created_at'].toString()) ??
+                  DateTime.now()
+              : DateTime.now(),
     );
   }
 

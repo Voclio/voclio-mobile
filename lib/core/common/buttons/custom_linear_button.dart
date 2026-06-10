@@ -15,13 +15,13 @@ class CustomLinearButton extends StatelessWidget {
 
   /// Callback function when button is pressed
   final VoidCallback onPressed;
-  
+
   /// Child widget to display inside the button
   final Widget child;
-  
+
   /// Height of the button
   final double? height;
-  
+
   /// Width of the button
   final double? width;
 
@@ -38,10 +38,7 @@ class CustomLinearButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           gradient: LinearGradient(
-            colors: [
-              context.colors.primary!,
-              context.colors.accentDark!,
-            ],
+            colors: [context.colors.primary!, context.colors.accentDark!],
             begin: const Alignment(0.46, -0.89),
             end: const Alignment(-0.46, 0.89),
           ),

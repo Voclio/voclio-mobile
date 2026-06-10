@@ -18,5 +18,12 @@ class VoiceRecording extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, title, url, transcription, duration, createdAt];
+  List<Object?> get props => [
+    id,
+    title,
+    url,
+    transcription,
+    duration,
+    createdAt,
+  ];
 }
