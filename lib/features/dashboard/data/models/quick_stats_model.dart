@@ -14,11 +14,18 @@ class QuickStatsModel {
   });
 
   factory QuickStatsModel.fromJson(Map<String, dynamic> json) {
+    final tasks = json['tasks'] as Map<String, dynamic>? ?? {};
+    final productivity = json['productivity'] as Map<String, dynamic>? ?? {};
+
+    final totalTasks = tasks['total'] ?? json['todayTasks'] ?? 0;
+    final completedTasks = tasks['completed'] ?? 0;
+
     return QuickStatsModel(
-      todayTasks: json['todayTasks'] ?? 0,
-      pendingTasks: json['pendingTasks'] ?? 0,
-      totalNotes: json['totalNotes'] ?? 0,
-      currentStreak: json['currentStreak'] ?? 0,
+      todayTasks: totalTasks is int ? totalTasks : int.tryParse('$totalTasks') ?? 0,
+      pendingTasks: (totalTasks is int ? totalTasks : int.tryParse('$totalTasks') ?? 0) -
+          (completedTasks is int ? completedTasks : int.tryParse('$completedTasks') ?? 0),
+      totalNotes: json['notes'] ?? json['totalNotes'] ?? 0,
+      currentStreak: productivity['sessions'] ?? json['currentStreak'] ?? 0,
     );
   }
 

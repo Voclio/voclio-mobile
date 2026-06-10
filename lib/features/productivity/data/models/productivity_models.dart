@@ -26,7 +26,7 @@ class FocusSessionModel {
       ambientSound: json['ambient_sound'],
       soundVolume: json['sound_volume'],
       completed: (json['completed'] ?? false) || json['status'] == 'completed',
-      actualDuration: json['actual_duration'],
+      actualDuration: json['actual_duration'] ?? json['elapsed_time'],
       createdAt:
           json['created_at'] != null
               ? DateTime.parse(json['created_at'])
@@ -106,17 +106,33 @@ class AchievementModel {
   });
 
   factory AchievementModel.fromJson(Map<String, dynamic> json) {
+    final type = json['achievement_type']?.toString();
+
     return AchievementModel(
-      id: json['achievement_id'] ?? json['id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      icon: json['icon'] ?? '🏆',
-      isUnlocked: json['is_unlocked'] ?? false,
-      unlockedAt:
-          json['unlocked_at'] != null
-              ? DateTime.parse(json['unlocked_at'])
+      id: (json['achievement_id'] ?? json['id'] ?? '').toString(),
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      icon: json['icon']?.toString() ?? _iconForType(type),
+      isUnlocked: json['is_unlocked'] == true || json['earned_at'] != null,
+      unlockedAt: json['unlocked_at'] != null
+          ? DateTime.tryParse(json['unlocked_at'].toString())
+          : json['earned_at'] != null
+              ? DateTime.tryParse(json['earned_at'].toString())
               : null,
     );
+  }
+
+  static String _iconForType(String? type) {
+    switch (type) {
+      case 'first_focus':
+        return '🎯';
+      case 'week_warrior':
+        return '🔥';
+      case 'note_taker':
+        return '📝';
+      default:
+        return '🏆';
+    }
   }
 
   AchievementEntity toEntity() {

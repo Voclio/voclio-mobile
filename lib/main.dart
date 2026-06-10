@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:voclio_app/voclio_app.dart';
@@ -14,8 +15,10 @@ void main() async {
   // Initialize dependencies
   await setupDependencies();
 
-  // Bypass SSL verification for development
-  HttpOverrides.global = MyHttpOverrides();
+  // Bypass SSL verification only in debug builds (e.g. self-signed staging certs)
+  if (kDebugMode) {
+    HttpOverrides.global = MyHttpOverrides();
+  }
 
   // Initialize controllers
   await ConnectivityControler.instance.init();

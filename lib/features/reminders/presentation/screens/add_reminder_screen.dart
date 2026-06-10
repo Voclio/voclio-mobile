@@ -10,6 +10,8 @@ import '../../../tasks/presentation/bloc/tasks_cubit.dart';
 import '../../../tasks/presentation/bloc/tasks_state.dart';
 import '../../domain/entities/reminder_entity.dart';
 import '../cubit/reminders_cubit.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
 class AddReminderScreen extends StatefulWidget {
   const AddReminderScreen({super.key});
@@ -124,7 +126,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   Future<void> _saveReminder() async {
     if (!_formKey.currentState!.validate()) return;
-
+    
     if (_selectedTask == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -141,10 +143,9 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     final reminder = ReminderEntity(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleController.text.trim(),
-      description:
-          _descriptionController.text.trim().isNotEmpty
-              ? _descriptionController.text.trim()
-              : null,
+      description: _descriptionController.text.trim().isNotEmpty
+          ? _descriptionController.text.trim()
+          : null,
       remindAt: _selectedDate,
       taskId: int.tryParse(_selectedTask!.id),
       reminderType: _reminderType,
@@ -153,7 +154,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     );
 
     await context.read<RemindersCubit>().createReminder(reminder);
-
+    
     if (mounted) {
       final state = context.read<RemindersCubit>().state;
       if (state is RemindersError) {
@@ -183,20 +184,16 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      appBar: AppBar(
-        title: Text(
-          'Add Reminder',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.sp),
-        ),
-        centerTitle: true,
-        elevation: 0,
-      ),
+    return HomeSecondaryScaffold(
+      title: 'Add Reminder',
+      subtitle: 'Schedule what matters',
+      icon: Icons.notifications_active_outlined,
+      accent: HomeSystemTokens.orange,
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.all(20.w),
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
           children: [
             // Header illustration
             Container(
@@ -224,7 +221,10 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                   SizedBox(height: 4.h),
                   Text(
                     'Never miss an important moment',
-                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
@@ -234,7 +234,10 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
             // Title field
             Text(
               'Title',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             SizedBox(height: 8.h),
             TextFormField(
@@ -265,7 +268,10 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
             // Description field (optional)
             Text(
               'Description (Optional)',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             SizedBox(height: 8.h),
             TextFormField(
@@ -294,262 +300,284 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
             // Task picker (Required)
             Text(
               'Task *',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             SizedBox(height: 8.h),
             _isLoadingTasks
                 ? Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 20.w,
-                        height: 20.w,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: context.colors.primary,
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: context.colors.primary,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        'Loading tasks...',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                : _tasks.isEmpty
-                ? Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.orange[300]!),
-                    borderRadius: BorderRadius.circular(12.r),
-                    color: Colors.orange[50],
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.warning_amber, color: Colors.orange[700]),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Text(
-                          'No tasks found. Create a task first.',
+                        SizedBox(width: 12.w),
+                        Text(
+                          'Loading tasks...',
                           style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.orange[700],
+                            fontSize: 16.sp,
+                            color: Colors.grey[600],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                )
-                : DropdownButtonFormField<TaskEntity>(
-                  value: _selectedTask,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.task_alt,
-                      color: context.colors.primary,
+                      ],
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(
-                        color: context.colors.primary ?? Colors.blue,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  hint: const Text('Select a task'),
-                  isExpanded: true,
-                  items:
-                      _tasks.map((task) {
-                        return DropdownMenuItem<TaskEntity>(
-                          value: task,
-                          child: Text(
-                            task.title,
-                            overflow: TextOverflow.ellipsis,
+                  )
+                : _tasks.isEmpty
+                    ? Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.orange[300]!),
+                          borderRadius: BorderRadius.circular(12.r),
+                          color: Colors.orange[50],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.warning_amber, color: Colors.orange[700]),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                'No tasks found. Create a task first.',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.orange[700],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : DropdownButtonFormField<TaskEntity>(
+                        value: _selectedTask,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.task_alt, color: context.colors.primary),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
                           ),
-                        );
-                      }).toList(),
-                  onChanged: (task) {
-                    setState(() => _selectedTask = task);
-                  },
-                ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide(
+                              color: context.colors.primary ?? Colors.blue,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        hint: const Text('Select a task'),
+                        isExpanded: true,
+                        items: _tasks.map((task) {
+                          return DropdownMenuItem<TaskEntity>(
+                            value: task,
+                            child: Text(
+                              task.title,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (task) {
+                          setState(() => _selectedTask = task);
+                        },
+                      ),
             SizedBox(height: 20.h),
 
             // Date picker
             Text(
               'Date',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 8.h),
-            InkWell(
-              onTap: _selectDate,
-              borderRadius: BorderRadius.circular(12.r),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: context.colors.primary),
-                    SizedBox(width: 12.w),
-                    Text(
-                      DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
-                      style: TextStyle(fontSize: 16.sp),
+              style: TextStyle(
+                fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const Spacer(),
-                    Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 20.h),
-
-            // Time picker
-            Text(
-              'Time',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 8.h),
-            InkWell(
-              onTap: _selectTime,
-              borderRadius: BorderRadius.circular(12.r),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, color: context.colors.primary),
-                    SizedBox(width: 12.w),
-                    Text(
-                      _selectedTime.format(context),
-                      style: TextStyle(fontSize: 16.sp),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 20.h),
-
-            // Reminder type
-            Text(
-              'Repeat',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 8.h),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Column(
-                children: [
-                  _buildReminderTypeOption(
-                    'one_time',
-                    'One Time',
-                    Icons.looks_one,
-                    'Remind me just once',
                   ),
-                  Divider(height: 1, color: Colors.grey[300]),
-                  _buildReminderTypeOption(
-                    'daily',
-                    'Daily',
-                    Icons.repeat,
-                    'Remind me every day',
-                  ),
-                  Divider(height: 1, color: Colors.grey[300]),
-                  _buildReminderTypeOption(
-                    'weekly',
-                    'Weekly',
-                    Icons.calendar_view_week,
-                    'Remind me every week',
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 32.h),
-
-            // Preview
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue[700]),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Text(
-                      'You will be reminded on ${DateFormat('MMM d, yyyy').format(_selectedDate)} at ${_selectedTime.format(context)}',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.blue[700],
+                  SizedBox(height: 8.h),
+                  InkWell(
+                    onTap: _selectDate,
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            color: context.colors.primary,
+                          ),
+                          SizedBox(width: 12.w),
+                          Text(
+                            DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
+                            style: TextStyle(fontSize: 16.sp),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.grey[600],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            SizedBox(height: 32.h),
+                  SizedBox(height: 20.h),
 
-            // Save button
-            SizedBox(
-              width: double.infinity,
-              height: 52.h,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveReminder,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
+                  // Time picker
+                  Text(
+                    'Time',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  elevation: 2,
-                ),
-                child:
-                    _isLoading
-                        ? SizedBox(
-                          height: 24.h,
-                          width: 24.w,
-                          child: const CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
+                  SizedBox(height: 8.h),
+                  InkWell(
+                    onTap: _selectTime,
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: context.colors.primary,
                           ),
-                        )
-                        : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'Create Reminder',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          SizedBox(width: 12.w),
+                          Text(
+                            _selectedTime.format(context),
+                            style: TextStyle(fontSize: 16.sp),
+                          ),
+                          const Spacer(),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.grey[600],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+
+                  // Reminder type
+                  Text(
+                    'Repeat',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildReminderTypeOption(
+                          'one_time',
+                          'One Time',
+                          Icons.looks_one,
+                          'Remind me just once',
                         ),
-              ),
-            ),
+                        Divider(height: 1, color: Colors.grey[300]),
+                        _buildReminderTypeOption(
+                          'daily',
+                          'Daily',
+                          Icons.repeat,
+                          'Remind me every day',
+                        ),
+                        Divider(height: 1, color: Colors.grey[300]),
+                        _buildReminderTypeOption(
+                          'weekly',
+                          'Weekly',
+                          Icons.calendar_view_week,
+                          'Remind me every week',
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+
+                  // Preview
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue[700],
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            'You will be reminded on ${DateFormat('MMM d, yyyy').format(_selectedDate)} at ${_selectedTime.format(context)}',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+
+                  // Save button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52.h,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveReminder,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 24.h,
+                              width: 24.w,
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.check),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  'Create Reminder',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
             SizedBox(height: 16.h),
           ],
         ),
@@ -590,20 +618,25 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                     title,
                     style: TextStyle(
                       fontSize: 16.sp,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                       color: isSelected ? context.colors.primary : null,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey[600],
+                    ),
                   ),
                 ],
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle, color: context.colors.primary),
+              Icon(
+                Icons.check_circle,
+                color: context.colors.primary,
+              ),
           ],
         ),
       ),

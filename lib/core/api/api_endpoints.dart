@@ -1,9 +1,7 @@
-class ApiEndpoints {
-  // Base URL
-  static const String baseUrl = 'https://voclio-backend.build8.dev/api';
+import '../config/api_config.dart';
 
-  // Production URL (uncomment when deploying)
-  // static const String baseUrl = 'https://your-production-url.com/api';
+class ApiEndpoints {
+  static String get baseUrl => ApiConfig.baseUrl;
 
   // ========== Authentication ==========
   static const String register = '/auth/register';
@@ -32,17 +30,15 @@ class ApiEndpoints {
   static const String taskStats = '/tasks/stats';
   static const String mainTasks = '/tasks/main';
   static const String bulkTasks = '/tasks/bulk';
-  static const String taskStatistics = '/tasks/statistics';
-  static const String taskCategories = '/tasks/categories';
+  static const String taskStatistics = '/tasks/stats';
 
   static String taskById(String id) => '/tasks/$id';
   static String taskSubtasks(String id) => '/tasks/$id/subtasks';
   static String taskWithSubtasks(String id) => '/tasks/$id/with-subtasks';
-  static String completeTask(String id) => taskById(id);
+  static String completeTask(String id) => '/tasks/$id/complete';
   static String subtasks(String taskId) => '/tasks/$taskId/subtasks';
-  static String subtaskById(String taskId, String subtaskId) =>
-      '/tasks/$taskId/subtasks/$subtaskId';
-  static String taskCategoryById(String id) => '/tasks/categories/$id';
+  static String subtaskById(String taskId, String subtaskId) => '/tasks/$subtaskId';
+  static String taskCategoryById(String id) => '/categories/$id';
 
   static const String tasksByDate = '/tasks/by-date';
   static const String tasksByCategory = '/tasks/by-category';
@@ -59,6 +55,7 @@ class ApiEndpoints {
 
   // ========== Categories ==========
   static const String categories = '/categories';
+  static const String taskCategories = categories;
   static String categoryById(String id) => '/categories/$id';
   static String categoryStats(String id) => '/categories/$id/stats';
 
@@ -67,6 +64,7 @@ class ApiEndpoints {
   static const String uploadVoice = '/voice/upload';
   static const String transcribe = '/voice/transcribe';
   static const String voiceProcessComplete = '/voice/process-complete';
+  static String voiceJobStatus(String jobId) => '/voice/job-status/$jobId';
   static const String voicePreviewExtraction = '/voice/preview-extraction';
   static const String voiceCreateFromPreview = '/voice/create-from-preview';
   static const String voiceUpdateTranscription = '/voice/update-transcription';
@@ -85,12 +83,9 @@ class ApiEndpoints {
   // ========== Google Calendar ==========
   static const String googleCalendarStatus = '/calendar/google/status';
   static const String googleCalendarConnect = '/calendar/google/connect';
-  static const String googleCalendarConnectMobile =
-      '/calendar/google/connect/mobile';
-  static const String googleCalendarLinkSession =
-      '/calendar/google/link-session';
-  static const String googleCalendarCallbackMobile =
-      '/calendar/google/callback/mobile';
+  static const String googleCalendarConnectMobile = '/calendar/google/connect/mobile';
+  static const String googleCalendarLinkSession = '/calendar/google/link-session';
+  static const String googleCalendarCallbackMobile = '/calendar/google/callback/mobile';
   static const String googleCalendarDisconnect = '/calendar/google/disconnect';
   static const String googleCalendarEvents = '/calendar/google/events';
   static const String googleCalendarToday = '/calendar/google/today';

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
+import 'package:voclio_app/core/api/api_response.dart';
 import '../models/reminder_model.dart';
 
 abstract class ReminderRemoteDataSource {
@@ -24,22 +25,28 @@ class ReminderRemoteDataSourceImpl implements ReminderRemoteDataSource {
     debugPrint('📌 GET Reminders - calling API: ${ApiEndpoints.reminders}');
     final response = await apiClient.get(ApiEndpoints.reminders);
     debugPrint('📌 GET Reminders - response: ${response.data}');
-    final List<dynamic> data = response.data['data'] ?? [];
-    debugPrint('📌 GET Reminders - parsed ${data.length} items');
-    return data.map((json) => ReminderModel.fromJson(json)).toList();
+    final list = ApiResponse.unwrapList(response.data);
+    debugPrint('📌 GET Reminders - parsed ${list.length} items');
+    return list
+        .map((json) => ReminderModel.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
   }
 
   @override
   Future<List<ReminderModel>> getUpcomingReminders() async {
     final response = await apiClient.get(ApiEndpoints.upcomingReminders);
-    final List<dynamic> data = response.data['data'] ?? [];
-    return data.map((json) => ReminderModel.fromJson(json)).toList();
+    final list = ApiResponse.unwrapList(response.data, key: 'reminders');
+    return list
+        .map((json) => ReminderModel.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
   }
 
   @override
   Future<ReminderModel> getReminder(String id) async {
     final response = await apiClient.get(ApiEndpoints.reminderById(id));
-    return ReminderModel.fromJson(response.data['data']);
+    final data = ApiResponse.unwrapMap(response.data);
+    final reminder = data['reminder'] ?? data;
+    return ReminderModel.fromJson(Map<String, dynamic>.from(reminder));
   }
 
   @override
@@ -51,7 +58,9 @@ class ReminderRemoteDataSourceImpl implements ReminderRemoteDataSource {
       data: reminder.toJson(),
     );
     debugPrint('📌 CREATE Reminder - response: ${response.data}');
-    return ReminderModel.fromJson(response.data['data']);
+    final data = ApiResponse.unwrapMap(response.data);
+    final created = data['reminder'] ?? data;
+    return ReminderModel.fromJson(Map<String, dynamic>.from(created));
   }
 
   @override
@@ -63,7 +72,9 @@ class ReminderRemoteDataSourceImpl implements ReminderRemoteDataSource {
       ApiEndpoints.reminderById(id),
       data: reminder.toJson(),
     );
-    return ReminderModel.fromJson(response.data['data']);
+    final data = ApiResponse.unwrapMap(response.data);
+    final updated = data['reminder'] ?? data;
+    return ReminderModel.fromJson(Map<String, dynamic>.from(updated));
   }
 
   @override

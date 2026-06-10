@@ -4,11 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/app_cubit.dart';
-import '../../../../core/common/inputs/text_app.dart';
-import '../../../../core/styles/fonts/font_weight_helper.dart';
+import '../../../../core/language/lang_keys.dart';
 
 class AuthTopControls extends StatelessWidget {
-  const AuthTopControls({super.key});
+  final bool showSkip;
+  final VoidCallback? onSkip;
+
+  const AuthTopControls({super.key, this.showSkip = false, this.onSkip});
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +32,11 @@ class AuthTopControls extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final isSmall = size.height < 700;
 
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+    return SizedBox(
+      height: isSmall ? 100.h : 120.h,
+      width: double.infinity,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
           SizedBox(
             width: isSmall ? 100.w : 120.w,
@@ -44,6 +47,22 @@ class AuthTopControls extends StatelessWidget {
               colorBlendMode: BlendMode.srcIn,
             ),
           ),
+          if (showSkip && onSkip != null)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: TextButton(
+                onPressed: onSkip,
+                child: Text(
+                  context.translate(LangKeys.skip),
+                  style: TextStyle(
+                    fontSize: isSmall ? 14.sp : 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: colors.primary,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

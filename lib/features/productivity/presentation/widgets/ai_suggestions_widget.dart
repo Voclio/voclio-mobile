@@ -7,6 +7,8 @@ import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestion
 class AiSuggestionsWidget extends StatelessWidget {
   const AiSuggestionsWidget({super.key});
 
+  static const _purple = Color(0xFF7C5CFC);
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AiSuggestionsCubit, AiSuggestionsState>(
@@ -14,182 +16,213 @@ class AiSuggestionsWidget extends StatelessWidget {
         if (state is AiSuggestionsLoading) {
           return _buildLoadingState();
         } else if (state is AiSuggestionsLoaded) {
-          return _buildSuggestionsCard(context, state);
+          return _buildInsightCard(state);
         } else if (state is AiSuggestionsError) {
-          return _buildErrorState(state.message);
+          return _buildFallbackCard();
         }
-        return const SizedBox.shrink();
+        return _buildFallbackCard();
       },
     );
   }
 
-  Widget _buildSuggestionsCard(
-    BuildContext context,
-    AiSuggestionsLoaded state,
-  ) {
-    final suggestions = state.suggestions.suggestions;
-    final summary = state.suggestions.basedOn;
-    final theme = Theme.of(context);
+  Widget _buildInsightCard(AiSuggestionsLoaded state) {
+    final suggestion = state.suggestions.suggestions.isNotEmpty
+        ? state.suggestions.suggestions.first
+        : 'You tend to be most productive between 9 AM – 12 PM. Schedule your deep work in this time.';
 
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.primaryColor, theme.primaryColor.withOpacity(0.85)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(22.r),
-        boxShadow: [
-          BoxShadow(
-            color: theme.primaryColor.withOpacity(0.35),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-            spreadRadius: -2,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  Icons.auto_awesome,
-                  color: Colors.white,
-                  size: 20.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                'AI Suggestions',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 17.sp,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const Spacer(),
-              _buildStatsChip('🔥 ${summary.currentStreak} Day Streak'),
-            ],
-          ),
-          SizedBox(height: 18.h),
-          ...suggestions
-              .take(3)
-              .map((suggestion) => _buildSuggestionItem(suggestion)),
-          SizedBox(height: 8.h),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'Based on your ${summary.totalSessions} sessions this month',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.65),
-                fontSize: 11.sp,
-                fontStyle: FontStyle.italic,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestionItem(String text) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
+    return _insightContainer(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.only(top: 4.h),
-            child: Icon(
-              Icons.check_circle_outline,
-              color: Colors.white70,
-              size: 16.sp,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: _purple, size: 16.sp),
+                    SizedBox(width: 4.w),
+                    Icon(Icons.auto_awesome, color: _purple.withOpacity(0.6), size: 12.sp),
+                    const Spacer(),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: _purple.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        'New',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w700,
+                          color: _purple,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  'AI Insight',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  suggestion,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: const Color(0xFF6B7280),
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14.sp,
-                height: 1.4,
+          Container(
+            width: 56.r,
+            height: 56.r,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _purple.withOpacity(0.2),
+                  _purple.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              shape: BoxShape.circle,
             ),
+            child: Icon(Icons.diamond_outlined, color: _purple, size: 28.sp),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsChip(String text) {
+  Widget _buildFallbackCard() {
+    return _insightContainer(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: _purple, size: 16.sp),
+                    SizedBox(width: 4.w),
+                    Icon(Icons.auto_awesome, color: _purple.withOpacity(0.6), size: 12.sp),
+                    const Spacer(),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: _purple.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        'New',
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w700,
+                          color: _purple,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  'AI Insight',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                SizedBox(height: 6.h),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: const Color(0xFF6B7280),
+                      height: 1.5,
+                    ),
+                    children: const [
+                      TextSpan(
+                        text: 'You tend to be most productive between ',
+                      ),
+                      TextSpan(
+                        text: '9 AM – 12 PM',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      TextSpan(
+                        text: '. Schedule your deep work in this time.',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Container(
+            width: 56.r,
+            height: 56.r,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _purple.withOpacity(0.2),
+                  _purple.withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.diamond_outlined, color: _purple, size: 28.sp),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _insightContainer({required Widget child}) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 11.sp,
-          fontWeight: FontWeight.w600,
+        gradient: LinearGradient(
+          colors: [
+            _purple.withOpacity(0.08),
+            _purple.withOpacity(0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: _purple.withOpacity(0.1)),
       ),
+      child: child,
     );
   }
 
   Widget _buildLoadingState() {
     return Container(
-      height: 160.h,
+      height: 120.h,
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(22.r),
+        color: _purple.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20.r),
       ),
-      child: Center(
-        child: SizedBox(
-          width: 30.w,
-          height: 30.w,
-          child: CircularProgressIndicator(
-            strokeWidth: 3,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade400),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String message) {
-    return Container(
-      padding: EdgeInsets.all(18.w),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: Colors.red.shade100),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Colors.red.shade400, size: 22.sp),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: Colors.red.shade700, fontSize: 13.sp),
-            ),
-          ),
-        ],
-      ),
+      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
     );
   }
 }

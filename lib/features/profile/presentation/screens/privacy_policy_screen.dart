@@ -1,52 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: theme.primaryColor,
-            size: 20.sp,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Privacy Policy',
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A1A2E),
-          ),
-        ),
-      ),
+    return HomeSecondaryScaffold(
+      title: 'Privacy Policy',
+      subtitle: 'Last updated: December 7, 2025',
+      icon: Icons.privacy_tip_outlined,
+      accent: HomeSystemTokens.green,
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Last updated: December 7, 2025',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.grey[600],
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
+        child: HomeSectionCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             _buildSection(
               'Introduction',
               'This Privacy Policy describes how Voclio ("we", "us", or "our") collects, uses, and shares your personal information when you use our mobile application.',
@@ -93,7 +66,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
             ),
 
             SizedBox(height: 32.h),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -110,7 +84,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF1A1A2E),
+              color: HomeSystemTokens.ink,
             ),
           ),
           SizedBox(height: 12.h),
@@ -118,7 +92,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             content,
             style: TextStyle(
               fontSize: 14.sp,
-              color: Colors.grey[700],
+              color: HomeSystemTokens.inkSoft,
               height: 1.6,
             ),
           ),

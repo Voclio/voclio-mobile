@@ -14,26 +14,15 @@ class ApiClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
-        sendTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 120),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       ),
     );
-
-    /* 
-    _dio.httpClientAdapter = IOHttpClientAdapter(
-      createHttpClient: () {
-        final client = HttpClient();
-        client.badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-        return client;
-      },
-    );
-    */
 
     _initializeInterceptors();
   }
@@ -203,7 +192,6 @@ class ApiClient {
         return TimeoutException('Connection timeout');
 
       case DioExceptionType.badResponse:
-        // Try to extract error message from various possible structures
         String errorMessage = 'Server error occurred';
 
         if (error.message != null &&
@@ -213,22 +201,14 @@ class ApiClient {
         } else if (error.response?.data != null) {
           final data = error.response!.data;
 
-          // Try different error message locations
           if (data is Map) {
-            // Priority 1: Nested error.message (standard for our backend 409)
             if (data['error'] is Map && data['error']['message'] != null) {
               errorMessage = data['error']['message'].toString();
-            }
-            // Priority 2: Direct message field
-            else if (data['message'] != null) {
+            } else if (data['message'] != null) {
               errorMessage = data['message'].toString();
-            }
-            // Priority 3: Direct error string field
-            else if (data['error'] is String) {
+            } else if (data['error'] is String) {
               errorMessage = data['error'];
-            }
-            // Priority 4: msg field (some frameworks use this)
-            else if (data['msg'] != null) {
+            } else if (data['msg'] != null) {
               errorMessage = data['msg'].toString();
             }
           }
@@ -247,11 +227,9 @@ class ApiClient {
     }
   }
 
-  // ========== Getters ==========
   Dio get dio => _dio;
 }
 
-// ========== Custom Exceptions ==========
 class TimeoutException implements Exception {
   final String message;
   TimeoutException(this.message);

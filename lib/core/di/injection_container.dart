@@ -10,6 +10,7 @@ import 'package:voclio_app/features/notes/domain/usecases/delete_note_use_case.d
 import 'package:voclio_app/features/notes/domain/usecases/get_all_notes_use_case.dart';
 import 'package:voclio_app/features/notes/domain/usecases/get_note_use_case.dart';
 import 'package:voclio_app/features/notes/domain/usecases/update_note_use_case.dart';
+import 'package:voclio_app/features/notes/domain/usecases/ai_usecases.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/tasks/data/datasources/task_remote_data_source.dart';
 import 'package:voclio_app/features/tasks/data/repositories/tasks_repository_impl.dart';
@@ -303,6 +304,8 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => AddNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateNoteUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteNoteUseCase(getIt()));
+  getIt.registerLazySingleton(() => SummarizeNoteUseCase(getIt()));
+  getIt.registerLazySingleton(() => ExtractTasksFromNoteUseCase(getIt()));
   getIt.registerFactory(
     () => NotesCubit(
       addNoteUseCase: getIt(),

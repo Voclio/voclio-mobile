@@ -11,7 +11,10 @@ abstract class NoteRemoteDataSource {
 
   // AI Features
   Future<String> summarizeNote(String id);
-  Future<List<Map<String, dynamic>>> extractTasksFromNote(String id);
+  Future<List<Map<String, dynamic>>> extractTasksFromNote(
+    String id, {
+    bool autoCreate,
+  });
 
   // Tags
   Future<List<Map<String, dynamic>>> getNoteTags(String noteId);
@@ -141,24 +144,32 @@ class NoteRemoteDataSourceImpl implements NoteRemoteDataSource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> extractTasksFromNote(String id) async {
+  Future<List<Map<String, dynamic>>> extractTasksFromNote(
+    String id, {
+    bool autoCreate = false,
+  }) async {
     try {
       final response = await apiClient.post(
         ApiEndpoints.extractTasksFromNote(id),
+        data: autoCreate ? {'auto_create': true} : null,
       );
       final rawData = response.data;
 
       List<dynamic> tasksList = [];
       if (rawData is Map && rawData['data'] != null) {
         final data = rawData['data'];
-        if (data is Map && data['tasks'] != null) {
-          tasksList = data['tasks'];
+        if (data is Map) {
+          if (data['extracted_tasks'] != null) {
+            tasksList = data['extracted_tasks'] as List;
+          } else if (data['tasks'] != null) {
+            tasksList = data['tasks'] as List;
+          }
         } else if (data is List) {
           tasksList = data;
         }
       }
 
-      return tasksList.map((t) => Map<String, dynamic>.from(t)).toList();
+      return tasksList.map((t) => Map<String, dynamic>.from(t as Map)).toList();
     } catch (e) {
       throw Exception('Failed to extract tasks from note: $e');
     }

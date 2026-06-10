@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -29,9 +31,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: HomeSystemTokens.canvas,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: HomeSystemTokens.canvas,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -47,7 +49,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1A1A2E),
+            color: HomeSystemTokens.ink,
           ),
         ),
         actions: [

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
+import 'package:voclio_app/features/notes/domain/usecases/ai_usecases.dart';
 
 class AiActionsDialog extends StatefulWidget {
   final String noteId;
@@ -18,29 +21,44 @@ class AiActionsDialog extends StatefulWidget {
 class _AiActionsDialogState extends State<AiActionsDialog> {
   bool _isLoading = false;
   String? _result;
-  String _selectedAction = '';
+  String? _error;
 
   Future<void> _performAction(String action) async {
     setState(() {
       _isLoading = true;
-      _selectedAction = action;
       _result = null;
+      _error = null;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      if (action == 'summarize') {
+        final result = await GetIt.I<SummarizeNoteUseCase>()(widget.noteId);
+        result.fold(
+          (failure) => _error = failure.message,
+          (summary) => _result = summary,
+        );
+      } else if (action == 'extract') {
+        final result = await GetIt.I<ExtractTasksFromNoteUseCase>()(
+          widget.noteId,
+          autoCreate: true,
+        );
+        result.fold(
+          (failure) => _error = failure.message,
+          (tasks) {
+            if (tasks.isEmpty) {
+              _result = 'No actionable tasks found in this note.';
+            } else {
+              _result = tasks.map((t) => '• $t').join('\n');
+            }
+          },
+        );
+      }
+    } catch (e) {
+      _error = e.toString();
+    }
 
-    if (action == 'summarize') {
-      setState(() {
-        _result =
-            'AI Summary:\n\nThis note discusses the key aspects of productivity and time management. The main points include setting clear goals, prioritizing tasks, and maintaining focus through dedicated work sessions.';
-        _isLoading = false;
-      });
-    } else if (action == 'extract') {
-      setState(() {
-        _result =
-            'Extracted Tasks:\n\n• Complete project report by Friday\n• Schedule team meeting for next week\n• Review and update documentation\n• Follow up with client emails';
-        _isLoading = false;
-      });
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -74,7 +92,7 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
               ],
             ),
             SizedBox(height: 20.h),
-            if (_result == null) ...[
+            if (_result == null && _error == null) ...[
               _buildActionButton(
                 icon: Icons.summarize,
                 title: 'Summarize Note',
@@ -85,8 +103,25 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
               _buildActionButton(
                 icon: Icons.task_alt,
                 title: 'Extract Tasks',
-                description: 'Find actionable items in your note',
+                description: 'Find actionable items and create tasks',
                 onTap: () => _performAction('extract'),
+              ),
+            ] else if (_error != null) ...[
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  _error!,
+                  style: TextStyle(fontSize: 14.sp, color: Colors.red.shade800),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              OutlinedButton(
+                onPressed: () => setState(() => _error = null),
+                child: const Text('Try Again'),
               ),
             ] else ...[
               Expanded(
@@ -109,7 +144,7 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
                       onPressed: () {
                         setState(() {
                           _result = null;
-                          _selectedAction = '';
+                          _error = null;
                         });
                       },
                       child: const Text('Back'),
@@ -119,7 +154,9 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Copy to clipboard or save
+                        if (_result != null) {
+                          Clipboard.setData(ClipboardData(text: _result!));
+                        }
                         Navigator.pop(context);
                       },
                       child: const Text('Done'),
@@ -134,7 +171,7 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
               SizedBox(height: 12.h),
               Center(
                 child: Text(
-                  'Processing with Gemini AI...',
+                  'Processing with AI...',
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey),
                 ),
               ),

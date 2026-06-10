@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import '../../../../core/common/animation/animate_do.dart';
 
@@ -172,7 +173,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: HomeSystemTokens.canvas,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,

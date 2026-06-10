@@ -8,6 +8,7 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:voclio_app/core/di/injection_container.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import '../bloc/voice_bloc.dart';
 import '../bloc/voice_state.dart';
 import '../bloc/voice_event.dart';
@@ -176,20 +177,21 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.grey.shade50,
+        backgroundColor: HomeSystemTokens.canvas,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: HomeSystemTokens.canvas,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.close, color: colors.textPrimary),
+            icon: Icon(Icons.close_rounded, color: HomeSystemTokens.ink),
             onPressed: () => Navigator.pop(context),
           ),
           title: Text(
             'Voice Recording',
             style: context.textStyle.copyWith(
               fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
-              color: colors.textPrimary,
+              fontWeight: FontWeight.w800,
+              color: HomeSystemTokens.ink,
+              letterSpacing: -0.3,
             ),
           ),
           centerTitle: true,

@@ -1,5 +1,6 @@
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
+import 'package:voclio_app/core/api/api_response.dart';
 import '../models/task_extensions_models.dart';
 
 abstract class TaskExtensionsDataSource {
@@ -39,8 +40,10 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
   Future<List<SubtaskModel>> getSubtasks(String taskId) async {
     try {
       final response = await apiClient.get(ApiEndpoints.subtasks(taskId));
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => SubtaskModel.fromJson(json)).toList();
+      final list = ApiResponse.unwrapList(response.data, key: 'subtasks');
+      return list
+          .map((json) => SubtaskModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
     } catch (e) {
       throw Exception('Failed to fetch subtasks: $e');
     }
@@ -57,7 +60,9 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
         ApiEndpoints.subtasks(taskId),
         data: {'title': title, 'order': order},
       );
-      return SubtaskModel.fromJson(response.data['data']);
+      final data = ApiResponse.unwrapMap(response.data);
+      final subtask = data['subtask'] ?? data;
+      return SubtaskModel.fromJson(Map<String, dynamic>.from(subtask as Map));
     } catch (e) {
       throw Exception('Failed to create subtask: $e');
     }
@@ -73,7 +78,10 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
     try {
       await apiClient.put(
         ApiEndpoints.subtaskById(taskId, subtaskId),
-        data: {'title': title, 'completed': completed},
+        data: {
+          'title': title,
+          'status': completed ? 'completed' : 'pending',
+        },
       );
     } catch (e) {
       throw Exception('Failed to update subtask: $e');
@@ -93,8 +101,10 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
   Future<List<TaskCategoryModel>> getCategories() async {
     try {
       final response = await apiClient.get(ApiEndpoints.taskCategories);
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => TaskCategoryModel.fromJson(json)).toList();
+      final list = ApiResponse.unwrapList(response.data, key: 'categories');
+      return list
+          .map((json) => TaskCategoryModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
     } catch (e) {
       throw Exception('Failed to fetch categories: $e');
     }
@@ -111,7 +121,9 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
         ApiEndpoints.taskCategories,
         data: {'name': name, 'color': color, 'icon': icon},
       );
-      return TaskCategoryModel.fromJson(response.data['data']);
+      final data = ApiResponse.unwrapMap(response.data);
+      final category = data['category'] ?? data;
+      return TaskCategoryModel.fromJson(Map<String, dynamic>.from(category as Map));
     } catch (e) {
       throw Exception('Failed to create category: $e');
     }
@@ -147,7 +159,9 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
   Future<TaskStatisticsModel> getTaskStatistics() async {
     try {
       final response = await apiClient.get(ApiEndpoints.taskStatistics);
-      return TaskStatisticsModel.fromJson(response.data['data']);
+      final data = ApiResponse.unwrapMap(response.data);
+      final stats = data['stats'] ?? data;
+      return TaskStatisticsModel.fromJson(Map<String, dynamic>.from(stats as Map));
     } catch (e) {
       throw Exception('Failed to fetch task statistics: $e');
     }

@@ -8,6 +8,9 @@ import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
 import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
+import '../widgets/ai_actions_dialog.dart';
 import '../widgets/tag_selection_sheet.dart';
 
 class NoteDetailScreen extends StatefulWidget {
@@ -94,8 +97,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     VoclioDialog.showConfirm(
       context: context,
       title: 'Delete Note?',
-      message:
-          'This action cannot be undone. Are you sure you want to delete this note?',
+      message: 'This action cannot be undone. Are you sure you want to delete this note?',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       onConfirm: () {
@@ -127,67 +129,79 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         if (didPop) _saveNote();
       },
       child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: HomeSystemTokens.canvas,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: Container(
-              padding: EdgeInsets.all(8.r),
-              decoration: BoxDecoration(
-                color:
-                    isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                Icons.arrow_back,
-                color: theme.colorScheme.onSurface,
-                size: 20.sp,
-              ),
+          leading: Padding(
+            padding: EdgeInsets.only(left: 8.w),
+            child: HomeIconButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              color: HomeSystemTokens.inkSoft,
+              onTap: () => Navigator.pop(context),
             ),
-            onPressed: () => Navigator.pop(context), // Triggers PopScope
           ),
+          leadingWidth: 56.w,
           actions: [
-            // Save indicator
             if (_isModified)
               Container(
                 margin: EdgeInsets.only(right: 8.w),
                 padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(isDark ? 0.2 : 0.1),
+                  color: HomeSystemTokens.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.edit, size: 14.sp, color: Colors.amber),
+                    Icon(Icons.edit, size: 14.sp, color: HomeSystemTokens.orange),
                     SizedBox(width: 4.w),
                     Text(
                       'Unsaved',
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: Colors.amber,
+                        color: HomeSystemTokens.orange,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-              ).animate().fadeIn(duration: 300.ms),
-            IconButton(
-              icon: Icon(
-                Icons.share_outlined,
-                color: theme.colorScheme.onSurface,
+              )
+                  .animate()
+                  .fadeIn(duration: 300.ms),
+            if (widget.note != null)
+              Padding(
+                padding: EdgeInsets.only(right: 4.w),
+                child: HomeIconButton(
+                  icon: Icons.auto_awesome,
+                  color: HomeSystemTokens.purple,
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => AiActionsDialog(
+                        noteId: widget.note!.id,
+                        noteContent: _contentController.text,
+                      ),
+                    );
+                  },
+                ),
               ),
-              onPressed: () {},
+            Padding(
+              padding: EdgeInsets.only(right: 4.w),
+              child: HomeIconButton(
+                icon: Icons.share_outlined,
+                color: HomeSystemTokens.inkSoft,
+                onTap: () {},
+              ),
             ),
             if (widget.note != null)
-              IconButton(
-                icon: Icon(Icons.delete_outline, color: Colors.redAccent),
-                onPressed: () {
-                  _showDeleteConfirmation(context);
-                },
+              Padding(
+                padding: EdgeInsets.only(right: 12.w),
+                child: HomeIconButton(
+                  icon: Icons.delete_outline,
+                  color: HomeSystemTokens.coral,
+                  onTap: () => _showDeleteConfirmation(context),
+                ),
               ),
           ],
         ),
@@ -203,92 +217,84 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 // New note badge
                 if (isNewNote)
                   Container(
-                        margin: EdgeInsets.only(bottom: 16.h),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 8.h,
+                    margin: EdgeInsets.only(bottom: 16.h),
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withOpacity(0.15),
+                          theme.colorScheme.primary.withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          size: 18.sp,
+                          color: theme.colorScheme.primary,
                         ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withOpacity(0.15),
-                              theme.colorScheme.primary.withOpacity(0.05),
-                            ],
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Creating new note',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13.sp,
                           ),
-                          borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.2),
-                          ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.add_circle_outline,
-                              size: 18.sp,
-                              color: theme.colorScheme.primary,
-                            ),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'Creating new note',
-                              style: TextStyle(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
+                      ],
+                    ),
+                  )
                       .animate()
                       .fadeIn(duration: 400.ms)
                       .slideY(begin: -0.2, end: 0),
 
                 // 1. Title Input with enhanced styling
                 Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 8.h,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.03) 
+                        : theme.colorScheme.primary.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: isDark 
+                          ? Colors.white.withOpacity(0.05) 
+                          : theme.colorScheme.primary.withOpacity(0.08),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _titleController,
+                    onChanged: (_) => setState(() => _isModified = true),
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "Note title",
+                      hintStyle: TextStyle(
+                        color: theme.colorScheme.secondary.withOpacity(0.5),
+                        fontWeight: FontWeight.normal,
                       ),
-                      decoration: BoxDecoration(
-                        color:
-                            isDark
-                                ? Colors.white.withOpacity(0.03)
-                                : theme.colorScheme.primary.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color:
-                              isDark
-                                  ? Colors.white.withOpacity(0.05)
-                                  : theme.colorScheme.primary.withOpacity(0.08),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.only(right: 12.w),
+                        child: Icon(
+                          Icons.title,
+                          color: theme.colorScheme.primary.withOpacity(0.5),
+                          size: 22.sp,
                         ),
                       ),
-                      child: TextField(
-                        controller: _titleController,
-                        onChanged: (_) => setState(() => _isModified = true),
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Note title",
-                          hintStyle: TextStyle(
-                            color: theme.colorScheme.secondary.withOpacity(0.5),
-                            fontWeight: FontWeight.normal,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.only(right: 12.w),
-                            child: Icon(
-                              Icons.title,
-                              color: theme.colorScheme.primary.withOpacity(0.5),
-                              size: 22.sp,
-                            ),
-                          ),
-                          prefixIconConstraints: BoxConstraints(minWidth: 0),
-                        ),
-                        maxLines: null,
-                      ),
-                    )
+                      prefixIconConstraints: BoxConstraints(minWidth: 0),
+                    ),
+                    maxLines: null,
+                  ),
+                )
                     .animate()
                     .fadeIn(duration: 400.ms, delay: 100.ms)
                     .slideY(begin: 0.1, end: 0),
@@ -297,111 +303,102 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
                 // 2. Meta Data Section
                 Container(
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color:
-                            isDark
-                                ? Colors.white.withOpacity(0.03)
-                                : Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Row(
-                        children: [
-                          // Date info
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(8.r),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary
-                                        .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.access_time,
-                                    size: 16.sp,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.note != null
-                                            ? "Edited ${_timeAgo(widget.note!.lastEditDate)}"
-                                            : "New Note",
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
-                                      if (widget.note != null)
-                                        Text(
-                                          "Created ${_formatDate(widget.note!.creationDate)}",
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withOpacity(0.5),
-                                                fontSize: 11.sp,
-                                              ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                  padding: EdgeInsets.all(12.r),
+                  decoration: BoxDecoration(
+                    color: isDark 
+                        ? Colors.white.withOpacity(0.03) 
+                        : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      // Date info
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8.r),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Icon(
+                                Icons.access_time,
+                                size: 16.sp,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
-                          ),
-
-                          // Divider
-                          Container(
-                            width: 1,
-                            height: 36.h,
-                            color: theme.colorScheme.onSurface.withOpacity(0.1),
-                          ),
-                          SizedBox(width: 16.w),
-
-                          // Word/Char count
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Row(
+                            SizedBox(width: 10.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(
-                                    Icons.text_fields,
-                                    size: 14.sp,
-                                    color: theme.colorScheme.secondary,
-                                  ),
-                                  SizedBox(width: 4.w),
                                   Text(
-                                    '$_wordCount words',
-                                    style: TextStyle(
-                                      fontSize: 12.sp,
+                                    widget.note != null
+                                        ? "Edited ${_timeAgo(widget.note!.lastEditDate)}"
+                                        : "New Note",
+                                    style: theme.textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.w500,
-                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
+                                  if (widget.note != null)
+                                    Text(
+                                      "Created ${_formatDate(widget.note!.creationDate)}",
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                        fontSize: 11.sp,
+                                      ),
+                                    ),
                                 ],
                               ),
-                              SizedBox(height: 2.h),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Divider
+                      Container(
+                        width: 1,
+                        height: 36.h,
+                        color: theme.colorScheme.onSurface.withOpacity(0.1),
+                      ),
+                      SizedBox(width: 16.w),
+                      
+                      // Word/Char count
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.text_fields,
+                                size: 14.sp,
+                                color: theme.colorScheme.secondary,
+                              ),
+                              SizedBox(width: 4.w),
                               Text(
-                                '$_charCount characters',
+                                '$_wordCount words',
                                 style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.5),
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
                             ],
                           ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            '$_charCount characters',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            ),
+                          ),
                         ],
                       ),
-                    )
+                    ],
+                  ),
+                )
                     .animate()
                     .fadeIn(duration: 400.ms, delay: 200.ms)
                     .slideY(begin: 0.1, end: 0),
@@ -426,10 +423,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     if (_selectedTags.isNotEmpty)
                       Container(
                         margin: EdgeInsets.only(left: 8.w),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 2.h,
-                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10.r),
@@ -444,7 +438,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         ),
                       ),
                   ],
-                ).animate().fadeIn(duration: 400.ms, delay: 300.ms),
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 300.ms),
 
                 SizedBox(height: 12.h),
 
@@ -454,7 +450,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   runSpacing: 8.h,
                   children: [
                     ..._selectedTags.map((tag) => _buildTagChip(context, tag)),
-
+                    
                     // Add Tag Button
                     BlocBuilder<NotesCubit, NotesState>(
                       builder: (context, state) {
@@ -490,23 +486,17 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             ),
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: theme.colorScheme.primary.withOpacity(
-                                  0.3,
-                                ),
+                                color: theme.colorScheme.primary.withOpacity(0.3),
                                 style: BorderStyle.solid,
                               ),
                               borderRadius: BorderRadius.circular(20.r),
-                              color: theme.colorScheme.primary.withOpacity(
-                                0.05,
-                              ),
+                              color: theme.colorScheme.primary.withOpacity(0.05),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  _selectedTags.isEmpty
-                                      ? Icons.add
-                                      : Icons.edit,
+                                  _selectedTags.isEmpty ? Icons.add : Icons.edit,
                                   size: 14.sp,
                                   color: theme.colorScheme.primary,
                                 ),
@@ -526,7 +516,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       },
                     ),
                   ],
-                ).animate().fadeIn(duration: 400.ms, delay: 350.ms),
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 350.ms),
 
                 SizedBox(height: 24.h),
 
@@ -546,58 +538,39 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       ),
                     ),
                   ],
-                ).animate().fadeIn(duration: 400.ms, delay: 400.ms),
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms, delay: 400.ms),
 
                 SizedBox(height: 12.h),
 
                 // 5. Content Area (Enhanced glass-like container)
-                Container(
-                      constraints: BoxConstraints(minHeight: 350.h),
-                      padding: EdgeInsets.all(20.r),
-                      decoration: BoxDecoration(
-                        color:
-                            isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.white,
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(
-                          color:
-                              isDark
-                                  ? Colors.white.withOpacity(0.08)
-                                  : Colors.grey.shade200,
-                        ),
-                        boxShadow:
-                            isDark
-                                ? []
-                                : [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.03),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                HomeSectionCard(
+                  padding: EdgeInsets.all(20.r),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: 350.h),
+                    child: TextField(
+                      controller: _contentController,
+                      onChanged: (_) => setState(() => _isModified = true),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        height: 1.7,
+                        letterSpacing: 0.2,
                       ),
-                      child: TextField(
-                        controller: _contentController,
-                        onChanged: (_) => setState(() => _isModified = true),
-                        style: theme.textTheme.bodyLarge?.copyWith(
+                      decoration: InputDecoration(
+                        hintText:
+                            "Start writing your note...\n\nTip: Your changes are saved automatically when you leave this screen.",
+                        hintStyle: TextStyle(
+                          color: theme.colorScheme.secondary.withOpacity(0.4),
                           height: 1.7,
-                          letterSpacing: 0.2,
                         ),
-                        decoration: InputDecoration(
-                          hintText:
-                              "Start writing your note...\n\nTip: Your changes are saved automatically when you leave this screen.",
-                          hintStyle: TextStyle(
-                            color: theme.colorScheme.secondary.withOpacity(0.4),
-                            height: 1.7,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        maxLines: null, // Grows indefinitely
-                        keyboardType: TextInputType.multiline,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
                       ),
-                    )
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                    ),
+                  ),
+                )
                     .animate()
                     .fadeIn(duration: 400.ms, delay: 450.ms)
                     .slideY(begin: 0.05, end: 0),
@@ -631,7 +604,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.tag, size: 12.sp, color: theme.colorScheme.primary),
+          Icon(
+            Icons.tag,
+            size: 12.sp,
+            color: theme.colorScheme.primary,
+          ),
           SizedBox(width: 4.w),
           Text(
             tagName,
@@ -655,20 +632,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }

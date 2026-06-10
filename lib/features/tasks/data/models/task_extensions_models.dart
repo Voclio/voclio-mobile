@@ -1,5 +1,12 @@
 import '../../domain/entities/task_extensions.dart';
 
+int _int(dynamic value) => int.tryParse(value?.toString() ?? '') ?? 0;
+
+double _double(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
+}
+
 class SubtaskModel {
   final String id;
   final String taskId;
@@ -19,10 +26,10 @@ class SubtaskModel {
 
   factory SubtaskModel.fromJson(Map<String, dynamic> json) {
     return SubtaskModel(
-      id: (json['subtask_id'] ?? json['id'] ?? '').toString(),
-      taskId: (json['task_id'] ?? '').toString(),
+      id: (json['subtask_id'] ?? json['task_id'] ?? json['id'] ?? '').toString(),
+      taskId: (json['parent_task_id'] ?? json['task_id'] ?? '').toString(),
       title: (json['title'] ?? '').toString(),
-      completed: json['completed'] ?? false,
+      completed: json['completed'] == true || json['status'] == 'completed',
       order: int.tryParse((json['order'] ?? 0).toString()) ?? 0,
       createdAt:
           json['created_at'] != null
@@ -103,11 +110,11 @@ class TaskStatisticsModel {
 
   factory TaskStatisticsModel.fromJson(Map<String, dynamic> json) {
     return TaskStatisticsModel(
-      totalTasks: json['total_tasks'] ?? 0,
-      completedTasks: json['completed_tasks'] ?? 0,
-      pendingTasks: json['pending_tasks'] ?? 0,
-      overdueTasks: json['overdue_tasks'] ?? 0,
-      completionRate: (json['completion_rate'] ?? 0.0).toDouble(),
+      totalTasks: _int(json['total_tasks'] ?? json['total']),
+      completedTasks: _int(json['completed_tasks'] ?? json['completed']),
+      pendingTasks: _int(json['pending_tasks'] ?? json['todo']),
+      overdueTasks: _int(json['overdue_tasks'] ?? json['overdue']),
+      completionRate: _double(json['completion_rate'] ?? json['overall_progress']),
       categoryBreakdown:
           json['category_breakdown'] != null
               ? Map<String, int>.from(json['category_breakdown'])

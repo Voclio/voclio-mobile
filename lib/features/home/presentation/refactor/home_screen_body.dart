@@ -2,21 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import 'package:get_it/get_it.dart';
 import 'package:voclio_app/features/home/presentation/widgets/home_list_tile.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_cubit.dart';
 import 'package:voclio_app/features/dashboard/presentation/bloc/dashboard_state.dart';
-import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart';
+import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_entity.dart'
+    as dashboard;
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/productivity/presentation/widgets/ai_suggestions_widget.dart';
-import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
-import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
-import 'package:voclio_app/features/widget_config/presentation/widgets/home_widgets.dart';
-import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
-import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
-import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -26,652 +20,304 @@ class HomeScreenBody extends StatefulWidget {
   State<HomeScreenBody> createState() => _HomeScreenBodyState();
 }
 
-class _HomeScreenBodyState extends State<HomeScreenBody>
-    with TickerProviderStateMixin {
-  final PageController _controller = PageController();
+class _HomeScreenBodyState extends State<HomeScreenBody> {
+  final PageController _bannerController = PageController();
+  Timer? _bannerTimer;
+  int _bannerIndex = 0;
 
-  final List<String> images = const [
-    'assets/images/freepik__modern-vector-illustration-of-person-speaking-into__23557.png',
-    'assets/images/Banner.png',
-    'assets/images/raw.png',
+  static const _bannerImages = [
+    'assets/images/hero1.png',
+    'assets/images/hero2.png',
+    'assets/images/hero3.png',
+    'assets/images/hero4.png',
   ];
-
-  int currentIndex = 0;
-  Timer? timer;
-  late AnimationController _floatingController;
 
   @override
   void initState() {
     super.initState();
     context.read<DashboardCubit>().loadDashboardStats();
 
-    // Widget config is initialized via BlocProvider in VoclioApp
-
-    // Only fetch profile if user is already logged in (has valid auth state)
     final authState = context.read<AuthBloc>().state;
-    if (authState is AuthSuccess) {
-      // Already have profile data, no need to fetch again
-    } else if (authState is! AuthInitial) {
-      // Only fetch if not in initial/guest state
+    if (authState is! AuthSuccess && authState is! AuthInitial) {
       context.read<AuthBloc>().add(const GetProfileEvent());
     }
 
-    _floatingController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+    _bannerTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_bannerController.hasClients) return;
+      final next = (_bannerIndex + 1) % _bannerImages.length;
+      _bannerController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   @override
   void dispose() {
-    timer?.cancel();
-    _controller.dispose();
-    _floatingController.dispose();
+    _bannerTimer?.cancel();
+    _bannerController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    return ColoredBox(
+      color: HomeSystemTokens.canvas,
+      child: SafeArea(
+        bottom: false,
+        child: BlocBuilder<DashboardCubit, DashboardState>(
+          builder: (context, state) {
+            final stats = state is DashboardStatsLoaded ? state.stats : null;
+            final overview = stats?.overview;
+            final todayTasks = stats?.upcomingTasks.take(3).toList() ?? [];
+            final upcoming = stats?.upcomingTasks;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FC),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Home header Info
-              const HomeListTile()
-                  .animate()
-                  .fadeIn(duration: 600.ms)
-                  .slideX(begin: -0.2, end: 0),
-
-              SizedBox(height: 16.h),
-
-              // Welcome Section with decorative background
-              Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20.w),
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.primaryColor.withOpacity(0.08),
-                          theme.primaryColor.withOpacity(0.03),
-                          Colors.white,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24.r),
-                      border: Border.all(
-                        color: theme.primaryColor.withOpacity(0.1),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10.w),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.primaryColor.withOpacity(0.2),
-                                    theme.primaryColor.withOpacity(0.1),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Icon(
-                                Icons.auto_graph_rounded,
-                                color: theme.primaryColor,
-                                size: 20.sp,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Your Activity',
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                          color: const Color(0xFF1A1A2E),
-                                          fontSize: 18.sp,
-                                          letterSpacing: -0.5,
-                                        ),
-                                  ),
-                                  Text(
-                                    'Track progress & stay organized',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 11.sp,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10.w,
-                                vertical: 5.h,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.primaryColor,
-                                    theme.primaryColor.withOpacity(0.8),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(20.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.primaryColor.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                'Today',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 600.ms, delay: 200.ms)
-                  .slideY(begin: 0.1),
-
-              SizedBox(height: 20.h),
-
-              // Quick Access Section
-              BlocBuilder<WidgetConfigCubit, WidgetConfigState>(
-                builder: (context, widgetState) {
-                  if (widgetState.enabledWidgets.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 36.w, right: 20.w),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(8.w),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFF6366F1),
-                                        const Color(0xFF8B5CF6),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.dashboard_customize_rounded,
-                                    color: Colors.white,
-                                    size: 16.sp,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Text(
-                                  'At a Glance',
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF1A1A2E),
-                                        fontSize: 18.sp,
-                                        letterSpacing: -0.3,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                WidgetSetupDialog.show(
-                                  context,
-                                  cubit: context.read<WidgetConfigCubit>(),
-                                );
-                              },
-                              icon: Icon(
-                                Icons.tune_rounded,
-                                color: theme.primaryColor,
-                                size: 22.sp,
-                              ),
-                              tooltip: 'Customize',
-                            ),
-                          ],
-                        ),
-                      ).animate().fadeIn(duration: 600.ms, delay: 250.ms),
-                      SizedBox(height: 12.h),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        child: MultiBlocProvider(
-                          providers: [
-                            BlocProvider.value(value: GetIt.I<TasksCubit>()),
-                            BlocProvider.value(value: GetIt.I<NotesCubit>()),
-                            BlocProvider.value(
-                              value: context.read<WidgetConfigCubit>(),
-                            ),
-                          ],
-                          child: HomeWidgetsContainer(
-                            onTabChange: widget.onTabChange,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                    ],
-                  );
-                },
-              ),
-
-              // Stats Cards
-              BlocBuilder<DashboardCubit, DashboardState>(
-                builder: (context, state) {
-                  final stats =
-                      state is DashboardStatsLoaded ? state.stats : null;
-                  return Padding(
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const HomeListTile(),
+                  SizedBox(height: 16.h),
+                  _buildHeroBanner(),
+                  SizedBox(height: 20.h),
+                  _buildStatsRow(overview, stats?.productivity),
+                  SizedBox(height: 24.h),
+                  _buildTodaysFocus(todayTasks),
+                  SizedBox(height: 20.h),
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatsCard(
-                            theme,
-                            Icons.task_alt_rounded,
-                            stats?.overview.totalTasks.toString() ?? '...',
-                            'Tasks',
-                            400,
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          child: _buildStatsCard(
-                            theme,
-                            Icons.note_alt_outlined,
-                            stats?.overview.totalNotes.toString() ?? '...',
-                            'Notes',
-                            500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                    child: const AiSuggestionsWidget(),
+                  ),
+                  SizedBox(height: 20.h),
+                  _buildUpcoming(upcoming),
+                  SizedBox(height: 100.h),
+                ],
               ),
-
-              SizedBox(height: 24.h),
-
-              // Daily Progress Section
-              BlocBuilder<DashboardCubit, DashboardState>(
-                builder: (context, state) {
-                  final stats =
-                      state is DashboardStatsLoaded ? state.stats : null;
-                  final progress = stats?.overview.overallProgress ?? 0.0;
-                  final completed = stats?.overview.completedTasks ?? 0;
-                  final total = stats?.overview.totalTasks ?? 0;
-                  final pending = stats?.overview.pendingTasks ?? 0;
-                  final recordings = stats?.overview.totalRecordings ?? 0;
-
-                  return Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Daily Progress',
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1A1A2E),
-                                fontSize: 18.sp,
-                                letterSpacing: -0.3,
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 3.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    progress >= 50
-                                        ? Colors.green.withOpacity(0.1)
-                                        : Colors.orange.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Text(
-                                '${progress.toStringAsFixed(0)}%',
-                                style: TextStyle(
-                                  color:
-                                      progress >= 50
-                                          ? Colors.green
-                                          : Colors.orange,
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 14.h),
-                        Container(
-                          padding: EdgeInsets.all(20.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24.r),
-                            boxShadow: [
-                              BoxShadow(
-                                color: theme.primaryColor.withOpacity(0.08),
-                                blurRadius: 30,
-                                offset: const Offset(0, 10),
-                              ),
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '$completed of $total tasks',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  Text(
-                                    'completed',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: theme.primaryColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 14.h),
-                              Container(
-                                height: 10.h,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                  color: theme.primaryColor.withOpacity(0.1),
-                                ),
-                                child: Stack(
-                                  children: [
-                                    FractionallySizedBox(
-                                      widthFactor: (progress / 100).clamp(
-                                        0.0,
-                                        1.0,
-                                      ),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            10.r,
-                                          ),
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              theme.primaryColor,
-                                              theme.primaryColor.withOpacity(
-                                                0.7,
-                                              ),
-                                              const Color(0xFF667EEA),
-                                            ],
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: theme.primaryColor
-                                                  .withOpacity(0.4),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: 16.h),
-                              Row(
-                                children: [
-                                  _buildProgressStat(
-                                    pending.toString(),
-                                    'Remaining',
-                                    Icons.schedule_rounded,
-                                    Colors.orange.shade400,
-                                  ),
-                                  SizedBox(width: 12.w),
-                                  _buildProgressStat(
-                                    recordings.toString(),
-                                    'Voice Notes',
-                                    Icons.mic_none_rounded,
-                                    theme.primaryColor,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animate().fadeIn(duration: 600.ms, delay: 600.ms);
-                },
-              ),
-
-              SizedBox(height: 28.h),
-
-              // AI Suggestions Section (at bottom for better UX)
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: const AiSuggestionsWidget(),
-              ),
-
-              SizedBox(height: 100.h), // Space for bottom nav
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildStatsCard(
-    ThemeData theme,
-    IconData icon,
-    String value,
-    String label,
-    int delay,
-  ) {
-    final isTask = label == 'Tasks';
-    final gradientColors = [
-      theme.primaryColor,
-      theme.primaryColor.withOpacity(0.85),
-    ];
-    final shadowColor = theme.primaryColor;
-
-    return Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: gradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24.r),
-            boxShadow: [
-              BoxShadow(
-                color: shadowColor.withOpacity(0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-                spreadRadius: -2,
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // Decorative circles
-              Positioned(
-                right: -20.w,
-                top: -20.h,
-                child: Container(
-                  width: 80.r,
-                  height: 80.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.1),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 10.w,
-                bottom: -30.h,
-                child: Container(
-                  width: 60.r,
-                  height: 60.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
-                  ),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
+  Widget _buildHeroBanner() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20.r),
+            child: SizedBox(
+              height: 150.h,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(10.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(14.r),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(icon, color: Colors.white, size: 24.sp),
+                  PageView.builder(
+                    controller: _bannerController,
+                    onPageChanged: (i) => setState(() => _bannerIndex = i),
+                    itemCount: _bannerImages.length,
+                    itemBuilder: (_, index) {
+                      return Image.asset(
+                        _bannerImages[index],
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: HomeSystemTokens.purple.withValues(alpha: 0.08),
+                          child: Icon(Icons.image_outlined, color: HomeSystemTokens.purple, size: 40.sp),
+                        ),
+                      );
+                    },
                   ),
-                  SizedBox(height: 16.h),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        value,
-                        style: TextStyle(
-                          fontSize: 36.sp,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -1,
-                          height: 1,
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      height: 60.h,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Colors.transparent, Colors.black.withOpacity(0.35)],
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 4.w, bottom: 4.h),
-                        child: Icon(
-                          isTask
-                              ? Icons.trending_up_rounded
-                              : Icons.auto_awesome,
-                          color: Colors.white.withOpacity(0.8),
-                          size: 18.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.white.withOpacity(0.95),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        )
-        .animate()
-        .fadeIn(duration: 600.ms, delay: delay.ms)
-        .scale(begin: const Offset(0.9, 0.9));
+          SizedBox(height: 10.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_bannerImages.length, (i) {
+              final active = i == _bannerIndex;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                margin: EdgeInsets.symmetric(horizontal: 3.w),
+                width: active ? 18.w : 6.w,
+                height: 6.h,
+                decoration: BoxDecoration(
+                  color: active ? HomeSystemTokens.purple : const Color(0xFFD1D5DB),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildProgressStat(
-    String value,
-    String label,
-    IconData icon,
-    Color color,
+  Widget _buildStatsRow(
+    dashboard.DashboardOverview? overview,
+    dashboard.ProductivityStats? productivity,
   ) {
-    return Expanded(
+    return SizedBox(
+      height: 100.h,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        children: [
+          _SummaryCard(
+            icon: Icons.assignment_outlined,
+            color: HomeSystemTokens.purple,
+            label: 'Tasks',
+            value: overview?.totalTasks.toString() ?? '—',
+            subtitle: '${overview?.completedTasks ?? 0} done today',
+          ),
+          SizedBox(width: 12.w),
+          _SummaryCard(
+            icon: Icons.notes_rounded,
+            color: HomeSystemTokens.blue,
+            label: 'Notes',
+            value: overview?.totalNotes.toString() ?? '—',
+            subtitle: 'All your notes',
+          ),
+          SizedBox(width: 12.w),
+          _SummaryCard(
+            icon: Icons.check_circle_outline_rounded,
+            color: HomeSystemTokens.green,
+            label: 'Completed',
+            value: overview?.completedTasks.toString() ?? '—',
+            subtitle: 'Today',
+          ),
+          SizedBox(width: 12.w),
+          _SummaryCard(
+            icon: Icons.local_fire_department_rounded,
+            color: HomeSystemTokens.orange,
+            label: 'Streak',
+            value: productivity?.currentStreak.toString() ?? '—',
+            subtitle: 'Days',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodaysFocus(List<dashboard.TaskEntity> tasks) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(6.w),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 16.sp),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
             ),
-            SizedBox(width: 10.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A2E),
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: HomeSystemTokens.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(Icons.calendar_today_rounded, color: HomeSystemTokens.purple, size: 18.sp),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Today's Focus",
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF111827),
+                        ),
+                      ),
+                      Text(
+                        '${tasks.length} tasks scheduled',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w500,
+                GestureDetector(
+                  onTap: () => widget.onTabChange?.call(1),
+                  child: Row(
+                    children: [
+                      Text(
+                        'View all',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: HomeSystemTokens.purple,
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: HomeSystemTokens.purple, size: 18.sp),
+                    ],
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: 20.h),
+            if (tasks.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                child: Text(
+                  'No tasks scheduled for today',
+                  style: TextStyle(fontSize: 13.sp, color: const Color(0xFF9CA3AF)),
+                ),
+              )
+            else
+              ...List.generate(tasks.length, (index) {
+                final task = tasks[index];
+                final isLast = index == tasks.length - 1;
+                return _FocusTaskRow(
+                  task: task,
+                  index: index,
+                  isLast: isLast,
+                );
+              }),
+            SizedBox(height: 8.h),
+            GestureDetector(
+              onTap: () => widget.onTabChange?.call(1),
+              child: Text(
+                '+ Add task',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: HomeSystemTokens.purple,
+                ),
+              ),
             ),
           ],
         ),
@@ -679,353 +325,387 @@ class _HomeScreenBodyState extends State<HomeScreenBody>
     );
   }
 
-  Widget _buildTaskItem(
-    String title,
-    String time,
-    Color color,
-    bool isCompleted,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18.r),
-        boxShadow: [
-          BoxShadow(
-            color:
-                isCompleted
-                    ? Colors.green.withOpacity(0.08)
-                    : color.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42.r,
-            height: 42.r,
-            decoration: BoxDecoration(
-              gradient:
-                  isCompleted
-                      ? const LinearGradient(
-                        colors: [Color(0xFF4ECDC4), Color(0xFF44B09E)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                      : LinearGradient(
-                        colors: [
-                          color.withOpacity(0.15),
-                          color.withOpacity(0.08),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow:
-                  isCompleted
-                      ? [
-                        BoxShadow(
-                          color: const Color(0xFF4ECDC4).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ]
-                      : null,
+  Widget _buildUpcoming(List<dashboard.TaskEntity>? tasks) {
+    final upcoming = tasks?.where((t) {
+      if (t.dueDate == null) return false;
+      return !t.dueDate!.isBefore(DateTime.now());
+    }).toList();
+
+    final next = upcoming != null && upcoming.isNotEmpty ? upcoming.first : null;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Container(
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
             ),
-            child: Icon(
-              isCompleted ? Icons.check_rounded : Icons.circle_outlined,
-              color: isCompleted ? Colors.white : color,
-              size: 20.sp,
-            ),
-          ),
-          SizedBox(width: 14.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        isCompleted
-                            ? Colors.grey.shade500
-                            : const Color(0xFF1A1A2E),
-                    decoration: isCompleted ? TextDecoration.lineThrough : null,
-                    decorationColor: Colors.grey.shade400,
+                Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: HomeSystemTokens.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10.r),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Icon(Icons.event_rounded, color: HomeSystemTokens.orange, size: 18.sp),
                 ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.schedule_rounded,
-                      size: 13.sp,
-                      color: Colors.grey.shade500,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w400,
+                SizedBox(width: 10.w),
+                Text(
+                  'Upcoming',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => widget.onTabChange?.call(2),
+                  child: Row(
+                    children: [
+                      Text(
+                        'View all',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: HomeSystemTokens.orange,
+                        ),
                       ),
-                    ),
-                  ],
+                      Icon(Icons.chevron_right_rounded, color: HomeSystemTokens.orange, size: 18.sp),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 20.sp,
-            color: Colors.grey.shade400,
-          ),
-        ],
+            if (next != null) ...[
+              SizedBox(height: 16.h),
+              _UpcomingRow(task: next),
+            ] else
+              Padding(
+                padding: EdgeInsets.only(top: 16.h),
+                child: Text(
+                  'No upcoming events',
+                  style: TextStyle(fontSize: 13.sp, color: const Color(0xFF9CA3AF)),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildNoteItem(
-    String title,
-    String preview,
-    String time,
-    Color color,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(18.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 6),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.r),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6366F1).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.sticky_note_2_rounded,
-                  color: Colors.white,
-                  size: 18.sp,
-                ),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1A1A2E),
-                    letterSpacing: -0.3,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 16.sp,
-                  color: const Color(0xFF6366F1),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            preview,
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w400,
-              height: 1.5,
+class _SummaryCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String value;
+  final String subtitle;
+
+  const _SummaryCard({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 100.h,
+      width: 118.w,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 2),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
               children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  size: 12.sp,
-                  color: Colors.grey.shade500,
+                Container(
+                  padding: EdgeInsets.all(5.w),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(icon, color: color, size: 14.sp),
                 ),
-                SizedBox(width: 4.w),
+                SizedBox(width: 6.w),
                 Text(
-                  time,
+                  label,
                   style: TextStyle(
                     fontSize: 11.sp,
-                    color: Colors.grey.shade500,
+                    color: const Color(0xFF9CA3AF),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
+            SizedBox(height: 6.h),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF111827),
+                height: 1,
+              ),
+            ),
+            SizedBox(height: 2.h),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusTaskRow extends StatelessWidget {
+  final dashboard.TaskEntity task;
+  final int index;
+  final bool isLast;
+
+  const _FocusTaskRow({
+    required this.task,
+    required this.index,
+    required this.isLast,
+  });
+
+  static const _tagColors = [
+    (Color(0xFF7C5CFC), 'Work'),
+    (Color(0xFF4A8FE7), 'Meeting'),
+    (Color(0xFF34C759), 'Development'),
+  ];
+
+  static const _trailingIcons = [
+    Icons.flag_outlined,
+    Icons.event_note_outlined,
+    Icons.code_rounded,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = _tagColors[index % _tagColors.length];
+    final time = task.dueDate != null
+        ? DateFormat('h:mm a').format(task.dueDate!)
+        : 'All day';
+    final isDone = task.status.toLowerCase() == 'completed';
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 28.w,
+            child: Column(
+              children: [
+                Container(
+                  width: 22.r,
+                  height: 22.r,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDone ? const Color(0xFF34C759) : const Color(0xFFD1D5DB),
+                      width: 2,
+                    ),
+                    color: isDone ? const Color(0xFF34C759) : Colors.transparent,
+                  ),
+                  child: isDone
+                      ? Icon(Icons.check, size: 14.sp, color: Colors.white)
+                      : null,
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: EdgeInsets.symmetric(vertical: 4.h),
+                      color: const Color(0xFFE5E7EB),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 20.h),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: isDone
+                                ? const Color(0xFF9CA3AF)
+                                : const Color(0xFF111827),
+                            decoration: isDone ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 3.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: tag.$1.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6.r),
+                              ),
+                              child: Text(
+                                tag.$2,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: tag.$1,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8.w),
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 13.sp,
+                              color: const Color(0xFF9CA3AF),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              time,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: const Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _trailingIcons[index % _trailingIcons.length],
+                    size: 18.sp,
+                    color: tag.$1,
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildActionCard(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-  ) {
-    final gradientColors =
-        icon == Icons.mic_rounded
-            ? [const Color(0xFFFF6B6B), const Color(0xFFFF8E53)]
-            : icon == Icons.add_task_rounded
-            ? [const Color(0xFF4ECDC4), const Color(0xFF44B09E)]
-            : [const Color(0xFF667EEA), const Color(0xFF764BA2)];
+class _UpcomingRow extends StatelessWidget {
+  final dashboard.TaskEntity task;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(20.r),
-        child: Container(
-          padding: EdgeInsets.all(16.w),
+  const _UpcomingRow({required this.task});
+
+  String _daysLabel(DateTime date) {
+    final diff = date.difference(DateTime.now()).inDays;
+    if (diff <= 0) return 'Today';
+    if (diff == 1) return 'In 1 day';
+    return 'In $diff days';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final due = task.dueDate ?? DateTime.now();
+    final dateStr = DateFormat('MMM d, yyyy • h:mm a').format(due);
+
+    return Row(
+      children: [
+        Container(
+          width: 40.r,
+          height: 40.r,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20.r),
-            boxShadow: [
-              BoxShadow(
-                color: gradientColors[0].withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            color: const Color(0xFFFF9500).withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
-          child: Row(
+          child: Icon(
+            Icons.event_available_rounded,
+            color: const Color(0xFFFF9500),
+            size: 20.sp,
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: EdgeInsets.all(14.r),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: gradientColors,
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: gradientColors[0].withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 24.sp),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1A1A2E),
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
+              Text(
+                task.title,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF111827),
                 ),
               ),
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      gradientColors[0].withOpacity(0.1),
-                      gradientColors[1].withOpacity(0.1),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  size: 18.sp,
-                  color: gradientColors[0],
+              SizedBox(height: 2.h),
+              Text(
+                dateStr,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: const Color(0xFF9CA3AF),
                 ),
               ),
             ],
           ),
         ),
-      ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF9500).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Text(
+            _daysLabel(due),
+            style: TextStyle(
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFFF9500),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -16,19 +16,44 @@ class DashboardStatsModel {
   });
 
   factory DashboardStatsModel.fromJson(Map<String, dynamic> json) {
+    final taskStats = json['taskStats'] ?? json['task_stats'];
+    final noteStats = json['noteStats'] ?? json['note_stats'];
+
+    Map<String, dynamic> overviewJson =
+        Map<String, dynamic>.from(json['overview'] as Map? ?? {});
+    if (overviewJson.isEmpty && taskStats is Map) {
+      overviewJson = {
+        'total_tasks': taskStats['totalTasks'] ?? taskStats['total_tasks'],
+        'completed_tasks':
+            taskStats['completedTasks'] ?? taskStats['completed_tasks'],
+        'pending_tasks': taskStats['pendingTasks'] ?? taskStats['pending_tasks'],
+        'overdue_tasks': taskStats['overdueTasks'] ?? taskStats['overdue_tasks'],
+        'overall_progress':
+            taskStats['completionRate'] ?? taskStats['overall_progress'],
+        'total_notes': noteStats is Map
+            ? (noteStats['totalNotes'] ?? noteStats['total_notes'])
+            : 0,
+      };
+    }
+
+    final upcomingRaw = json['upcoming_tasks'] ?? json['upcomingTasks'];
+    final recentRaw = json['recent_notes'] ?? json['recentNotes'];
+    final productivityJson =
+        json['productivity'] ?? json['productivityStats'] ?? {};
+
     return DashboardStatsModel(
-      overview: DashboardOverviewModel.fromJson(json['overview'] ?? {}),
-      upcomingTasks:
-          (json['upcoming_tasks'] as List<dynamic>?)
-              ?.map((e) => TaskModel.fromJson(e))
+      overview: DashboardOverviewModel.fromJson(overviewJson),
+      upcomingTasks: (upcomingRaw as List<dynamic>?)
+              ?.map((e) => TaskModel.fromJson(Map<String, dynamic>.from(e)))
               .toList() ??
           [],
-      recentNotes:
-          (json['recent_notes'] as List<dynamic>?)
-              ?.map((e) => NoteModel.fromJson(e))
+      recentNotes: (recentRaw as List<dynamic>?)
+              ?.map((e) => NoteModel.fromJson(Map<String, dynamic>.from(e)))
               .toList() ??
           [],
-      productivity: ProductivityStatsModel.fromJson(json['productivity'] ?? {}),
+      productivity: ProductivityStatsModel.fromJson(
+        Map<String, dynamic>.from(productivityJson as Map? ?? {}),
+      ),
       quickActions:
           (json['quick_actions'] as List<dynamic>?)
               ?.map((e) => QuickActionModel.fromJson(e))
@@ -71,14 +96,16 @@ class DashboardOverviewModel {
 
   factory DashboardOverviewModel.fromJson(Map<String, dynamic> json) {
     return DashboardOverviewModel(
-      totalTasks: json['total_tasks'] ?? 0,
-      completedTasks: json['completed_tasks'] ?? 0,
-      pendingTasks: json['pending_tasks'] ?? 0,
-      overdueTasks: json['overdue_tasks'] ?? 0,
-      overallProgress: (json['overall_progress'] ?? 0.0).toDouble(),
-      totalNotes: json['total_notes'] ?? 0,
-      totalRecordings: json['total_recordings'] ?? 0,
-      totalAchievements: json['total_achievements'] ?? 0,
+      totalTasks: json['total_tasks'] ?? json['totalTasks'] ?? 0,
+      completedTasks: json['completed_tasks'] ?? json['completedTasks'] ?? 0,
+      pendingTasks: json['pending_tasks'] ?? json['pendingTasks'] ?? 0,
+      overdueTasks: json['overdue_tasks'] ?? json['overdueTasks'] ?? 0,
+      overallProgress:
+          (json['overall_progress'] ?? json['completionRate'] ?? 0.0).toDouble(),
+      totalNotes: json['total_notes'] ?? json['totalNotes'] ?? 0,
+      totalRecordings: json['total_recordings'] ?? json['totalRecordings'] ?? 0,
+      totalAchievements:
+          json['total_achievements'] ?? json['totalAchievements'] ?? 0,
     );
   }
 
@@ -115,12 +142,13 @@ class TaskModel {
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
     return TaskModel(
-      id: json['task_id'] ?? 0,
+      id: _parseId(json['task_id'] ?? json['id']),
       title: json['title'] ?? '',
-      dueDate:
-          json['due_date'] != null ? DateTime.parse(json['due_date']) : null,
+      dueDate: json['due_date'] != null
+          ? DateTime.parse(json['due_date'].toString())
+          : null,
       priority: json['priority'] ?? 'medium',
-      status: json['status'] ?? 'pending',
+      status: json['status'] ?? (json['is_done'] == true ? 'completed' : 'pending'),
       categoryId: json['category_id'],
     );
   }
@@ -152,13 +180,12 @@ class NoteModel {
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
     return NoteModel(
-      id: json['note_id'] ?? 0,
+      id: _parseId(json['note_id'] ?? json['id']),
       title: json['title'] ?? '',
-      preview: json['preview'] ?? '',
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : DateTime.now(),
+      preview: json['preview'] ?? json['content'] ?? '',
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'].toString())
+          : DateTime.now(),
     );
   }
 
@@ -185,9 +212,10 @@ class ProductivityStatsModel {
 
   factory ProductivityStatsModel.fromJson(Map<String, dynamic> json) {
     return ProductivityStatsModel(
-      currentStreak: json['current_streak'] ?? 0,
-      longestStreak: json['longest_streak'] ?? 0,
-      todayFocusMinutes: json['today_focus_minutes'] ?? 0,
+      currentStreak: json['current_streak'] ?? json['currentStreak'] ?? 0,
+      longestStreak: json['longest_streak'] ?? json['longestStreak'] ?? 0,
+      todayFocusMinutes:
+          json['today_focus_minutes'] ?? json['totalFocusTime'] ?? 0,
     );
   }
 
@@ -218,4 +246,12 @@ class QuickActionModel {
   QuickActionEntity toEntity() {
     return QuickActionEntity(id: id, label: label, icon: icon);
   }
+}
+
+int _parseId(dynamic raw) {
+  if (raw is int) return raw;
+  if (raw is String) {
+    return int.tryParse(raw) ?? raw.hashCode.abs() % 100000;
+  }
+  return 0;
 }

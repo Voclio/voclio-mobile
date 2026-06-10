@@ -15,6 +15,8 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../../core/enums/enums.dart';
 import '../../domain/entities/calendar_month_entity.dart';
 import '../../domain/entities/google_calendar_entity.dart';
+import '../../../../core/widgets/home_system/home_system_tokens.dart';
+import '../../../../core/widgets/home_system/home_system_widgets.dart';
 
 class MonthlyCalendarScreen extends StatelessWidget {
   const MonthlyCalendarScreen({super.key});
@@ -426,17 +428,19 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      primary: false,
+      backgroundColor: HomeSystemTokens.canvas,
       appBar: AppBar(
         title: Text(
           'Calendar',
           style: TextStyle(
             fontSize: 22.sp,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w800,
+            color: HomeSystemTokens.ink,
+            letterSpacing: -0.3,
           ),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: HomeSystemTokens.canvas,
         elevation: 0,
         centerTitle: false,
         actions: [

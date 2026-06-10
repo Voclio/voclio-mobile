@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/productivity_cubit.dart';
 import '../bloc/productivity_state.dart';
@@ -194,62 +196,68 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
     final primaryColor = theme.primaryColor;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Focus Timer'),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              // TODO: Show focus history
-            },
-          ),
-        ],
-      ),
-      body: BlocListener<ProductivityCubit, ProductivityState>(
-        listener: (context, state) {
-          if (state is FocusSessionStarted) {
-            currentSessionId = state.session.id;
-          }
-          if (state is ProductivityError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+      backgroundColor: HomeSystemTokens.canvas,
+      body: HomeCanvas(
+        child: BlocListener<ProductivityCubit, ProductivityState>(
+          listener: (context, state) {
+            if (state is FocusSessionStarted) {
+              currentSessionId = state.session.id;
+            }
+            if (state is ProductivityError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
-              ),
-            );
-          }
-        },
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Column(
-              children: [
-                SizedBox(height: 20.h),
-                // Timer Circle
-                _buildTimerCircle(primaryColor),
-                SizedBox(height: 40.h),
-                // Controls
-                if (!isRunning) ...[
-                  _buildDurationSelector(primaryColor),
+              );
+            }
+          },
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  SizedBox(height: 8.h),
+                  HomeScreenHeader(
+                    title: 'Focus Timer',
+                    subtitle: 'Stay in the zone',
+                    icon: Icons.timer_rounded,
+                    accent: HomeSystemTokens.purple,
+                    actions: [
+                      HomeIconButton(
+                        icon: Icons.history_rounded,
+                        color: HomeSystemTokens.inkSoft,
+                        onTap: () {
+                          // TODO: Show focus history
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24.h),
+                  _buildTimerCircle(primaryColor),
                   SizedBox(height: 32.h),
-                  _buildSoundSelector(primaryColor),
+                  if (!isRunning) ...[
+                    HomeSectionCard(
+                      child: _buildDurationSelector(primaryColor),
+                    ),
+                    SizedBox(height: 16.h),
+                    HomeSectionCard(
+                      child: _buildSoundSelector(primaryColor),
+                    ),
+                    SizedBox(height: 24.h),
+                    _buildStartButton(primaryColor),
+                  ] else ...[
+                    _buildRunningIndicator(primaryColor),
+                    SizedBox(height: 32.h),
+                    _buildStopButton(),
+                  ],
                   SizedBox(height: 40.h),
-                  _buildStartButton(primaryColor),
-                ] else ...[
-                  _buildRunningIndicator(primaryColor),
-                  SizedBox(height: 32.h),
-                  _buildStopButton(),
                 ],
-                SizedBox(height: 40.h),
-              ],
+              ),
             ),
           ),
         ),
@@ -315,14 +323,8 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                   height: 220.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Theme.of(context).cardColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                    color: HomeSystemTokens.card,
+                    boxShadow: HomeSystemTokens.cardShadow(),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -377,9 +379,9 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
         Text(
           'Duration',
           style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w700,
+            color: HomeSystemTokens.ink,
           ),
         ),
         SizedBox(height: 16.h),
@@ -450,18 +452,17 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
         Text(
           'Ambient Sound',
           style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
+            fontSize: 17.sp,
+            fontWeight: FontWeight.w700,
+            color: HomeSystemTokens.ink,
           ),
         ),
         SizedBox(height: 16.h),
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.grey[300]!),
+            color: HomeSystemTokens.canvas,
+            borderRadius: BorderRadius.circular(HomeSystemTokens.radiusMd),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String?>(

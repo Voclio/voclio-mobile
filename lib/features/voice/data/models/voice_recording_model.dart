@@ -14,7 +14,11 @@ class VoiceRecordingModel extends VoiceRecording {
     return VoiceRecordingModel(
       id: (json['recording_id'] ?? json['id'] ?? json['_id'] ?? '').toString(),
       title: (json['title'] ?? 'New Recording') as String,
-      url: (json['url'] ?? json['path'] ?? json['audio_url'] ?? '') as String,
+      url: (json['url'] ??
+              json['storage_url'] ??
+              json['path'] ??
+              json['audio_url'] ??
+              '') as String,
       transcription:
           json['transcription'] ?? json['transcription_text'] as String?,
       duration: Duration(

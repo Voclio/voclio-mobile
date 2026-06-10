@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
+import 'package:voclio_app/core/api/api_response.dart';
 import 'voice_remote_datasource.dart';
 import '../models/voice_recording_model.dart';
 
@@ -15,33 +16,74 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
   @override
   Future<List<VoiceRecordingModel>> getVoiceRecordings() async {
     final response = await apiClient.get(ApiEndpoints.voiceRecordings);
-
-    // DEBUG: View the exact structure of the list
-    debugPrint("GET RECORDINGS RESPONSE: ${response.data}");
-
-    // FIX for "Map is not a subtype of List":
-    // The server is likely returning pagination data: { "data": { "data": [...] } }
-    // or standard: { "data": [...] }
-    var rawData = response.data['data'];
-    List listData = [];
-
-    if (rawData is List) {
-      listData = rawData;
-    } else if (rawData is Map && rawData['data'] is List) {
-      // Handle Paginated Response
-      listData = rawData['data'];
-    } else {
-      debugPrint(
-        "WARNING: unexpected list format. Raw Data type: ${rawData.runtimeType}",
-      );
-    }
-
-    return listData.map((e) => VoiceRecordingModel.fromJson(e)).toList();
+    final list = ApiResponse.unwrapList(response.data, key: 'recordings');
+    return list.map((e) => VoiceRecordingModel.fromJson(e)).toList();
   }
 
   @override
   Future<VoiceRecordingModel> uploadVoice(File file) async {
-    String fileName = file.path.split('/').last;
+    try {
+      return await _uploadViaProcessComplete(file);
+    } on ServerException catch (e) {
+      if (e.statusCode == 503) {
+        return _uploadSimple(file);
+      }
+      debugPrint('PROCESS-COMPLETE ERROR: ${e.message}');
+      rethrow;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 503) {
+        return _uploadSimple(file);
+      }
+      debugPrint('PROCESS-COMPLETE ERROR: ${e.response?.data}');
+      rethrow;
+    }
+  }
+
+  Future<FormData> _buildUploadFormData(File file) async {
+    final fileName = file.path.split('/').last;
+    final audioFile = await MultipartFile.fromFile(
+      file.path,
+      filename: fileName,
+      contentType: MediaType('audio', 'mp4'),
+    );
+
+    return FormData.fromMap({
+      'audio_file': audioFile,
+      'language': 'ar',
+      'auto_create_tasks': 'true',
+      'auto_create_notes': 'true',
+    });
+  }
+
+  Future<VoiceRecordingModel> _uploadViaProcessComplete(File file) async {
+    final formData = await _buildUploadFormData(file);
+
+    final response = await apiClient.uploadFile(
+      ApiEndpoints.voiceProcessComplete,
+      formData,
+      options: Options(
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+
+    final data = ApiResponse.unwrapMap(response.data);
+    final recordingId = data['recording_id']?.toString();
+    if (recordingId != null && recordingId.isNotEmpty) {
+      final recording = await _getRecording(recordingId);
+      return VoiceRecordingModel.fromJson(recording);
+    }
+
+    final recordingData = data['recording'] ?? data;
+    return VoiceRecordingModel.fromJson(
+      Map<String, dynamic>.from(recordingData as Map),
+    );
+  }
+
+  Future<VoiceRecordingModel> _uploadSimple(File file) async {
+    final fileName = file.path.split('/').last;
 
     final audioFile = await MultipartFile.fromFile(
       file.path,
@@ -49,39 +91,27 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
       contentType: MediaType('audio', 'mp4'),
     );
 
-    FormData formData = FormData.fromMap({
-      "audio_file": audioFile, // We confirmed this key is correct
-      "language": "ar",
+    final formData = FormData.fromMap({
+      'audio_file': audioFile,
+      'language': 'ar',
     });
 
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.uploadVoice,
-        data: formData,
-        options: Options(
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Accept": "application/json",
-          },
-        ),
-      );
+    final response = await apiClient.uploadFile(
+      ApiEndpoints.uploadVoice,
+      formData,
+      options: Options(
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+        },
+      ),
+    );
 
-      // DEBUG: Print the response to confirm structure
-      debugPrint("UPLOAD RESPONSE: ${response.data}");
-
-      // FIX: Drill down into ['data']['recording'] based on your JSON snippet
-      final data = response.data['data'];
-      final recordingData = data['recording']; // <--- This is the key change
-
-      if (recordingData == null) {
-        throw Exception("Upload response missing 'recording' object");
-      }
-
-      return VoiceRecordingModel.fromJson(recordingData);
-    } on DioException catch (e) {
-      debugPrint("UPLOAD ERROR: ${e.response?.data}");
-      rethrow;
-    }
+    final data = ApiResponse.unwrapMap(response.data);
+    final recordingData = data['recording'] ?? data;
+    return VoiceRecordingModel.fromJson(
+      Map<String, dynamic>.from(recordingData as Map),
+    );
   }
 
   @override
@@ -89,48 +119,114 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     await apiClient.delete(ApiEndpoints.deleteVoice(id));
   }
 
+  Future<Map<String, dynamic>> _getRecording(String id) async {
+    final response = await apiClient.get(ApiEndpoints.voiceById(id));
+    final data = ApiResponse.unwrapMap(response.data);
+    return Map<String, dynamic>.from((data['recording'] ?? data) as Map);
+  }
+
   @override
   Future<void> createNoteFromVoice(String id) async {
+    final recording = await _getRecording(id);
+    final transcription = recording['transcription_text']?.toString() ?? '';
+    if (transcription.isEmpty) {
+      throw Exception('Recording is not transcribed yet');
+    }
+
     await apiClient.post(
-      ApiEndpoints.createNoteFromVoice(id),
+      ApiEndpoints.notes,
       data: {
-        'title': 'Voice Note ${DateTime.now().toString().split('.')[0]}',
-        'tags': [],
+        'title': 'Voice Note',
+        'content': transcription,
+        'voice_recording_id': int.tryParse(id) ?? id,
       },
     );
   }
 
   @override
   Future<void> createTasksFromVoice(String id) async {
+    final recording = await _getRecording(id);
+    final transcription = recording['transcription_text']?.toString() ?? '';
+    if (transcription.isEmpty) {
+      throw Exception('Recording is not transcribed yet');
+    }
+
+    final noteResponse = await apiClient.post(
+      ApiEndpoints.notes,
+      data: {
+        'title': 'Voice Tasks',
+        'content': transcription,
+        'voice_recording_id': int.tryParse(id) ?? id,
+      },
+    );
+
+    final noteData = ApiResponse.unwrapMap(noteResponse.data);
+    final note = noteData['note'] ?? noteData;
+    final noteId = (note['note_id'] ?? note['id']).toString();
+
     await apiClient.post(
-      ApiEndpoints.createTasksFromVoice(id),
-      data: {'auto_create': true, 'category_id': 1},
+      ApiEndpoints.extractTasksFromNote(noteId),
+      data: {'auto_create': true},
     );
   }
 
   @override
   Future<String> transcribe(String id) async {
-    debugPrint("CALLING PROCESS ENDPOINT WITH ID: $id");
-
-    // The body key might be 'recording_id' or just 'id'.
-    // 'recording_id' is more likely based on your other APIs.
-    final response = await apiClient.post(
-      ApiEndpoints.transcribe, // This now points to /voice/process
-      data: {'recording_id': id},
-    );
-
-    debugPrint("PROCESS RESPONSE: ${response.data}");
-
-    // FIX: Parse the new nested structure
-    // The path is response -> data -> transcription
-    final responseData = response.data['data'];
-
-    if (responseData != null && responseData['transcription'] != null) {
-      return responseData['transcription'] as String;
+    final recording = await _getRecording(id);
+    final existing = recording['transcription_text']?.toString() ?? '';
+    if (existing.isNotEmpty) {
+      return existing;
     }
 
-    // Return empty string if transcription is missing
-    return '';
+    final response = await apiClient.post(
+      ApiEndpoints.transcribe,
+      data: {
+        'recording_id': int.tryParse(id) ?? id,
+        'language': 'ar',
+      },
+    );
+
+    final data = ApiResponse.unwrapMap(response.data);
+
+    if (data['transcription'] != null) {
+      return data['transcription'].toString();
+    }
+
+    final jobId = data['job_id']?.toString();
+    if (jobId == null || jobId.isEmpty) {
+      return '';
+    }
+
+    return _pollTranscriptionJob(jobId, id);
+  }
+
+  Future<String> _pollTranscriptionJob(String jobId, String recordingId) async {
+    for (var attempt = 0; attempt < 30; attempt++) {
+      await Future.delayed(const Duration(seconds: 2));
+
+      final statusResponse = await apiClient.get(
+        ApiEndpoints.voiceJobStatus(jobId),
+        queryParameters: {'queue': 'transcription'},
+      );
+      final statusData = ApiResponse.unwrapMap(statusResponse.data);
+      final job = statusData['job'] as Map? ?? statusData;
+      final state = job['state']?.toString();
+
+      if (state == 'completed') {
+        final result = job['result'];
+        if (result is Map && result['transcription'] != null) {
+          return result['transcription'].toString();
+        }
+        final recording = await _getRecording(recordingId);
+        return recording['transcription_text']?.toString() ?? '';
+      }
+
+      if (state == 'failed') {
+        throw Exception(job['error']?.toString() ?? 'Transcription failed');
+      }
+    }
+
+    throw Exception('Transcription timed out. Ensure the worker is running.');
   }
 
   @override

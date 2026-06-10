@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get_it/get_it.dart';
 import 'package:voclio_app/core/domain/entities/tag_entity.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
@@ -40,6 +41,18 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
     context.read<TasksCubit>().init();
   }
 
+  void _showAddTaskSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: context.read<TasksCubit>(),
+        child: const AddTaskBottomSheet(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -64,74 +77,13 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
         final tomorrowTasks = _filterTasksByDate(visibleTasks, 1);
         final laterTasks = _filterTasksByDate(visibleTasks, 2);
 
+        final pendingTasks = totalTasks - completedTasks;
+
         return Scaffold(
-          // 1. Use Theme Background
-          backgroundColor: theme.scaffoldBackgroundColor,
-
-          appBar: AppBar(
-            // 2. Make AppBar Transparent
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            // 3. Center the title layout or keep spacing
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tasks',
-                      // 4. Use Theme Typography
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      'You have $totalTasks tasks',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.secondary,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.filter_list_rounded,
-                    // 5. Use Theme Icon Color
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          floatingActionButton: Padding(
-            padding: EdgeInsets.only(bottom: 85.h),
-            child: FloatingActionButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder:
-                      (_) => BlocProvider.value(
-                        value: context.read<TasksCubit>(),
-                        child: const AddTaskBottomSheet(),
-                      ),
-                );
-              },
-              backgroundColor: theme.colorScheme.primary,
-              elevation: 5,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.add, color: Colors.white),
-            ),
-          ),
-
-          body: BlocListener<TasksCubit, TasksState>(
+          primary: false,
+          backgroundColor: HomeSystemTokens.canvas,
+          body: HomeCanvas(
+            child: BlocListener<TasksCubit, TasksState>(
             listenWhen:
                 (previous, current) => previous.status != current.status,
             listener: (context, state) {
@@ -140,77 +92,110 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                   SnackBar(
                     content: Text(state.errorMessage),
                     backgroundColor: theme.colorScheme.error,
+                    behavior: SnackBarBehavior.floating,
+                    margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 90.h),
                   ),
                 );
               }
             },
             child: SafeArea(
+              bottom: false,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 10.h), // Reduced top spacing slightly
-                    // Progress Card
-                    // Only show progress card if viewing "All" (optional decision)
-                    // or show progress for the current filter
+                    SizedBox(height: 8.h),
+                    HomeScreenHeader(
+                      title: 'Tasks',
+                      subtitle: '$totalTasks total · $pendingTasks remaining',
+                      icon: Icons.task_alt_rounded,
+                      accent: HomeSystemTokens.purple,
+                      actions: [
+                        HomeIconButton(
+                          icon: Icons.add_rounded,
+                          onTap: () => _showAddTaskSheet(context),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 18.h),
                     _buildProgressCard(context, progressValue, progressPercent),
-
-                    SizedBox(height: 24.h),
-
-                    // Tag Filter Chips (Like Notes Screen)
+                    SizedBox(height: 14.h),
+                    SizedBox(
+                      height: 96.h,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          HomeStatTile(
+                            icon: Icons.pending_actions_rounded,
+                            color: HomeSystemTokens.purple,
+                            label: 'Pending',
+                            value: pendingTasks.toString(),
+                            subtitle: 'To complete',
+                          ),
+                          SizedBox(width: 10.w),
+                          HomeStatTile(
+                            icon: Icons.check_circle_outline_rounded,
+                            color: HomeSystemTokens.green,
+                            label: 'Done',
+                            value: completedTasks.toString(),
+                            subtitle: 'Completed',
+                          ),
+                          SizedBox(width: 10.w),
+                          HomeStatTile(
+                            icon: Icons.percent_rounded,
+                            color: HomeSystemTokens.orange,
+                            label: 'Progress',
+                            value: '$progressPercent%',
+                            subtitle: 'Overall',
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
                     BlocBuilder<TasksCubit, TasksState>(
                       builder: (context, state) {
                         return SizedBox(
-                          height: 40.h,
+                          height: 42.h,
                           child: ListView(
                             scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
                             children: [
-                              // "All" Chip
-                              _buildFilterChip(
-                                context,
+                              HomeFilterPill(
                                 label: 'All',
-                                isSelected: state.selectedTagName == null,
-                                onTap:
-                                    () => context
-                                        .read<TasksCubit>()
-                                        .filterByTag(null),
+                                selected: state.selectedTagName == null,
+                                onTap: () => context
+                                    .read<TasksCubit>()
+                                    .filterByTag(null),
                               ),
-                              SizedBox(width: 10.w),
-                              // Dynamic Tag Chips
-                              ...state.availableTags.map((tag) {
-                                return Padding(
-                                  padding: EdgeInsets.only(right: 10.w),
-                                  child: _buildFilterChip(
-                                    context,
-                                    label: tag.name,
-                                    isSelected:
-                                        state.selectedTagName == tag.name,
-                                    onTap:
-                                        () => context
-                                            .read<TasksCubit>()
-                                            .filterByTag(tag.name),
-                                  ),
-                                );
-                              }),
+                              ...state.availableTags.map(
+                                (tag) => HomeFilterPill(
+                                  label: tag.name,
+                                  selected: state.selectedTagName == tag.name,
+                                  onTap: () => context
+                                      .read<TasksCubit>()
+                                      .filterByTag(tag.name),
+                                ),
+                              ),
                             ],
                           ),
                         );
                       },
                     ),
-
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 16.h),
 
                     // Top Loading Indicator
                     if (state.status == TasksStatus.loading)
                       Padding(
                         padding: EdgeInsets.only(bottom: 12.h),
-                        child: LinearProgressIndicator(
-                          minHeight: 2.h,
-                          backgroundColor: theme.colorScheme.primary
-                              .withOpacity(0.1),
-                          color: theme.colorScheme.primary,
-                        ),
+                        child:
+                            LinearProgressIndicator(
+                              minHeight: 2.h,
+                              backgroundColor: theme.colorScheme.primary
+                                  .withOpacity(0.1),
+                              color: theme.colorScheme.primary,
+                            ),
                       ),
 
                     // Task List
@@ -249,10 +234,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                               child: ListView(
                                 children: [
                                   SizedBox(height: 80.h),
-                                  _buildEmptyState(
-                                    context,
-                                    state.selectedTagName,
-                                  ),
+                                  _buildEmptyState(context, state.selectedTagName),
                                 ],
                               ),
                             );
@@ -270,10 +252,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   _buildSectionHeader(context, "Today"),
                                   ...todayTasks.map(
                                     (task) => _buildTaskItem(
-                                      context,
-                                      task,
-                                      state.availableTags,
-                                    ),
+                                          context,
+                                          task,
+                                          state.availableTags,
+                                        ),
                                   ),
                                 ],
                                 if (tomorrowTasks.isNotEmpty) ...[
@@ -281,10 +263,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   _buildSectionHeader(context, "Tomorrow"),
                                   ...tomorrowTasks.map(
                                     (task) => _buildTaskItem(
-                                      context,
-                                      task,
-                                      state.availableTags,
-                                    ),
+                                          context,
+                                          task,
+                                          state.availableTags,
+                                        ),
                                   ),
                                 ],
                                 if (laterTasks.isNotEmpty) ...[
@@ -292,10 +274,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                                   _buildSectionHeader(context, "Later"),
                                   ...laterTasks.map(
                                     (task) => _buildTaskItem(
-                                      context,
-                                      task,
-                                      state.availableTags,
-                                    ),
+                                          context,
+                                          task,
+                                          state.availableTags,
+                                        ),
                                   ),
                                 ],
                               ],
@@ -309,6 +291,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
               ),
             ),
           ),
+        ),
         );
       },
     );
@@ -321,108 +304,74 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
     double progressValue,
     int percentage,
   ) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final isComplete = percentage == 100;
+    final barColor =
+        isComplete ? HomeSystemTokens.green : HomeSystemTokens.purple;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.r),
-      decoration: BoxDecoration(
-        color:
-            isComplete
-                ? (isDark
-                    ? Colors.green.withOpacity(0.15)
-                    : Colors.green.shade50)
-                : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24.r),
-        border:
-            isComplete
-                ? Border.all(color: Colors.green.withOpacity(0.3), width: 1.5)
-                : null,
-        boxShadow: [
-          BoxShadow(
-            color:
-                isComplete
-                    ? Colors.green.withOpacity(0.1)
-                    : Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        gradient:
-            !isComplete && isDark
-                ? LinearGradient(
-                  colors: [
-                    theme.colorScheme.secondary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-                : null,
-      ),
+    return HomeSectionCard(
+      padding: EdgeInsets.all(18.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  if (isComplete) ...[
-                    Icon(
-                      Icons.celebration_rounded,
-                      color: Colors.green,
-                      size: 20.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                  ],
-                  Text(
-                    isComplete ? "All Done!" : "Overall Progress",
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isComplete ? Colors.green.shade700 : null,
-                    ),
-                  ),
-                ],
-              ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color:
-                      isComplete
-                          ? Colors.green.withOpacity(0.2)
-                          : theme.colorScheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: barColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: Text(
-                  "$percentage%",
-                  style: TextStyle(
-                    color:
-                        isComplete
-                            ? Colors.green.shade700
-                            : theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.sp,
-                  ),
+                child: Icon(
+                  isComplete
+                      ? Icons.celebration_rounded
+                      : Icons.trending_up_rounded,
+                  color: barColor,
+                  size: 18.sp,
+                ),
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isComplete ? 'All done for now' : 'Overall progress',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.w700,
+                        color: HomeSystemTokens.ink,
+                      ),
+                    ),
+                    Text(
+                      isComplete
+                          ? 'Great work — you cleared the list'
+                          : 'Keep going, you are getting there',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: HomeSystemTokens.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$percentage%',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  color: barColor,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 14.h),
           ClipRRect(
-            borderRadius: BorderRadius.circular(10.r),
+            borderRadius: BorderRadius.circular(8.r),
             child: LinearProgressIndicator(
               value: progressValue,
-              backgroundColor:
-                  isDark
-                      ? Colors.white10
-                      : (isComplete
-                          ? Colors.green.shade100
-                          : Colors.deepPurple.shade50),
-              color: isComplete ? Colors.green : theme.colorScheme.primary,
-              minHeight: 10.h,
+              minHeight: 7.h,
+              backgroundColor: barColor.withValues(alpha: 0.12),
+              color: barColor,
             ),
           ),
         ],
@@ -457,16 +406,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h, left: 4.w),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontSize: 18.sp,
-        ),
-      ),
-    );
+    return HomeSectionTitle(title: title);
   }
 
   List<TaskEntity> _filterTasksByDate(List<TaskEntity> tasks, int type) {
@@ -485,114 +425,64 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
     }).toList();
   }
 
-  Widget _buildFilterChip(
-    BuildContext context, {
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(
-            color:
-                isSelected
-                    ? theme.colorScheme.primary
-                    : (isDark ? Colors.white24 : Colors.black12),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-              fontSize: 14.sp,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildEmptyState(BuildContext context, String? selectedTagName) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Illustration container
           Container(
-            width: 120.w,
-            height: 120.h,
+            width: 112.r,
+            height: 112.r,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: HomeSystemTokens.purple.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.task_alt_rounded,
-              size: 60.sp,
-              color: theme.colorScheme.primary.withOpacity(0.6),
+              size: 52.sp,
+              color: HomeSystemTokens.purple,
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 22.h),
           Text(
             selectedTagName != null
                 ? 'No tasks in "$selectedTagName"'
                 : 'No tasks yet',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w800,
+              color: HomeSystemTokens.ink,
             ),
           ),
           SizedBox(height: 8.h),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            padding: EdgeInsets.symmetric(horizontal: 36.w),
             child: Text(
               selectedTagName != null
                   ? 'Create a new task with this tag to see it here'
-                  : 'Tap the + button to create your first task',
+                  : 'Tap + to create your first task',
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.secondary,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: HomeSystemTokens.inkMuted,
                 height: 1.5,
               ),
             ),
           ),
-          SizedBox(height: 32.h),
+          SizedBox(height: 28.h),
           ElevatedButton.icon(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder:
-                    (_) => BlocProvider.value(
-                      value: context.read<TasksCubit>(),
-                      child: const AddTaskBottomSheet(),
-                    ),
-              );
-            },
+            onPressed: () => _showAddTaskSheet(context),
             icon: Icon(Icons.add_rounded, size: 20.sp),
             label: Text(
               'Create Task',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.sp),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
+              backgroundColor: HomeSystemTokens.purple,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
+                borderRadius: BorderRadius.circular(14.r),
               ),
               elevation: 0,
             ),

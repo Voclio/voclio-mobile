@@ -141,20 +141,20 @@ class MyColors extends ThemeExtension<MyColors> {
   /// Light theme configuration - Professional blue and green colors
   /// Suitable for productivity and voice-to-text applications
   static const MyColors light = MyColors(
-    primary: Color(0xFF6C4FBB), // Rich, vibrant purple for modern UI
-    accent: Color(0xFF4CAF50), // Green for success and productivity
-    accentLight: Color(0xFF81C784), // Light green, comfortable
-    accentDark: Color(0xFF388E3C), // Dark green, professional
+    primary: Color(0xFF7C5CFC),
+    accent: Color(0xFF34C759),
+    accentLight: Color(0xFF81C784),
+    accentDark: Color(0xFF388E3C),
     white: Color(0xFFFFFFFF),
     black: Color(0xFF000000),
-    grey: Color(0xFF424242), // Darker grey for better readability
-    greyLight: Color(0xFFF5F5F7),
+    grey: Color(0xFF424242),
+    greyLight: Color(0xFFF5F6FA),
     greyDark: Color(0xFF1A1A1A),
-    textPrimary: Color(0xFF1A1A2E), // Very dark text for strong contrast
-    textSecondary: Color(0xFF6B7280),
+    textPrimary: Color(0xFF111827),
+    textSecondary: Color(0xFF9CA3AF),
     textLight: Color(0xFFFFFFFF),
-    background: Color(0xFFFFFFFF),
-    backgroundLight: Color(0xFFFAFAFA),
+    background: Color(0xFFF5F6FA),
+    backgroundLight: Color(0xFFF5F6FA),
     backgroundDark: Color(0xFF303030),
     success: Color(0xFF10B981),
     warning: Color(0xFFF59E0B),

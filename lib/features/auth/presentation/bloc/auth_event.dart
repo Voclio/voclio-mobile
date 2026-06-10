@@ -114,3 +114,7 @@ class GetProfileEvent extends AuthEvent {
 class CheckAuthStatusEvent extends AuthEvent {
   const CheckAuthStatusEvent();
 }
+
+class SkipAuthEvent extends AuthEvent {
+  const SkipAuthEvent();
+}

@@ -340,17 +340,31 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  Future<AuthResponseModel> _mergeCachedTokens(AuthResponseModel response) async {
+    if (response.token.isNotEmpty) return response;
+    final cached = await _localDataSource.getAuthData();
+    if (cached == null) return response;
+    return AuthResponseModel(
+      user: response.user,
+      token: cached.token,
+      refreshToken: cached.refreshToken,
+      expiresAt: cached.expiresAt,
+    );
+  }
+
   @override
   Future<Either<Failure, AuthResponse>> getProfile() async {
     try {
-      final responseModel = await _remoteDataSource.getProfile().timeout(
-        const Duration(seconds: 8),
-        onTimeout: () {
-          throw ServerException(
-            408,
-            'Profile request timed out. Please try again.',
-          );
-        },
+      final responseModel = await _mergeCachedTokens(
+        await _remoteDataSource.getProfile().timeout(
+          const Duration(seconds: 8),
+          onTimeout: () {
+            throw ServerException(
+              408,
+              'Profile request timed out. Please try again.',
+            );
+          },
+        ),
       );
       await _localDataSource.saveAuthData(responseModel);
       return Right(responseModel);
@@ -373,14 +387,16 @@ class AuthRepositoryImpl implements AuthRepository {
     String phoneNumber,
   ) async {
     try {
-      final response = await _remoteDataSource
-          .updateProfile(name, phoneNumber)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw ServerException(408, 'Update profile timed out.');
-            },
-          );
+      final response = await _mergeCachedTokens(
+        await _remoteDataSource
+            .updateProfile(name, phoneNumber)
+            .timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw ServerException(408, 'Update profile timed out.');
+              },
+            ),
+      );
       await _localDataSource.saveAuthData(response);
       return Right(response);
     } on ServerException catch (e) {

@@ -6,124 +6,68 @@ import 'package:go_router/go_router.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import '../../../notifications/presentation/widgets/notification_badge.dart';
 
 class HomeListTile extends StatelessWidget {
   const HomeListTile({super.key});
 
-  /// Returns dynamic greeting based on time of day
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour >= 5 && hour < 12) {
-      return 'Good Morning';
-    } else if (hour >= 12 && hour < 17) {
-      return 'Good Afternoon';
-    } else if (hour >= 17 && hour < 21) {
-      return 'Good Evening';
-    } else {
-      return 'Good Night';
-    }
+    if (hour >= 5 && hour < 12) return 'Good Morning';
+    if (hour >= 12 && hour < 17) return 'Good Afternoon';
+    if (hour >= 17 && hour < 21) return 'Good Evening';
+    return 'Good Night';
   }
 
   void _showProfileMenu(BuildContext context) {
-    final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final overlay =
         Navigator.of(context).overlay!.context.findRenderObject() as RenderBox;
-    final Offset position = button.localToGlobal(
-      Offset(0, button.size.height),
-      ancestor: overlay,
-    );
+    final position = renderBox.localToGlobal(Offset.zero, ancestor: overlay);
 
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(
-        20.w,
-        position.dy + 10.h,
-        overlay.size.width - 200.w,
+        position.dx,
+        position.dy + renderBox.size.height + 8.h,
+        overlay.size.width - position.dx - renderBox.size.width,
         0,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       elevation: 8,
       items: [
-        _buildMenuItem(
-          context,
-          icon: Icons.person_outline,
-          title: 'Profile',
-          value: 'profile',
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.dashboard_outlined,
-          title: 'Dashboard',
-          value: 'dashboard',
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.calendar_month_outlined,
-          title: 'Calendar',
-          value: 'calendar',
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.notifications_active_outlined,
-          title: 'Reminders',
-          value: 'reminders',
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.timer_outlined,
-          title: 'Focus Timer',
-          value: 'focusTimer',
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.emoji_events_outlined,
-          title: 'Achievements',
-          value: 'achievements',
-        ),
+        _buildMenuItem(context, icon: Icons.person_outline, title: 'Profile', value: 'profile'),
+        _buildMenuItem(context, icon: Icons.dashboard_outlined, title: 'Dashboard', value: 'dashboard'),
+        _buildMenuItem(context, icon: Icons.calendar_month_outlined, title: 'Calendar', value: 'calendar'),
+        _buildMenuItem(context, icon: Icons.notifications_active_outlined, title: 'Reminders', value: 'reminders'),
+        _buildMenuItem(context, icon: Icons.timer_outlined, title: 'Focus Timer', value: 'focusTimer'),
+        _buildMenuItem(context, icon: Icons.emoji_events_outlined, title: 'Achievements', value: 'achievements'),
         const PopupMenuDivider(),
-        _buildMenuItem(
-          context,
-          icon: Icons.settings_outlined,
-          title: 'Settings',
-          value: 'settings',
-        ),
-        _buildMenuItem(
-          context,
-          icon: Icons.logout,
-          title: 'Logout',
-          value: 'logout',
-          isDestructive: true,
-        ),
+        _buildMenuItem(context, icon: Icons.settings_outlined, title: 'Settings', value: 'settings'),
+        _buildMenuItem(context, icon: Icons.logout, title: 'Logout', value: 'logout', isDestructive: true),
       ],
     ).then((value) {
       if (value == null) return;
-
       switch (value) {
         case 'profile':
           context.push(AppRouter.profile);
-          break;
         case 'dashboard':
           context.push(AppRouter.dashboard);
-          break;
         case 'calendar':
           context.push(AppRouter.calendar);
-          break;
         case 'reminders':
           context.push(AppRouter.reminders);
-          break;
         case 'focusTimer':
           context.push(AppRouter.focusTimer);
-          break;
         case 'achievements':
           context.push(AppRouter.achievements);
-          break;
         case 'settings':
           context.push(AppRouter.settings);
-          break;
         case 'logout':
           _handleLogout(context);
-          break;
       }
     });
   }
@@ -170,165 +114,144 @@ class HomeListTile extends StatelessWidget {
     );
   }
 
+  Widget _buildAvatar(String? avatarUrl) {
+    return Container(
+      width: 40.r,
+      height: 40.r,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF9B8AFB), Color(0xFF7C5CFC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: HomeSystemTokens.purple.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: avatarUrl != null && avatarUrl.isNotEmpty
+            ? Image.network(
+                avatarUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Icon(
+                  Icons.person_rounded,
+                  color: Colors.white,
+                  size: 20.sp,
+                ),
+              )
+            : Icon(Icons.person_rounded, color: Colors.white, size: 20.sp),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
         final user = state is AuthSuccess ? state.response.user : null;
-        final userName = user?.name.isNotEmpty == true ? user!.name : 'User';
+        final userName =
+            user?.name.isNotEmpty == true ? user!.name.split(' ').first : 'User';
         final avatarUrl = user?.avatar;
 
-        return Container(
-          margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.white, context.colors.primary!.withOpacity(0.03)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20.r),
-            boxShadow: [
-              BoxShadow(
-                color: context.colors.primary!.withOpacity(0.08),
-                blurRadius: 20,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+        return Padding(
+          padding: EdgeInsets.fromLTRB(20.w, 6.h, 20.w, 2.h),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Profile section with menu indicator
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _showProfileMenu(context),
-                  borderRadius: BorderRadius.circular(16.r),
-                  child: Container(
-                    padding: EdgeInsets.all(4.w),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(
-                        color: context.colors.primary!.withOpacity(0.1),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Avatar
-                        Container(
-                          width: 50.r,
-                          height: 50.r,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                context.colors.primary!.withOpacity(0.1),
-                                context.colors.primary!.withOpacity(0.05),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            border: Border.all(
-                              color: context.colors.primary!.withOpacity(0.2),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: context.colors.primary!.withOpacity(
-                                  0.15,
+              Expanded(
+                child: Builder(
+                  builder: (profileContext) {
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showProfileMenu(profileContext),
+                        borderRadius: BorderRadius.circular(14.r),
+                        splashColor: HomeSystemTokens.purple.withOpacity(0.08),
+                        highlightColor: HomeSystemTokens.purple.withOpacity(0.04),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 6.h,
+                            horizontal: 4.w,
+                          ),
+                          child: Row(
+                            children: [
+                              _buildAvatar(avatarUrl),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${_getGreeting()} 👋',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: const Color(0xFF9CA3AF),
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            userName,
+                                            style: TextStyle(
+                                              fontSize: 18.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: const Color(0xFF111827),
+                                              letterSpacing: -0.3,
+                                              height: 1.1,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        SizedBox(width: 4.w),
+                                        Container(
+                                          padding: EdgeInsets.all(2.w),
+                                          decoration: BoxDecoration(
+                                            color: HomeSystemTokens.purple.withOpacity(0.08),
+                                            borderRadius: BorderRadius.circular(6.r),
+                                          ),
+                                          child: Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            size: 18.sp,
+                                            color: HomeSystemTokens.purple,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 2.h),
+                                    Text(
+                                      "You're making great progress today.",
+                                      style: TextStyle(
+                                        fontSize: 11.sp,
+                                        color: const Color(0xFFB0B7C3),
+                                        fontWeight: FontWeight.w400,
+                                        height: 1.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: ClipOval(
-                            child:
-                                avatarUrl != null && avatarUrl.isNotEmpty
-                                    ? Image.network(
-                                      avatarUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        return Container(
-                                          color: context.colors.primary!
-                                              .withOpacity(0.1),
-                                          child: Icon(
-                                            Icons.person_rounded,
-                                            size: 26.sp,
-                                            color: context.colors.primary,
-                                          ),
-                                        );
-                                      },
-                                    )
-                                    : Container(
-                                      color: context.colors.primary!
-                                          .withOpacity(0.05),
-                                      child: Icon(
-                                        Icons.person_rounded,
-                                        size: 26.sp,
-                                        color: context.colors.primary,
-                                      ),
-                                    ),
-                          ),
                         ),
-                        SizedBox(width: 6.w),
-                        // Dropdown indicator
-                        Container(
-                          padding: EdgeInsets.all(4.w),
-                          decoration: BoxDecoration(
-                            color: context.colors.primary!.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: context.colors.primary,
-                            size: 16.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 14.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          _getGreeting(),
-                          style: context.textStyle.copyWith(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade500,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        SizedBox(width: 4.w),
-                        Text('👋', style: TextStyle(fontSize: 14.sp)),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      userName,
-                      style: context.textStyle.copyWith(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1A1A2E),
-                        letterSpacing: -0.5,
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
+              SizedBox(width: 8.w),
               const NotificationBadge(),
             ],
           ),

@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/presentation/screens/task_details_screen.dart';
 import '../../../tasks/presentation/bloc/tasks_cubit.dart';
+import '../../../../core/widgets/home_system/home_system_tokens.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -77,7 +78,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: HomeSystemTokens.canvas,
       body: SafeArea(
         child: Column(
           children: [

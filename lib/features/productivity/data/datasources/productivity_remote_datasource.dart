@@ -1,5 +1,6 @@
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
+import 'package:voclio_app/core/api/api_response.dart';
 import 'package:voclio_app/features/productivity/data/models/productivity_models.dart';
 import 'package:voclio_app/features/productivity/data/models/ai_suggestion_model.dart';
 
@@ -29,195 +30,75 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
     String? sound,
     int? volume,
   ) async {
-    try {
-      final response = await apiClient.post(
-        ApiEndpoints.focusSessions,
-        data: {
-          'timer_duration': duration,
-          if (sound != null) 'ambient_sound': sound,
-          if (volume != null) 'sound_volume': volume,
-        },
-      );
-      return FocusSessionModel.fromJson(response.data['data']['session']);
-    } catch (e) {
-      // Return mock focus session
-      return FocusSessionModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        timerDuration: duration * 60,
-        ambientSound: sound,
-        soundVolume: volume,
-        completed: false,
-        createdAt: DateTime.now(),
-      );
-    }
+    final response = await apiClient.post(
+      ApiEndpoints.focusSessions,
+      data: {
+        'timer_duration': duration,
+        if (sound != null) 'ambient_sound': sound,
+        if (volume != null) 'sound_volume': volume,
+      },
+    );
+    final data = ApiResponse.unwrapMap(response.data);
+    final session = data['session'] ?? data;
+    return FocusSessionModel.fromJson(Map<String, dynamic>.from(session as Map));
   }
 
   @override
   Future<List<FocusSessionModel>> getFocusSessions() async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.focusSessions);
-      final List<dynamic> data = response.data['data'];
-      return data.map((json) => FocusSessionModel.fromJson(json)).toList();
-    } catch (e) {
-      // Return mock data if API fails
-      return [
-        FocusSessionModel(
-          id: '1',
-          timerDuration: 1500,
-          actualDuration: 1500,
-          completed: true,
-          createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        ),
-        FocusSessionModel(
-          id: '2',
-          timerDuration: 3600,
-          actualDuration: 3200,
-          completed: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        ),
-      ];
-    }
+    final response = await apiClient.get(ApiEndpoints.focusSessions);
+    final list = ApiResponse.unwrapList(response.data, fallbackKeys: ['sessions']);
+    return list
+        .map((json) => FocusSessionModel.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
   }
 
   @override
   Future<void> endFocusSession(String id, int actualDuration) async {
-    try {
-      await apiClient.put(
-        ApiEndpoints.focusSessionById(id),
-        data: {'status': 'completed', 'actual_duration': actualDuration},
-      );
-    } catch (e) {
-      // Mock success - do nothing
-      return;
-    }
-  }
-
-  Future<StreakModel> getStreak() async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.streak);
-      return StreakModel.fromJson(response.data['data']['streak']);
-    } catch (e) {
-      // Return mock data if API fails
-      return StreakModel(
-        currentStreak: 5,
-        longestStreak: 12,
-        lastActivityDate: DateTime.now().subtract(const Duration(days: 1)),
-      );
-    }
-  }
-
-  @override
-  Future<List<AchievementModel>> getAchievements() async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.achievements);
-      final List<dynamic> data = response.data['data']['achievements'];
-      return data.map((json) => AchievementModel.fromJson(json)).toList();
-    } catch (e) {
-      // Return mock data if API fails
-      return [
-        AchievementModel(
-          id: '1',
-          title: 'First Focus',
-          description: 'Complete your first focus session',
-          icon: '🎯',
-          isUnlocked: true,
-        ),
-        AchievementModel(
-          id: '2',
-          title: 'Week Warrior',
-          description: 'Maintain a 7-day streak',
-          icon: '🔥',
-          isUnlocked: true,
-        ),
-        AchievementModel(
-          id: '3',
-          title: 'Focus Master',
-          description: 'Complete 50 focus sessions',
-          icon: '👑',
-          isUnlocked: false,
-        ),
-        AchievementModel(
-          id: '4',
-          title: 'Early Bird',
-          description: 'Start a session before 8 AM',
-          icon: '🌅',
-          isUnlocked: true,
-        ),
-        AchievementModel(
-          id: '5',
-          title: 'Night Owl',
-          description: 'Complete a session after 10 PM',
-          icon: '🦉',
-          isUnlocked: false,
-        ),
-        AchievementModel(
-          id: '6',
-          title: 'Marathon Runner',
-          description: 'Complete a 2-hour focus session',
-          icon: '⚡',
-          isUnlocked: false,
-        ),
-      ];
-    }
+    await apiClient.put(
+      ApiEndpoints.focusSessionById(id),
+      data: {'status': 'completed', 'elapsed_time': actualDuration},
+    );
   }
 
   @override
   Future<void> deleteFocusSession(String id) async {
-    try {
-      await apiClient.delete(ApiEndpoints.focusSessionById(id));
-    } catch (e) {
-      throw Exception('Failed to delete focus session: $e');
-    }
+    await apiClient.delete(ApiEndpoints.focusSessionById(id));
+  }
+
+  @override
+  Future<StreakModel> getStreak() async {
+    final response = await apiClient.get(ApiEndpoints.streak);
+    final data = ApiResponse.unwrapMap(response.data);
+    final streak = data['streak'] ?? data;
+    return StreakModel.fromJson(Map<String, dynamic>.from(streak as Map));
+  }
+
+  @override
+  Future<List<AchievementModel>> getAchievements() async {
+    final response = await apiClient.get(ApiEndpoints.achievements);
+    final list = ApiResponse.unwrapList(response.data, key: 'achievements');
+    return list
+        .map((json) => AchievementModel.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
   }
 
   @override
   Future<Map<String, dynamic>> getProductivitySummary() async {
-    try {
-      final response = await apiClient.get(ApiEndpoints.productivitySummary);
-      return response.data['data'] ?? response.data;
-    } catch (e) {
-      // Return mock summary if API fails
-      return {
-        'total_focus_time': 7200,
-        'sessions_completed': 10,
-        'average_session_length': 720,
-        'most_productive_hour': 14,
-        'weekly_goal_progress': 0.75,
-      };
-    }
+    final now = DateTime.now();
+    final weekStart = now.subtract(Duration(days: now.weekday));
+    final response = await apiClient.get(
+      ApiEndpoints.productivitySummary,
+      queryParameters: {
+        'start_date': weekStart.toIso8601String().split('T').first,
+        'end_date': now.toIso8601String().split('T').first,
+      },
+    );
+    return ApiResponse.unwrapMap(response.data);
   }
 
   @override
   Future<AiSuggestionModel> getAiSuggestions() async {
-    try {
-      final response = await apiClient.get(
-        ApiEndpoints.productivitySuggestions,
-      );
-      return AiSuggestionModel.fromJson(response.data);
-    } catch (e) {
-      // Return mock suggestions if API fails
-      return AiSuggestionModel.fromJson({
-        'data': {
-          'suggestions': [
-            'Try scheduling your most important tasks in the morning when focus is highest',
-            'Take short breaks every 25-30 minutes to maintain productivity',
-            'Consider using voice notes to capture ideas quickly on the go',
-          ],
-          'based_on': {
-            'summary': {
-              'focus_days': 0,
-              'total_focus_minutes': 0,
-              'total_sessions': 0,
-              'avg_session_minutes': '0.00',
-              'tasks_completed': 0,
-              'current_streak': 0,
-            },
-            'total_tasks': 0,
-            'pending_tasks': 0,
-            'overdue_tasks': 0,
-          },
-        },
-      });
-    }
+    final response = await apiClient.get(ApiEndpoints.productivitySuggestions);
+    return AiSuggestionModel.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 }

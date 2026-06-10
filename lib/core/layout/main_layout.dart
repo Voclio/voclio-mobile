@@ -73,8 +73,9 @@ class _MainLayoutState extends State<MainLayout>
 
     return Scaffold(
       key: MainLayout.mainLayoutKey,
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFFF5F6FA),
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {

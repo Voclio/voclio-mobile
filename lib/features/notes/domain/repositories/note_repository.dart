@@ -8,4 +8,6 @@ abstract class NoteRepository {
   Future<Either<Failure, void>> updateNote(NoteEntity note);
   Future<Either<Failure, void>> deleteNote(String id);
   Future<Either<Failure, NoteEntity?>> getNote(String id);
+  Future<Either<Failure, String>> summarizeNote(String id);
+  Future<Either<Failure, List<String>>> extractTasksFromNote(String id, {bool autoCreate});
 }

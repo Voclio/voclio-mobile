@@ -27,40 +27,30 @@ class NotificationBadge extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                padding: EdgeInsets.all(10.r),
+                width: 44.r,
+                height: 44.r,
                 decoration: BoxDecoration(
-                  color: context.colors.primary!.withOpacity(0.1),
                   shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFFE8EAF0)),
+                  color: Colors.white,
                 ),
                 child: Icon(
                   Icons.notifications_outlined,
-                  color: context.colors.primary,
-                  size: 26.sp,
+                  color: const Color(0xFF6B7280),
+                  size: 20.sp,
                 ),
               ),
               if (unreadCount > 0)
                 Positioned(
-                  top: -2.h,
-                  right: -2.w,
+                  top: 8.h,
+                  right: 10.w,
                   child: Container(
-                    padding: EdgeInsets.all(4.r),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    width: 8.r,
+                    height: 8.r,
+                    decoration: BoxDecoration(
+                      color: context.colors.primary,
                       shape: BoxShape.circle,
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: 18.r,
-                      minHeight: 18.r,
-                    ),
-                    child: Center(
-                      child: Text(
-                        unreadCount > 99 ? '99+' : unreadCount.toString(),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      border: Border.all(color: Colors.white, width: 1.5),
                     ),
                   ),
                 ),

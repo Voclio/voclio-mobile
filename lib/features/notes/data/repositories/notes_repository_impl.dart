@@ -79,4 +79,34 @@ class NoteRepositoryImpl implements NoteRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> summarizeNote(String id) async {
+    try {
+      final summary = await remoteDataSource.summarizeNote(id);
+      return Right(summary);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<String>>> extractTasksFromNote(
+    String id, {
+    bool autoCreate = false,
+  }) async {
+    try {
+      final tasks = await remoteDataSource.extractTasksFromNote(
+        id,
+        autoCreate: autoCreate,
+      );
+      final titles = tasks
+          .map((t) => (t['title'] ?? t['name'] ?? '').toString())
+          .where((t) => t.isNotEmpty)
+          .toList();
+      return Right(titles);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

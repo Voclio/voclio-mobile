@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
@@ -191,6 +192,7 @@ class _OTPScreenState extends State<OTPScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: HomeSystemTokens.canvas,
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _onRefresh,

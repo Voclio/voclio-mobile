@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'dart:developer' as developer;
 import '../../domain/entities/auth_request.dart';
 import '../../domain/entities/auth_response.dart';
+import '../../domain/entities/user.dart';
 import '../../domain/entities/otp_request.dart';
 import '../../domain/entities/otp_response.dart';
 import '../../domain/usecases/login_usecase.dart';

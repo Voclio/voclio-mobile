@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
+import '../../domain/entities/dashboard_stats_entity.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
-import '../../domain/entities/dashboard_stats_entity.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,376 +24,240 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: Text(
-          'Dashboard',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
-          ),
+    return HomeSecondaryScaffold(
+      title: 'Dashboard',
+      subtitle: 'Your productivity at a glance',
+      icon: Icons.insights_rounded,
+      accent: HomeSystemTokens.purple,
+      actions: [
+        HomeIconButton(
+          icon: Icons.refresh_rounded,
+          color: HomeSystemTokens.inkSoft,
+          onTap: () => context.read<DashboardCubit>().refresh(),
         ),
-        iconTheme: const IconThemeData(color: Colors.black87),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => context.read<DashboardCubit>().refresh(),
-          ),
-        ],
-      ),
+      ],
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (context, state) {
           if (state is DashboardLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return _buildLoadingSkeleton();
           }
 
           if (state is DashboardError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
-                  SizedBox(height: 16.h),
-                  Text(
-                    state.message,
-                    style: TextStyle(fontSize: 16.sp, color: Colors.black54),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 24.h),
-                  ElevatedButton.icon(
-                    onPressed:
-                        () =>
-                            context.read<DashboardCubit>().loadDashboardStats(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 32.w,
-                        vertical: 12.h,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            return HomeEmptyState(
+              icon: Icons.cloud_off_rounded,
+              title: 'Could not load dashboard',
+              message: state.message,
+              actionLabel: 'Try again',
+              accent: HomeSystemTokens.coral,
+              onAction: () =>
+                  context.read<DashboardCubit>().loadDashboardStats(),
             );
           }
 
           if (state is DashboardStatsLoaded) {
-            final stats = state.stats;
-            return RefreshIndicator(
-              onRefresh: () => context.read<DashboardCubit>().refresh(),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    // Header Stats Cards
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(20.w),
-                      decoration: const BoxDecoration(color: Colors.white),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Your Progress',
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            'Keep up the great work!',
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
-                          Row(
-                            children: [
-                              _buildQuickStat(
-                                'Streak',
-                                '${stats.productivity.currentStreak}',
-                                'days',
-                                Icons.local_fire_department_rounded,
-                                Colors.orange.shade400,
-                              ),
-                              SizedBox(width: 16.w),
-                              _buildQuickStat(
-                                'Tasks',
-                                '${stats.overview.completedTasks}/${stats.overview.totalTasks}',
-                                'done',
-                                Icons.task_alt_rounded,
-                                Colors.green.shade400,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Main Content
-                    Padding(
-                      padding: EdgeInsets.all(20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Task Completion Circle
-                          _buildCompletionCard(
-                            stats.overview.overallProgress,
-                            stats.overview,
-                          ),
-
-                          SizedBox(height: 24.h),
-
-                          // Overview Grid
-                          Text(
-                            'Overview',
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildOverviewCard(
-                                  'Notes',
-                                  stats.overview.totalNotes.toString(),
-                                  Icons.note_rounded,
-                                  const Color(0xFF9C27B0),
-                                  'Total',
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: _buildOverviewCard(
-                                  'Recordings',
-                                  stats.overview.totalRecordings.toString(),
-                                  Icons.mic_rounded,
-                                  const Color(0xFF00BCD4),
-                                  'Voice',
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 12.h),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildOverviewCard(
-                                  'Focus Time',
-                                  '${stats.productivity.todayFocusMinutes}m',
-                                  Icons.timer_rounded,
-                                  const Color(0xFF3F51B5),
-                                  'Today',
-                                ),
-                              ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: _buildOverviewCard(
-                                  'Achievements',
-                                  stats.overview.totalAchievements.toString(),
-                                  Icons.emoji_events_rounded,
-                                  const Color(0xFFFF9800),
-                                  'Unlocked',
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 24.h),
-
-                          // Upcoming Tasks
-                          if (stats.upcomingTasks.isNotEmpty) ...[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Upcoming Tasks',
-                                  style: TextStyle(
-                                    fontSize: 18.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                Text(
-                                  '${stats.upcomingTasks.length} tasks',
-                                  style: TextStyle(
-                                    fontSize: 13.sp,
-                                    color: Colors.black45,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            ...stats.upcomingTasks
-                                .take(5)
-                                .map((task) => _buildTaskItem(task)),
-                          ],
-
-                          SizedBox(height: 100.h), // Bottom nav space
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
+            return _buildContent(context, state.stats);
           }
 
-          return const Center(child: Text('No data available'));
+          return const SizedBox.shrink();
         },
       ),
     );
   }
 
-  Widget _buildQuickStat(
-    String label,
-    String value,
-    String suffix,
-    IconData icon,
-    Color color,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color, color.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+  Widget _buildContent(BuildContext context, DashboardStatsEntity stats) {
+    final overview = stats.overview;
+    final productivity = stats.productivity;
+    final progress = (overview.overallProgress / 100).clamp(0.0, 1.0);
+
+    return RefreshIndicator(
+      color: HomeSystemTokens.purple,
+      onRefresh: () => context.read<DashboardCubit>().refresh(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
         ),
+        padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 100.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(6.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8.r),
+            _buildHeroCard(overview, progress),
+            SizedBox(height: 16.h),
+            SizedBox(
+              height: 96.h,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  HomeStatTile(
+                    icon: Icons.task_alt_rounded,
+                    color: HomeSystemTokens.purple,
+                    label: 'Tasks',
+                    value: '${overview.completedTasks}/${overview.totalTasks}',
+                    subtitle: 'Completed',
                   ),
-                  child: Icon(icon, color: Colors.white, size: 20.sp),
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
+                  SizedBox(width: 10.w),
+                  HomeStatTile(
+                    icon: Icons.notes_rounded,
+                    color: HomeSystemTokens.blue,
+                    label: 'Notes',
+                    value: '${overview.totalNotes}',
+                    subtitle: 'Saved',
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              value,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28.sp,
-                fontWeight: FontWeight.bold,
+                  SizedBox(width: 10.w),
+                  HomeStatTile(
+                    icon: Icons.local_fire_department_rounded,
+                    color: HomeSystemTokens.orange,
+                    label: 'Streak',
+                    value: '${productivity.currentStreak}',
+                    subtitle: 'Days',
+                  ),
+                  SizedBox(width: 10.w),
+                  HomeStatTile(
+                    icon: Icons.timer_outlined,
+                    color: HomeSystemTokens.green,
+                    label: 'Focus',
+                    value: '${productivity.todayFocusMinutes}m',
+                    subtitle: 'Today',
+                  ),
+                ],
               ),
             ),
-            Text(
-              suffix,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
-                fontSize: 12.sp,
+            SizedBox(height: 20.h),
+            HomeSectionTitle(title: 'Activity'),
+            _buildActivityPanel(overview, productivity),
+            if (stats.upcomingTasks.isNotEmpty) ...[
+              SizedBox(height: 22.h),
+              HomeSectionTitle(
+                title: 'Coming up',
+                trailing: '${stats.upcomingTasks.length}',
               ),
-            ),
+              _buildUpcomingCard(stats.upcomingTasks.take(5).toList()),
+            ],
+            if (stats.recentNotes.isNotEmpty) ...[
+              SizedBox(height: 22.h),
+              const HomeSectionTitle(title: 'Recent notes'),
+              _buildRecentNotesCard(stats.recentNotes.take(4).toList()),
+            ],
+            if (stats.upcomingTasks.isEmpty && stats.recentNotes.isEmpty) ...[
+              SizedBox(height: 24.h),
+              HomeEmptyState(
+                icon: Icons.rocket_launch_outlined,
+                title: 'You are all caught up',
+                message:
+                    'Create tasks or notes to see your activity summary here.',
+                accent: HomeSystemTokens.purple,
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCompletionCard(
-    double completionRate,
-    DashboardOverview overview,
-  ) {
+  Widget _buildHeroCard(DashboardOverview overview, double progress) {
+    final percent = overview.overallProgress.clamp(0, 100);
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(HomeSystemTokens.radiusLg.r),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            HomeSystemTokens.purple.withValues(alpha: 0.12),
+            HomeSystemTokens.blue.withValues(alpha: 0.06),
+          ],
+        ),
+        boxShadow: HomeSystemTokens.cardShadow(opacity: 0.04),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildCompletionStat(
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Overall completion',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: HomeSystemTokens.inkSoft,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      '${percent.toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        fontSize: 36.sp,
+                        fontWeight: FontWeight.w800,
+                        color: HomeSystemTokens.ink,
+                        height: 1,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 72.r,
+                height: 72.r,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 6,
+                      backgroundColor:
+                          HomeSystemTokens.purple.withValues(alpha: 0.12),
+                      color: HomeSystemTokens.purple,
+                    ),
+                    Text(
+                      '${percent.toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w800,
+                        color: HomeSystemTokens.purple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.r),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6.h,
+              backgroundColor: Colors.white.withValues(alpha: 0.55),
+              color: HomeSystemTokens.purple,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              _heroChip(
+                '${overview.completedTasks}',
+                'Done',
+                HomeSystemTokens.green,
+              ),
+              SizedBox(width: 8.w),
+              _heroChip(
+                '${overview.pendingTasks}',
                 'Pending',
-                overview.pendingTasks,
-                Colors.orange,
+                HomeSystemTokens.orange,
               ),
-              Container(
-                width: 120.w,
-                height: 120.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.7),
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${completionRate.toStringAsFixed(1)}%',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Completed',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              _buildCompletionStat(
+              SizedBox(width: 8.w),
+              _heroChip(
+                '${overview.overdueTasks}',
                 'Overdue',
-                overview.overdueTasks,
-                Colors.red,
+                HomeSystemTokens.coral,
               ),
             ],
           ),
@@ -399,158 +266,352 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCompletionStat(String label, int value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value.toString(),
-          style: TextStyle(
-            fontSize: 32.sp,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+  Widget _heroChip(String value, String label, Color color) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.72),
+          borderRadius: BorderRadius.circular(12.r),
         ),
-        Text(label, style: TextStyle(fontSize: 13.sp, color: Colors.black54)),
-      ],
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+            ),
+            SizedBox(height: 2.h),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.sp,
+                color: HomeSystemTokens.inkMuted,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildOverviewCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-    String subtitle,
+  Widget _buildActivityPanel(
+    DashboardOverview overview,
+    ProductivityStats productivity,
   ) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    final items = [
+      _ActivityItem(
+        icon: Icons.mic_rounded,
+        label: 'Voice notes',
+        value: '${overview.totalRecordings}',
+        color: HomeSystemTokens.blue,
       ),
+      _ActivityItem(
+        icon: Icons.emoji_events_outlined,
+        label: 'Achievements',
+        value: '${overview.totalAchievements}',
+        color: HomeSystemTokens.orange,
+      ),
+      _ActivityItem(
+        icon: Icons.bolt_rounded,
+        label: 'Best streak',
+        value: '${productivity.longestStreak}d',
+        color: HomeSystemTokens.purple,
+      ),
+      _ActivityItem(
+        icon: Icons.check_circle_outline_rounded,
+        label: 'Completion',
+        value: '${overview.overallProgress.toStringAsFixed(0)}%',
+        color: HomeSystemTokens.green,
+      ),
+    ];
+
+    return HomeSectionCard(
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(icon, color: color, size: 24.sp),
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 11.sp, color: Colors.black38),
-          ),
-        ],
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          final isLast = index == items.length - 1;
+          return Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40.r,
+                      height: 40.r,
+                      decoration: BoxDecoration(
+                        color: item.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      child: Icon(item.icon, color: item.color, size: 20.sp),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: HomeSystemTokens.ink,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      item.value,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w800,
+                        color: HomeSystemTokens.ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!isLast)
+                Divider(
+                  height: 1,
+                  indent: 68.w,
+                  color: HomeSystemTokens.inkMuted.withValues(alpha: 0.12),
+                ),
+            ],
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildTaskItem(TaskEntity task) {
-    final isUrgent =
-        task.dueDate != null &&
-        task.dueDate!.difference(DateTime.now()).inHours < 24;
+  Widget _buildUpcomingCard(List<TaskEntity> tasks) {
+    return HomeSectionCard(
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
+      child: Column(
+        children: List.generate(tasks.length, (index) {
+          final task = tasks[index];
+          final isLast = index == tasks.length - 1;
+          final isDone = task.status.toLowerCase() == 'completed';
+          final isUrgent = task.dueDate != null &&
+              !isDone &&
+              task.dueDate!.difference(DateTime.now()).inHours < 24;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: isUrgent ? Colors.red.shade200 : Colors.grey.shade200,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 4.w,
-            height: 40.h,
-            decoration: BoxDecoration(
-              color: isUrgent ? Colors.red : Theme.of(context).primaryColor,
-              borderRadius: BorderRadius.circular(2.r),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  task.title,
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                Container(
+                  width: 22.r,
+                  height: 22.r,
+                  margin: EdgeInsets.only(top: 2.h),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDone
+                        ? HomeSystemTokens.green
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: isDone
+                          ? HomeSystemTokens.green
+                          : HomeSystemTokens.inkMuted.withValues(alpha: 0.35),
+                      width: 2,
+                    ),
                   ),
-                  // Removed maxLines: 1 to support longer titles like the one in user JSON
+                  child: isDone
+                      ? Icon(Icons.check, size: 14.sp, color: Colors.white)
+                      : null,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isDone
+                              ? HomeSystemTokens.inkMuted
+                              : HomeSystemTokens.ink,
+                          decoration:
+                              isDone ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      if (task.dueDate != null) ...[
+                        SizedBox(height: 4.h),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 13.sp,
+                              color: isUrgent
+                                  ? HomeSystemTokens.coral
+                                  : HomeSystemTokens.inkMuted,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              DateFormat('MMM d · h:mm a').format(task.dueDate!),
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: isUrgent
+                                    ? HomeSystemTokens.coral
+                                    : HomeSystemTokens.inkMuted,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                _priorityDot(task.priority),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _priorityDot(String priority) {
+    final color = switch (priority.toLowerCase()) {
+      'high' => HomeSystemTokens.coral,
+      'medium' => HomeSystemTokens.orange,
+      'low' => HomeSystemTokens.green,
+      _ => HomeSystemTokens.inkMuted,
+    };
+
+    return Container(
+      width: 8.r,
+      height: 8.r,
+      margin: EdgeInsets.only(top: 8.h),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+
+  Widget _buildRecentNotesCard(List<NoteEntity> notes) {
+    return HomeSectionCard(
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
+      child: Column(
+        children: List.generate(notes.length, (index) {
+          final note = notes[index];
+          final isLast = index == notes.length - 1;
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40.r,
+                  height: 40.r,
+                  decoration: BoxDecoration(
+                    color: HomeSystemTokens.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(
+                    Icons.article_outlined,
+                    color: HomeSystemTokens.blue,
+                    size: 20.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        note.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: HomeSystemTokens.ink,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        note.preview,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          height: 1.4,
+                          color: HomeSystemTokens.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-          if (task.dueDate != null)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: isUrgent ? Colors.red.shade50 : Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                _formatDueDate(task.dueDate!),
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: isUrgent ? Colors.red.shade700 : Colors.blue.shade700,
-                ),
-              ),
-            ),
-        ],
+          );
+        }),
       ),
     );
   }
 
-  String _formatDueDate(DateTime dueDate) {
-    final now = DateTime.now();
-    final difference = dueDate.difference(now);
-
-    if (difference.inHours < 1) return 'Due now';
-    if (difference.inHours < 24) return '${difference.inHours}h';
-    if (difference.inDays < 7) return '${difference.inDays}d';
-    return '${dueDate.day}/${dueDate.month}';
+  Widget _buildLoadingSkeleton() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 40.h),
+      child: Column(
+        children: [
+          Container(
+            height: 160.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(HomeSystemTokens.radiusLg.r),
+            ),
+          ),
+          SizedBox(height: 16.h),
+          SizedBox(
+            height: 96.h,
+            child: Row(
+              children: List.generate(
+                3,
+                (i) => Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(right: i < 2 ? 10.w : 0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Container(
+            height: 220.h,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(HomeSystemTokens.radiusLg.r),
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
+
+class _ActivityItem {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _ActivityItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 }

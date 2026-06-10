@@ -5,7 +5,17 @@ class AiSuggestionModel extends AiSuggestionEntity {
 
   factory AiSuggestionModel.fromJson(Map<String, dynamic> json) {
     final data = json['data'] ?? json;
-    final suggestionsList = List<String>.from(data['suggestions'] ?? []);
+    final rawSuggestions = data['suggestions'] as List<dynamic>? ?? [];
+    final suggestionsList = rawSuggestions
+        .map((item) {
+          if (item is String) return item;
+          if (item is Map) {
+            return (item['text'] ?? item['suggestion'] ?? '').toString();
+          }
+          return item.toString();
+        })
+        .where((s) => s.isNotEmpty)
+        .toList();
 
     final basedOnData = data['based_on'] ?? {};
 
