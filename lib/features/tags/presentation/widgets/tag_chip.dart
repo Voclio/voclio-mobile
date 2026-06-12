@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/tag_entity.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TagChipWidget extends StatelessWidget {
   final TagEntity tag;
@@ -27,7 +28,7 @@ class TagChipWidget extends StatelessWidget {
           color: Color(int.parse(tag.color.replaceFirst('#', '0xFF'))),
           fontSize: 12.sp,
         ),
-        deleteIcon: onDelete != null ? const Icon(Icons.close, size: 16) : null,
+        deleteIcon: onDelete != null ? Icon(AppIcons.close, size: 16) : null,
         onDeleted: onDelete,
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       ),

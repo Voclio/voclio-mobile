@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestions_cubit.dart';
 import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestions_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AiSuggestionsWidget extends StatelessWidget {
   const AiSuggestionsWidget({super.key});
@@ -49,7 +50,7 @@ class AiSuggestionsWidget extends StatelessWidget {
                       BorderRadius.circular(HomeSystemTokens.radiusSm.r),
                 ),
                 child: Icon(
-                  Icons.auto_awesome_rounded,
+                  AppIcons.auto_awesome_rounded,
                   color: HomeSystemTokens.purple,
                   size: 16.sp,
                 ),

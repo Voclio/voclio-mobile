@@ -41,10 +41,48 @@ class TasksCubit extends Cubit<TasksState> {
     required this.getTagsUseCase,
   }) : super(const TasksState());
 
-  Future<void> init() async {
-    await fetchTags();
-    // await fetchCategories(); // Endpoint seems broken/missing on backend
-    await getTasks();
+  Future<void> init({bool force = false}) async {
+    if (!force &&
+        state.status == TasksStatus.success &&
+        state.tasks.isNotEmpty) {
+      return;
+    }
+    if (!force && state.status == TasksStatus.loading) return;
+
+    emit(state.copyWith(status: TasksStatus.loading));
+
+    final tagsResult = getTagsUseCase();
+    final tasksResult = getAllTasksUseCase();
+
+    final tags = await tagsResult;
+    final tasks = await tasksResult;
+    if (isClosed) return;
+
+    tags.fold(
+      (failure) => print('Failed to fetch tags: ${failure.message}'),
+      (tagList) => emit(state.copyWith(availableTags: tagList)),
+    );
+
+    tasks.fold(
+      (failure) {
+        emit(
+          state.copyWith(
+            status: TasksStatus.failure,
+            errorMessage: failure.message,
+          ),
+        );
+      },
+      (taskList) {
+        emit(
+          state.copyWith(
+            status: TasksStatus.success,
+            tasks: taskList,
+            allTasks: taskList,
+          ),
+        );
+        HomeScreenWidgetService.updateTodayTasks(taskList);
+      },
+    );
   }
 
   Future<void> fetchCategories() async {

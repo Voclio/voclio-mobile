@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:voclio_app/core/domain/entities/tag_entity.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TaskTile extends StatelessWidget {
   final TaskEntity task;
@@ -60,7 +61,7 @@ class TaskTile extends StatelessWidget {
                     color: task.isDone ? HomeSystemTokens.green : Colors.transparent,
                   ),
                   child: task.isDone
-                      ? Icon(Icons.check_rounded, size: 15.sp, color: Colors.white)
+                      ? Icon(AppIcons.check_rounded, size: 15.sp, color: Colors.white)
                       : null,
                 ),
               ),
@@ -96,8 +97,8 @@ class TaskTile extends StatelessWidget {
                       children: [
                         Icon(
                           isOverdue
-                              ? Icons.schedule_rounded
-                              : Icons.access_time_rounded,
+                              ? AppIcons.schedule_rounded
+                              : AppIcons.access_time_rounded,
                           size: 13.sp,
                           color: isOverdue
                               ? HomeSystemTokens.coral
@@ -117,7 +118,7 @@ class TaskTile extends StatelessWidget {
                         if (task.subtasks.isNotEmpty) ...[
                           SizedBox(width: 10.w),
                           Icon(
-                            Icons.checklist_rounded,
+                            AppIcons.checklist_rounded,
                             size: 13.sp,
                             color: HomeSystemTokens.inkMuted,
                           ),
@@ -164,7 +165,7 @@ class TaskTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.chevron_right_rounded,
+                AppIcons.chevron_right_rounded,
                 color: HomeSystemTokens.inkMuted.withValues(alpha: 0.6),
                 size: 20.sp,
               ),

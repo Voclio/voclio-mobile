@@ -4,6 +4,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:intl_phone_field/phone_number.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import '../../../../core/common/animation/animate_do.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AuthPhoneField extends StatelessWidget {
   final String label;
@@ -54,7 +55,7 @@ class AuthPhoneField extends StatelessWidget {
           showDropdownIcon: true,
           dropdownIconPosition: IconPosition.trailing,
           flagsButtonPadding: EdgeInsets.only(left: 16.w),
-          dropdownIcon: Icon(Icons.arrow_drop_down, color: primaryColor),
+          dropdownIcon: Icon(AppIcons.arrow_drop_down, color: primaryColor),
           style: TextStyle(
             fontSize: isSmall ? 14.sp : 16.sp,
             color: const Color(0xFF1A1A2E),

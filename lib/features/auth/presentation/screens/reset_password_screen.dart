@@ -16,6 +16,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
 import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
@@ -144,8 +145,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureNewPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                                    ? AppIcons.visibility_off
+                                    : AppIcons.visibility,
                                 color: context.colors.primary,
                               ),
                               onPressed: () {
@@ -182,8 +183,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureConfirmPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+                                    ? AppIcons.visibility_off
+                                    : AppIcons.visibility,
                                 color: context.colors.primary,
                               ),
                               onPressed: () {

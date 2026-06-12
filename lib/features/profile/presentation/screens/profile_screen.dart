@@ -7,6 +7,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'edit_profile_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'about_screen.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -16,7 +17,7 @@ class ProfileScreen extends StatelessWidget {
     return HomeSecondaryScaffold(
       title: 'Profile',
       subtitle: 'Manage your account',
-      icon: Icons.person_rounded,
+      icon: AppIcons.person_rounded,
       accent: HomeSystemTokens.purple,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -45,7 +46,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Icon(Icons.person, size: 50.sp, color: Colors.white),
+                    child: Icon(AppIcons.person, size: 50.sp, color: Colors.white),
                   ),
                   SizedBox(height: 16.h),
                   Text(
@@ -72,28 +73,28 @@ class ProfileScreen extends StatelessWidget {
               title: 'Quick Access',
               children: [
                 HomeMenuTile(
-                  icon: Icons.dashboard_outlined,
+                  icon: AppIcons.dashboard_outlined,
                   title: 'Dashboard',
                   subtitle: 'Activity & productivity stats',
                   iconColor: HomeSystemTokens.purple,
                   onTap: () => context.push(AppRouter.dashboard),
                 ),
                 HomeMenuTile(
-                  icon: Icons.notifications_outlined,
+                  icon: AppIcons.notifications_outlined,
                   title: 'Notifications',
                   subtitle: 'Manage your notifications',
                   iconColor: HomeSystemTokens.blue,
                   onTap: () => context.push(AppRouter.notifications),
                 ),
                 HomeMenuTile(
-                  icon: Icons.emoji_events_outlined,
+                  icon: AppIcons.emoji_events_outlined,
                   title: 'Achievements',
                   subtitle: 'View your milestones',
                   iconColor: HomeSystemTokens.orange,
                   onTap: () => context.push(AppRouter.achievements),
                 ),
                 HomeMenuTile(
-                  icon: Icons.settings_outlined,
+                  icon: AppIcons.settings_outlined,
                   title: 'Settings',
                   subtitle: 'App preferences & account',
                   iconColor: HomeSystemTokens.inkSoft,
@@ -107,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
               title: 'Account',
               children: [
                 HomeMenuTile(
-                  icon: Icons.edit_outlined,
+                  icon: AppIcons.edit_outlined,
                   title: 'Edit Profile',
                   iconColor: HomeSystemTokens.blue,
                   onTap: () {
@@ -120,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
                 HomeMenuTile(
-                  icon: Icons.privacy_tip_outlined,
+                  icon: AppIcons.privacy_tip_outlined,
                   title: 'Privacy Policy',
                   iconColor: HomeSystemTokens.inkSoft,
                   onTap: () {
@@ -133,7 +134,7 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
                 HomeMenuTile(
-                  icon: Icons.info_outline,
+                  icon: AppIcons.info_outline,
                   title: 'About',
                   iconColor: HomeSystemTokens.inkSoft,
                   onTap: () {
@@ -146,7 +147,7 @@ class ProfileScreen extends StatelessWidget {
                   },
                 ),
                 HomeMenuTile(
-                  icon: Icons.logout_rounded,
+                  icon: AppIcons.logout_rounded,
                   title: 'Logout',
                   iconColor: HomeSystemTokens.coral,
                   showDivider: false,

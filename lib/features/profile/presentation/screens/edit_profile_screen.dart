@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -38,7 +39,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_ios_new_rounded,
+            AppIcons.arrow_back_ios_new_rounded,
             color: theme.primaryColor,
             size: 20.sp,
           ),
@@ -104,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(Icons.person, size: 60.sp, color: Colors.white),
+                    child: Icon(AppIcons.person, size: 60.sp, color: Colors.white),
                   ),
                   Positioned(
                     bottom: 0,
@@ -118,7 +119,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         border: Border.all(color: Colors.white, width: 3),
                       ),
                       child: Icon(
-                        Icons.camera_alt,
+                        AppIcons.camera_alt,
                         size: 18.sp,
                         color: Colors.white,
                       ),
@@ -137,7 +138,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     _buildTextField(
                       controller: _nameController,
                       label: 'Full Name',
-                      icon: Icons.person_outline,
+                      icon: AppIcons.person_outline,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your name';
@@ -151,7 +152,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     _buildTextField(
                       controller: _emailController,
                       label: 'Email',
-                      icon: Icons.email_outlined,
+                      icon: AppIcons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -169,7 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     _buildTextField(
                       controller: _phoneController,
                       label: 'Phone',
-                      icon: Icons.phone_outlined,
+                      icon: AppIcons.phone_outlined,
                       keyboardType: TextInputType.phone,
                     ),
 
@@ -178,7 +179,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     _buildTextField(
                       controller: _bioController,
                       label: 'Bio',
-                      icon: Icons.info_outline,
+                      icon: AppIcons.info_outline,
                       maxLines: 3,
                     ),
                   ],

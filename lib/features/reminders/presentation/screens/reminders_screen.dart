@@ -9,6 +9,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/routes/App_routes.dart';
 import '../cubit/reminders_cubit.dart';
 import '../widgets/reminder_card.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class RemindersScreen extends StatefulWidget {
   const RemindersScreen({super.key});
@@ -47,7 +48,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.timer),
+              leading: Icon(AppIcons.timer),
               title: const Text('5 minutes'),
               onTap: () {
                 Navigator.pop(dialogContext);
@@ -55,7 +56,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.timer),
+              leading: Icon(AppIcons.timer),
               title: const Text('15 minutes'),
               onTap: () {
                 Navigator.pop(dialogContext);
@@ -63,7 +64,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.timer),
+              leading: Icon(AppIcons.timer),
               title: const Text('30 minutes'),
               onTap: () {
                 Navigator.pop(dialogContext);
@@ -71,7 +72,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.timer),
+              leading: Icon(AppIcons.timer),
               title: const Text('1 hour'),
               onTap: () {
                 Navigator.pop(dialogContext);
@@ -134,18 +135,18 @@ class _RemindersScreenState extends State<RemindersScreen> {
           child: HomeSecondaryScaffold(
           title: 'Reminders',
           subtitle: _currentTab == 0 ? 'All reminders' : 'Upcoming only',
-          icon: Icons.alarm_rounded,
+          icon: AppIcons.alarm_rounded,
           accent: HomeSystemTokens.orange,
           showBack: Navigator.canPop(context),
           actions: [
             HomeIconButton(
-              icon: Icons.add_rounded,
+              icon: AppIcons.add_rounded,
               onTap: _openAddReminder,
             ),
           ],
           floatingActionButton: FloatingActionButton.extended(
             onPressed: _openAddReminder,
-            icon: const Icon(Icons.add),
+            icon: Icon(AppIcons.add),
             label: const Text('Add Reminder'),
             backgroundColor: HomeSystemTokens.orange,
             foregroundColor: Colors.white,
@@ -248,7 +249,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   Widget _buildEmptyState(BuildContext context) {
     return HomeEmptyState(
-      icon: Icons.notifications_off_outlined,
+      icon: AppIcons.notifications_off_outlined,
       title: _currentTab == 0
           ? 'No Reminders Yet'
           : 'No Upcoming Reminders',
@@ -263,7 +264,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   Widget _buildErrorState(BuildContext context, String message) {
     return HomeEmptyState(
-      icon: Icons.error_outline_rounded,
+      icon: AppIcons.error_outline_rounded,
       title: 'Oops! Something went wrong',
       message: message,
       actionLabel: 'Try Again',

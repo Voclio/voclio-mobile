@@ -8,6 +8,7 @@ import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import '../../../notifications/presentation/widgets/notification_badge.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class HomeListTile extends StatelessWidget {
   const HomeListTile({super.key});
@@ -39,15 +40,15 @@ class HomeListTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       elevation: 8,
       items: [
-        _buildMenuItem(context, icon: Icons.person_outline, title: 'Profile', value: 'profile'),
-        _buildMenuItem(context, icon: Icons.dashboard_outlined, title: 'Dashboard', value: 'dashboard'),
-        _buildMenuItem(context, icon: Icons.calendar_month_outlined, title: 'Calendar', value: 'calendar'),
-        _buildMenuItem(context, icon: Icons.notifications_active_outlined, title: 'Reminders', value: 'reminders'),
-        _buildMenuItem(context, icon: Icons.timer_outlined, title: 'Focus Timer', value: 'focusTimer'),
-        _buildMenuItem(context, icon: Icons.emoji_events_outlined, title: 'Achievements', value: 'achievements'),
+        _buildMenuItem(context, icon: AppIcons.person_outline, title: 'Profile', value: 'profile'),
+        _buildMenuItem(context, icon: AppIcons.dashboard_outlined, title: 'Dashboard', value: 'dashboard'),
+        _buildMenuItem(context, icon: AppIcons.calendar_month_outlined, title: 'Calendar', value: 'calendar'),
+        _buildMenuItem(context, icon: AppIcons.notifications_active_outlined, title: 'Reminders', value: 'reminders'),
+        _buildMenuItem(context, icon: AppIcons.timer_outlined, title: 'Focus Timer', value: 'focusTimer'),
+        _buildMenuItem(context, icon: AppIcons.emoji_events_outlined, title: 'Achievements', value: 'achievements'),
         const PopupMenuDivider(),
-        _buildMenuItem(context, icon: Icons.settings_outlined, title: 'Settings', value: 'settings'),
-        _buildMenuItem(context, icon: Icons.logout, title: 'Logout', value: 'logout', isDestructive: true),
+        _buildMenuItem(context, icon: AppIcons.settings_outlined, title: 'Settings', value: 'settings'),
+        _buildMenuItem(context, icon: AppIcons.logout, title: 'Logout', value: 'logout', isDestructive: true),
       ],
     ).then((value) {
       if (value == null) return;
@@ -140,12 +141,12 @@ class HomeListTile extends StatelessWidget {
                 avatarUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Icon(
-                  Icons.person_rounded,
+                  AppIcons.person_rounded,
                   color: Colors.white,
                   size: 20.sp,
                 ),
               )
-            : Icon(Icons.person_rounded, color: Colors.white, size: 20.sp),
+            : Icon(AppIcons.person_rounded, color: Colors.white, size: 20.sp),
       ),
     );
   }
@@ -221,7 +222,7 @@ class HomeListTile extends StatelessWidget {
                                             borderRadius: BorderRadius.circular(6.r),
                                           ),
                                           child: Icon(
-                                            Icons.keyboard_arrow_down_rounded,
+                                            AppIcons.keyboard_arrow_down_rounded,
                                             size: 18.sp,
                                             color: HomeSystemTokens.purple,
                                           ),

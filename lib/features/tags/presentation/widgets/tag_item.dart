@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/tag_entity.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TagItem extends StatelessWidget {
   final TagEntity tag;
@@ -41,7 +42,7 @@ class TagItem extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(Icons.label, color: Colors.white, size: 24.sp),
+          child: Icon(AppIcons.label, color: Colors.white, size: 24.sp),
         ),
         title: Text(
           tag.name,
@@ -54,21 +55,21 @@ class TagItem extends StatelessWidget {
         trailing: PopupMenuButton(
           itemBuilder:
               (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 20),
+                      Icon(AppIcons.edit, size: 20),
                       SizedBox(width: 8),
                       Text('Edit'),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, size: 20, color: Colors.red),
+                      Icon(AppIcons.delete, size: 20, color: Colors.red),
                       SizedBox(width: 8),
                       Text('Delete', style: TextStyle(color: Colors.red)),
                     ],

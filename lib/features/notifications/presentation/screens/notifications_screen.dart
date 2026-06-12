@@ -6,6 +6,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
 import '../cubit/notifications_cubit.dart';
 import '../widgets/notification_card.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -22,14 +23,14 @@ class NotificationsScreen extends StatelessWidget {
         final actions = <Widget>[
           if (unreadCount > 0)
             HomeIconButton(
-              icon: Icons.done_all_rounded,
+              icon: AppIcons.done_all_rounded,
               color: HomeSystemTokens.purple,
               onTap: () => cubit.markAllAsRead(),
             ),
           if (hasNotifications) ...[
             SizedBox(width: 8.w),
             HomeIconButton(
-              icon: Icons.delete_sweep_rounded,
+              icon: AppIcons.delete_sweep_rounded,
               color: HomeSystemTokens.coral,
               onTap: () => _showDeleteConfirmation(context, cubit),
             ),
@@ -41,7 +42,7 @@ class NotificationsScreen extends StatelessWidget {
           subtitle: unreadCount > 0
               ? '$unreadCount unread'
               : 'All caught up!',
-          icon: Icons.notifications_rounded,
+          icon: AppIcons.notifications_rounded,
           accent: HomeSystemTokens.blue,
           actions: actions,
           body: _NotificationsBody(state: state),
@@ -64,7 +65,7 @@ class NotificationsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10.r),
               ),
               child: Icon(
-                Icons.delete_forever_rounded,
+                AppIcons.delete_forever_rounded,
                 color: HomeSystemTokens.coral,
                 size: 24.sp,
               ),
@@ -142,7 +143,7 @@ class _NotificationsBody extends StatelessWidget {
         (currentState is NotificationsLoaded &&
             currentState.notifications.isEmpty)) {
       return HomeEmptyState(
-        icon: Icons.notifications_off_outlined,
+        icon: AppIcons.notifications_off_outlined,
         title: 'All Caught Up!',
         message:
             'No new notifications at the moment.\nWe\'ll let you know when something arrives!',

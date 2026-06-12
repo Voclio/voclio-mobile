@@ -12,6 +12,7 @@ import '../../domain/entities/reminder_entity.dart';
 import '../cubit/reminders_cubit.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AddReminderScreen extends StatefulWidget {
   const AddReminderScreen({super.key});
@@ -187,7 +188,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
     return HomeSecondaryScaffold(
       title: 'Add Reminder',
       subtitle: 'Schedule what matters',
-      icon: Icons.notifications_active_outlined,
+      icon: AppIcons.notifications_active_outlined,
       accent: HomeSystemTokens.orange,
       body: Form(
         key: _formKey,
@@ -205,7 +206,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               child: Column(
                 children: [
                   Icon(
-                    Icons.notifications_active,
+                    AppIcons.notifications_active,
                     size: 48.sp,
                     color: context.colors.primary,
                   ),
@@ -244,7 +245,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
               controller: _titleController,
               decoration: InputDecoration(
                 hintText: 'Enter reminder title',
-                prefixIcon: Icon(Icons.title, color: context.colors.primary),
+                prefixIcon: Icon(AppIcons.title, color: context.colors.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
                 ),
@@ -281,7 +282,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                 hintText: 'Add a description...',
                 prefixIcon: Padding(
                   padding: EdgeInsets.only(bottom: 48.h),
-                  child: Icon(Icons.description, color: context.colors.primary),
+                  child: Icon(AppIcons.description, color: context.colors.primary),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -344,7 +345,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.warning_amber, color: Colors.orange[700]),
+                            Icon(AppIcons.warning_amber, color: Colors.orange[700]),
                             SizedBox(width: 12.w),
                             Expanded(
                               child: Text(
@@ -361,7 +362,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                     : DropdownButtonFormField<TaskEntity>(
                         value: _selectedTask,
                         decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.task_alt, color: context.colors.primary),
+                          prefixIcon: Icon(AppIcons.task_alt, color: context.colors.primary),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.r),
                           ),
@@ -411,7 +412,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.calendar_today,
+                            AppIcons.calendar_today,
                             color: context.colors.primary,
                           ),
                           SizedBox(width: 12.w),
@@ -421,7 +422,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                           ),
                           const Spacer(),
                           Icon(
-                            Icons.arrow_drop_down,
+                            AppIcons.arrow_drop_down,
                             color: Colors.grey[600],
                           ),
                         ],
@@ -451,7 +452,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.access_time,
+                            AppIcons.access_time,
                             color: context.colors.primary,
                           ),
                           SizedBox(width: 12.w),
@@ -461,7 +462,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                           ),
                           const Spacer(),
                           Icon(
-                            Icons.arrow_drop_down,
+                            AppIcons.arrow_drop_down,
                             color: Colors.grey[600],
                           ),
                         ],
@@ -489,21 +490,21 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                         _buildReminderTypeOption(
                           'one_time',
                           'One Time',
-                          Icons.looks_one,
+                          AppIcons.looks_one,
                           'Remind me just once',
                         ),
                         Divider(height: 1, color: Colors.grey[300]),
                         _buildReminderTypeOption(
                           'daily',
                           'Daily',
-                          Icons.repeat,
+                          AppIcons.repeat,
                           'Remind me every day',
                         ),
                         Divider(height: 1, color: Colors.grey[300]),
                         _buildReminderTypeOption(
                           'weekly',
                           'Weekly',
-                          Icons.calendar_view_week,
+                          AppIcons.calendar_view_week,
                           'Remind me every week',
                         ),
                       ],
@@ -521,7 +522,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.info_outline,
+                          AppIcons.info_outline,
                           color: Colors.blue[700],
                         ),
                         SizedBox(width: 12.w),
@@ -565,7 +566,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.check),
+                                Icon(AppIcons.check),
                                 SizedBox(width: 8.w),
                                 Text(
                                   'Create Reminder',
@@ -634,7 +635,7 @@ class _AddReminderScreenState extends State<AddReminderScreen> {
             ),
             if (isSelected)
               Icon(
-                Icons.check_circle,
+                AppIcons.check_circle,
                 color: context.colors.primary,
               ),
           ],

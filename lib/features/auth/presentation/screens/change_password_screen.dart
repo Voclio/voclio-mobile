@@ -6,6 +6,7 @@ import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import '../../../../core/common/animation/animate_do.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -140,7 +141,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.check_circle, color: Colors.white),
+                  Icon(AppIcons.check_circle, color: Colors.white),
                   SizedBox(width: 12.w),
                   const Text('Password changed successfully!'),
                 ],
@@ -158,7 +159,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.white),
+                  Icon(AppIcons.error_outline, color: Colors.white),
                   SizedBox(width: 12.w),
                   Expanded(child: Text(state.message)),
                 ],
@@ -192,7 +193,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                 ],
               ),
               child: Icon(
-                Icons.arrow_back_ios_new,
+                AppIcons.arrow_back_ios_new,
                 size: 18.sp,
                 color: primaryColor,
               ),
@@ -271,7 +272,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                   ],
                                 ),
                                 child: Icon(
-                                  Icons.lock_rounded,
+                                  AppIcons.lock_rounded,
                                   size: 40.sp,
                                   color: Colors.white,
                                 ),
@@ -327,7 +328,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                 _obscureCurrentPassword =
                                     !_obscureCurrentPassword,
                           ),
-                      icon: Icons.lock_outline_rounded,
+                      icon: AppIcons.lock_outline_rounded,
                       primaryColor: primaryColor,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -352,7 +353,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                           () => setState(
                             () => _obscureNewPassword = !_obscureNewPassword,
                           ),
-                      icon: Icons.lock_reset_rounded,
+                      icon: AppIcons.lock_reset_rounded,
                       primaryColor: primaryColor,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -477,7 +478,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                 _obscureConfirmPassword =
                                     !_obscureConfirmPassword,
                           ),
-                      icon: Icons.lock_clock_rounded,
+                      icon: AppIcons.lock_clock_rounded,
                       primaryColor: primaryColor,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -547,7 +548,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                                           MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          Icons.shield_rounded,
+                                          AppIcons.shield_rounded,
                                           size: 20.sp,
                                           color: Colors.white,
                                         ),
@@ -589,7 +590,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: Icon(
-                              Icons.tips_and_updates_rounded,
+                              AppIcons.tips_and_updates_rounded,
                               color: Colors.blue.shade700,
                               size: 24.sp,
                             ),
@@ -681,8 +682,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
           suffixIcon: IconButton(
             icon: Icon(
               obscureText
-                  ? Icons.visibility_off_rounded
-                  : Icons.visibility_rounded,
+                  ? AppIcons.visibility_off_rounded
+                  : AppIcons.visibility_rounded,
               color: Colors.grey.shade500,
               size: 22.sp,
             ),
@@ -733,7 +734,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isMet ? Icons.check_circle_rounded : Icons.circle_outlined,
+            isMet ? AppIcons.check_circle_rounded : AppIcons.circle_outlined,
             size: 14.sp,
             color: isMet ? Colors.green : Colors.grey.shade400,
           ),

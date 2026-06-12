@@ -46,27 +46,16 @@ class VoclioApp extends StatelessWidget {
                             create: (context) => getIt<AuthBloc>(),
                           ),
                           BlocProvider<NotificationsCubit>(
-                            create:
-                                (context) =>
-                                    getIt<NotificationsCubit>()
-                                      ..loadNotifications(),
+                            create: (context) => getIt<NotificationsCubit>(),
                           ),
                           BlocProvider<CalendarCubit>(
-                            create:
-                                (context) =>
-                                    getIt<CalendarCubit>()..loadMonth(
-                                      DateTime.now().year,
-                                      DateTime.now().month,
-                                    ),
+                            create: (context) => getIt<CalendarCubit>(),
                           ),
                           BlocProvider<DashboardCubit>(
                             create: (context) => getIt<DashboardCubit>(),
                           ),
                           BlocProvider<AiSuggestionsCubit>(
-                            create:
-                                (context) =>
-                                    getIt<AiSuggestionsCubit>()
-                                      ..loadAiSuggestions(),
+                            create: (context) => getIt<AiSuggestionsCubit>(),
                           ),
                           BlocProvider<WidgetConfigCubit>(
                             create:

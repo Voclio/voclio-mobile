@@ -6,12 +6,21 @@ import '../../features/tasks/presentation/screens/tasks_screen.dart';
 import '../../features/calendar/presentation/screens/monthly_calendar_screen.dart';
 import '../../features/notes/presentation/screens/notes_screen.dart';
 import '../../features/voice/presentation/screens/voice_recording_screen.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
   static final GlobalKey<State<MainLayout>> mainLayoutKey =
       GlobalKey<State<MainLayout>>();
+
+  /// Switch main bottom-nav tab from anywhere (e.g. after voice actions).
+  static void goToTab(int index) {
+    final state = mainLayoutKey.currentState;
+    if (state is _MainLayoutState) {
+      state.changeTab(index);
+    }
+  }
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -23,27 +32,29 @@ class _MainLayoutState extends State<MainLayout>
   late AnimationController _fabAnimationController;
   late PageController _pageController;
 
-  late final List<Widget> _screens;
-
-  final iconList = <IconData>[
-    Icons.home_rounded,
-    Icons.task_alt_rounded,
-    Icons.calendar_month_rounded,
-    Icons.note_alt_rounded,
-  ];
+  final Set<int> _mountedTabs = {0};
 
   final iconLabels = <String>['Home', 'Tasks', 'Calendar', 'Notes'];
+
+  Widget _screenFor(int index) {
+    switch (index) {
+      case 0:
+        return HomeScreenBody(onTabChange: changeTab);
+      case 1:
+        return const TasksScreen();
+      case 2:
+        return const MonthlyCalendarScreen();
+      case 3:
+        return const NotesScreen();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
-    _screens = [
-      HomeScreenBody(onTabChange: changeTab),
-      const TasksScreen(),
-      const MonthlyCalendarScreen(),
-      const NotesScreen(),
-    ];
     _fabAnimationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -53,6 +64,10 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   void changeTab(int index) {
+    setState(() {
+      _mountedTabs.add(index);
+      _currentIndex = index;
+    });
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -80,10 +95,17 @@ class _MainLayoutState extends State<MainLayout>
         controller: _pageController,
         onPageChanged: (index) {
           setState(() {
+            _mountedTabs.add(index);
             _currentIndex = index;
           });
         },
-        children: _screens,
+        children: List.generate(
+          iconLabels.length,
+          (index) =>
+              _mountedTabs.contains(index)
+                  ? _screenFor(index)
+                  : const SizedBox.shrink(),
+        ),
       ),
       floatingActionButton: Container(
         width: 65.r,
@@ -127,7 +149,7 @@ class _MainLayoutState extends State<MainLayout>
             customBorder: const CircleBorder(),
             splashColor: Colors.white.withValues(alpha: 0.3),
             child: Center(
-              child: Icon(Icons.mic_rounded, size: 32.sp, color: Colors.white),
+              child: Icon(AppIcons.mic_filled, size: 32.sp, color: Colors.white),
             ),
           ),
         ),
@@ -155,9 +177,10 @@ class _MainLayoutState extends State<MainLayout>
           ],
         ),
         child: AnimatedBottomNavigationBar.builder(
-          itemCount: iconList.length,
+          itemCount: AppIcons.bottomNav.length,
           tabBuilder: (int index, bool isActive) {
             final color = isActive ? theme.primaryColor : Colors.grey.shade600;
+            final icon = AppIcons.bottomNav[index].of(isActive);
             // Add horizontal padding to push tasks left and calendar right
             final horizontalPadding =
                 index == 1
@@ -179,7 +202,7 @@ class _MainLayoutState extends State<MainLayout>
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      iconList[index],
+                      icon,
                       size: 22.sp,
                       color: isActive ? Colors.white : color,
                     ),

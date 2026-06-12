@@ -30,20 +30,22 @@ class DeleteVoiceRecording extends VoiceEvent {
 
 class CreateNoteFromVoice extends VoiceEvent {
   final String id;
+  final String? transcription;
 
-  const CreateNoteFromVoice(this.id);
+  const CreateNoteFromVoice(this.id, {this.transcription});
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, transcription];
 }
 
 class CreateTasksFromVoice extends VoiceEvent {
   final String id;
+  final String? transcription;
 
-  const CreateTasksFromVoice(this.id);
+  const CreateTasksFromVoice(this.id, {this.transcription});
 
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [id, transcription];
 }
 
 class TranscribeVoice extends VoiceEvent {

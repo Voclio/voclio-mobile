@@ -22,6 +22,7 @@ import 'package:voclio_app/features/widget_config/domain/entities/widget_prefere
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
 import 'package:voclio_app/features/widget_config/presentation/widgets/home_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class HomeScreenBody extends StatefulWidget {
   final Function(int)? onTabChange;
@@ -46,7 +47,6 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardCubit>().loadDashboardStats();
 
     final authState = context.read<AuthBloc>().state;
     if (authState is! AuthSuccess && authState is! AuthInitial) {
@@ -63,10 +63,15 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
       );
     });
 
-    GetIt.I<TasksCubit>().init();
-
     final now = DateTime.now();
-    context.read<CalendarCubit>().loadMonth(now.year, now.month);
+    unawaited(
+      Future.wait([
+        context.read<DashboardCubit>().loadDashboardStats(),
+        GetIt.I<TasksCubit>().init(),
+        context.read<CalendarCubit>().loadMonth(now.year, now.month),
+        context.read<AiSuggestionsCubit>().loadAiSuggestions(),
+      ]),
+    );
   }
 
   Future<void> _onRefresh() async {
@@ -226,7 +231,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: HomeSystemTokens.purple.withValues(alpha: 0.08),
-                          child: Icon(Icons.image_outlined, color: HomeSystemTokens.purple, size: 40.sp),
+                          child: Icon(AppIcons.image_outlined, color: HomeSystemTokens.purple, size: 40.sp),
                         ),
                       );
                     },
@@ -276,43 +281,38 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
     dashboard.DashboardOverview? overview,
     dashboard.ProductivityStats? productivity,
   ) {
-    return SizedBox(
-      height: 100.h,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Row(
         children: [
-          _SummaryCard(
-            icon: Icons.assignment_outlined,
-            color: HomeSystemTokens.purple,
-            label: 'Tasks',
-            value: overview?.totalTasks.toString() ?? '—',
-            subtitle: '${overview?.completedTasks ?? 0} done today',
+          Expanded(
+            child: _SummaryCard(
+              icon: AppIcons.assignment_outlined,
+              color: HomeSystemTokens.purple,
+              label: 'Tasks',
+              value: overview?.totalTasks.toString() ?? '—',
+              subtitle: '${overview?.completedTasks ?? 0} done today',
+            ),
           ),
           SizedBox(width: 12.w),
-          _SummaryCard(
-            icon: Icons.notes_rounded,
-            color: HomeSystemTokens.blue,
-            label: 'Notes',
-            value: overview?.totalNotes.toString() ?? '—',
-            subtitle: 'All your notes',
+          Expanded(
+            child: _SummaryCard(
+              icon: AppIcons.notes_rounded,
+              color: HomeSystemTokens.blue,
+              label: 'Notes',
+              value: overview?.totalNotes.toString() ?? '—',
+              subtitle: 'All your notes',
+            ),
           ),
           SizedBox(width: 12.w),
-          _SummaryCard(
-            icon: Icons.check_circle_outline_rounded,
-            color: HomeSystemTokens.green,
-            label: 'Completed',
-            value: overview?.completedTasks.toString() ?? '—',
-            subtitle: 'Today',
-          ),
-          SizedBox(width: 12.w),
-          _SummaryCard(
-            icon: Icons.local_fire_department_rounded,
-            color: HomeSystemTokens.orange,
-            label: 'Streak',
-            value: productivity?.currentStreak.toString() ?? '—',
-            subtitle: 'Days',
+          Expanded(
+            child: _SummaryCard(
+              icon: AppIcons.local_fire_department_rounded,
+              color: HomeSystemTokens.orange,
+              label: 'Streak',
+              value: productivity?.currentStreak.toString() ?? '—',
+              subtitle: 'Days',
+            ),
           ),
         ],
       ),
@@ -359,7 +359,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
                         color: HomeSystemTokens.purple.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
-                      child: Icon(Icons.calendar_today_rounded,
+                      child: Icon(AppIcons.calendar_today_rounded,
                           color: HomeSystemTokens.purple, size: 18.sp),
                     ),
                     SizedBox(width: 10.w),
@@ -397,7 +397,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
                               color: HomeSystemTokens.purple,
                             ),
                           ),
-                          Icon(Icons.chevron_right_rounded,
+                          Icon(AppIcons.chevron_right_rounded,
                               color: HomeSystemTokens.purple, size: 18.sp),
                         ],
                       ),
@@ -491,7 +491,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
                     color: HomeSystemTokens.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
-                  child: Icon(Icons.event_rounded, color: HomeSystemTokens.orange, size: 18.sp),
+                  child: Icon(AppIcons.event_rounded, color: HomeSystemTokens.orange, size: 18.sp),
                 ),
                 SizedBox(width: 10.w),
                 Text(
@@ -515,7 +515,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
                           color: HomeSystemTokens.orange,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, color: HomeSystemTokens.orange, size: 18.sp),
+                      Icon(AppIcons.chevron_right_rounded, color: HomeSystemTokens.orange, size: 18.sp),
                     ],
                   ),
                 ),
@@ -556,10 +556,8 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 100.h,
-      width: 118.w,
-      child: Container(
+    return Container(
+        height: 100.h,
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -587,24 +585,32 @@ class _SummaryCard extends StatelessWidget {
                   child: Icon(icon, color: color, size: 14.sp),
                 ),
                 SizedBox(width: 6.w),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: const Color(0xFF9CA3AF),
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: const Color(0xFF9CA3AF),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
             SizedBox(height: 6.h),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 22.sp,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF111827),
-                height: 1,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF111827),
+                  height: 1,
+                ),
               ),
             ),
             SizedBox(height: 2.h),
@@ -620,8 +626,7 @@ class _SummaryCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 
@@ -663,7 +668,7 @@ class _FocusTaskRow extends StatelessWidget {
                     color: isDone ? const Color(0xFF34C759) : Colors.transparent,
                   ),
                   child: isDone
-                      ? Icon(Icons.check, size: 14.sp, color: Colors.white)
+                      ? Icon(AppIcons.check, size: 14.sp, color: Colors.white)
                       : null,
                 ),
                 if (!isLast)
@@ -721,7 +726,7 @@ class _FocusTaskRow extends StatelessWidget {
                             ),
                             SizedBox(width: 8.w),
                             Icon(
-                              Icons.schedule_rounded,
+                              AppIcons.schedule_rounded,
                               size: 13.sp,
                               color: const Color(0xFF9CA3AF),
                             ),
@@ -739,7 +744,7 @@ class _FocusTaskRow extends StatelessWidget {
                     ),
                   ),
                   Icon(
-                    Icons.flag_outlined,
+                    AppIcons.flag_outlined,
                     size: 18.sp,
                     color: tagColor,
                   ),
@@ -780,7 +785,7 @@ class _UpcomingRow extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Icons.event_available_rounded,
+            AppIcons.event_available_rounded,
             color: const Color(0xFFFF9500),
             size: 20.sp,
           ),

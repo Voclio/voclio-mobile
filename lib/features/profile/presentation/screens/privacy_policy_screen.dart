@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -11,7 +12,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
     return HomeSecondaryScaffold(
       title: 'Privacy Policy',
       subtitle: 'Last updated: December 7, 2025',
-      icon: Icons.privacy_tip_outlined,
+      icon: AppIcons.privacy_tip_outlined,
       accent: HomeSystemTokens.green,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),

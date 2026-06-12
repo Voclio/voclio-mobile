@@ -8,6 +8,7 @@ import 'package:voclio_app/features/settings/presentation/cubit/settings_cubit.d
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
 import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -32,7 +33,7 @@ class SettingsScreen extends StatelessWidget {
             return HomeSecondaryScaffold(
               title: 'Settings',
               subtitle: 'Customize your experience',
-              icon: Icons.settings_rounded,
+              icon: AppIcons.settings_rounded,
               accent: HomeSystemTokens.purple,
               showBack: false,
               body: state.isLoading && state.theme.isEmpty
@@ -51,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                               builder: (context, widgetState) {
                                 final count = widgetState.enabledWidgets.length;
                                 return HomeMenuTile(
-                                  icon: Icons.widgets_outlined,
+                                  icon: AppIcons.widgets_outlined,
                                   title: 'Home Widgets',
                                   subtitle:
                                       '$count widget${count == 1 ? '' : 's'} enabled',
@@ -80,7 +81,7 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               'Push Notifications',
                               'Receive alerts on your device',
-                              Icons.notifications_active_outlined,
+                              AppIcons.notifications_active_outlined,
                               HomeSystemTokens.blue,
                               state.pushEnabled,
                               (val) => context
@@ -93,7 +94,7 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               'Email Notifications',
                               'Get updates in your inbox',
-                              Icons.email_outlined,
+                              AppIcons.email_outlined,
                               HomeSystemTokens.green,
                               state.emailEnabled,
                               (val) => context
@@ -106,7 +107,7 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               'WhatsApp Notifications',
                               'Updates via WhatsApp',
-                              Icons.message_outlined,
+                              AppIcons.message_outlined,
                               HomeSystemTokens.orange,
                               state.whatsappEnabled,
                               (val) => context
@@ -126,7 +127,7 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               'Reminders via Email',
                               'Never miss a goal session',
-                              Icons.alarm_rounded,
+                              AppIcons.alarm_rounded,
                               HomeSystemTokens.orange,
                               state.emailForReminders,
                               (val) => context
@@ -139,7 +140,7 @@ class SettingsScreen extends StatelessWidget {
                               context,
                               'Tasks via Email',
                               'Daily task summaries',
-                              Icons.task_alt_rounded,
+                              AppIcons.task_alt_rounded,
                               HomeSystemTokens.purple,
                               state.emailForTasks,
                               (val) => context
@@ -178,7 +179,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildThemeTile(BuildContext context, String currentTheme) {
     return HomeMenuTile(
-      icon: Icons.palette_outlined,
+      icon: AppIcons.palette_outlined,
       title: 'Theme Mode',
       iconColor: HomeSystemTokens.purple,
       trailing: DropdownButton<String>(
@@ -203,7 +204,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildLanguageTile(BuildContext context, String currentLang) {
     return HomeMenuTile(
-      icon: Icons.language_outlined,
+      icon: AppIcons.language_outlined,
       title: 'Language',
       iconColor: HomeSystemTokens.green,
       trailing: DropdownButton<String>(
@@ -227,7 +228,7 @@ class SettingsScreen extends StatelessWidget {
 
   Widget _buildTimezoneTile(BuildContext context, String currentTz) {
     return HomeMenuTile(
-      icon: Icons.public_outlined,
+      icon: AppIcons.public_outlined,
       title: 'Timezone',
       iconColor: HomeSystemTokens.orange,
       trailing: Row(
@@ -242,7 +243,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           SizedBox(width: 4.w),
           Icon(
-            Icons.chevron_right_rounded,
+            AppIcons.chevron_right_rounded,
             size: 22.sp,
             color: HomeSystemTokens.inkMuted,
           ),

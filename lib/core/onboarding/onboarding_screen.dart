@@ -11,6 +11,7 @@ import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../common/inputs/text_app.dart';
 import '../styles/fonts/font_weight_helper.dart';
 import 'package:video_player/video_player.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -225,7 +226,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           SizedBox(width: 8.w),
                           Icon(
-                            Icons.arrow_forward_rounded,
+                            AppIcons.arrow_forward_rounded,
                             color: context.colors.white,
                             size: 20.sp,
                           ),
@@ -331,7 +332,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                                 onPressed: _signInWithFacebook,
                                 icon: Icon(
-                                  Icons.facebook,
+                                  AppIcons.facebook,
                                   color: Colors.white,
                                   size: 20.sp,
                                 ),

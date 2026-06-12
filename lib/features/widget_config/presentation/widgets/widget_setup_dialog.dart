@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../domain/entities/widget_preference.dart';
 import '../bloc/widget_config_cubit.dart';
 import '../bloc/widget_config_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 /// A popup dialog that allows users to configure which widgets they want to see
 class WidgetSetupDialog extends StatefulWidget {
@@ -185,7 +186,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Icon(
-              Icons.widgets_rounded,
+              AppIcons.widgets_rounded,
               color: Colors.white,
               size: 28.sp,
             ),
@@ -265,7 +266,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.dashboard_customize_rounded,
+              AppIcons.dashboard_customize_rounded,
               size: 60.sp,
               color: theme.primaryColor,
             ),
@@ -292,21 +293,21 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
           SizedBox(height: 32.h),
           _buildFeatureItem(
             theme,
-            Icons.task_alt_rounded,
+            AppIcons.task_alt_rounded,
             'Quick Task Overview',
             'See your upcoming tasks at a glance',
           ).animate().slideX(begin: -0.2, delay: 500.ms),
           SizedBox(height: 16.h),
           _buildFeatureItem(
             theme,
-            Icons.calendar_month_rounded,
+            AppIcons.calendar_month_rounded,
             'Calendar Events',
             'Never miss an important event',
           ).animate().slideX(begin: -0.2, delay: 600.ms),
           SizedBox(height: 16.h),
           _buildFeatureItem(
             theme,
-            Icons.note_alt_rounded,
+            AppIcons.note_alt_rounded,
             'Quick Notes',
             'Access your recent notes instantly',
           ).animate().slideX(begin: -0.2, delay: 700.ms),
@@ -474,7 +475,7 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
               ),
               child:
                   isSelected
-                      ? Icon(Icons.check, color: Colors.white, size: 16.sp)
+                      ? Icon(AppIcons.check, color: Colors.white, size: 16.sp)
                       : null,
             ),
           ],
@@ -486,19 +487,19 @@ class _WidgetSetupDialogState extends State<WidgetSetupDialog> {
   IconData _getIconForWidgetType(WidgetType type) {
     switch (type) {
       case WidgetType.upcomingTasks:
-        return Icons.upcoming_rounded;
+        return AppIcons.upcoming_rounded;
       case WidgetType.todayTasks:
-        return Icons.today_rounded;
+        return AppIcons.today_rounded;
       case WidgetType.calendar:
-        return Icons.calendar_month_rounded;
+        return AppIcons.calendar_month_rounded;
       case WidgetType.notes:
-        return Icons.note_alt_rounded;
+        return AppIcons.note_alt_rounded;
       case WidgetType.reminders:
-        return Icons.notifications_active_rounded;
+        return AppIcons.notifications_active_rounded;
       case WidgetType.productivity:
-        return Icons.insights_rounded;
+        return AppIcons.insights_rounded;
       case WidgetType.quickActions:
-        return Icons.flash_on_rounded;
+        return AppIcons.flash_on_rounded;
     }
   }
 

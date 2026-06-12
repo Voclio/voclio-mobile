@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'home_system_tokens.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class HomeCanvas extends StatelessWidget {
   final Widget child;
@@ -113,7 +114,6 @@ class HomeStatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 118.w,
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
       decoration: HomeSystemTokens.cardDecoration(),
       child: Column(
@@ -145,13 +145,17 @@ class HomeStatTile extends StatelessWidget {
             ],
           ),
           SizedBox(height: 8.h),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22.sp,
-              fontWeight: FontWeight.w800,
-              color: HomeSystemTokens.ink,
-              height: 1,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w800,
+                color: HomeSystemTokens.ink,
+                height: 1,
+              ),
             ),
           ),
           SizedBox(height: 2.h),
@@ -216,7 +220,7 @@ class HomeSearchField extends StatelessWidget {
             fontSize: 15.sp,
           ),
           prefixIcon: Icon(
-            Icons.search_rounded,
+            AppIcons.search_rounded,
             color: HomeSystemTokens.inkMuted,
             size: 22.sp,
           ),
@@ -358,7 +362,7 @@ class HomeBackButton extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(right: 8.w),
       child: HomeIconButton(
-        icon: Icons.arrow_back_ios_new_rounded,
+        icon: AppIcons.arrow_back_ios_new_rounded,
         color: HomeSystemTokens.inkSoft,
         onTap: onTap ?? () => Navigator.maybePop(context),
       ),
@@ -588,7 +592,7 @@ class HomeMenuTile extends StatelessWidget {
                   ),
                   trailing ??
                       Icon(
-                        Icons.chevron_right_rounded,
+                        AppIcons.chevron_right_rounded,
                         color: HomeSystemTokens.inkMuted,
                         size: 22.sp,
                       ),

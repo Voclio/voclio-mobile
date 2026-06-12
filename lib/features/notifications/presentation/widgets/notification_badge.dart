@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import '../cubit/notifications_cubit.dart';
 import '../screens/notifications_screen.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class NotificationBadge extends StatelessWidget {
   const NotificationBadge({super.key});
@@ -35,7 +36,7 @@ class NotificationBadge extends StatelessWidget {
                   color: Colors.white,
                 ),
                 child: Icon(
-                  Icons.notifications_outlined,
+                  AppIcons.notifications_outlined,
                   color: const Color(0xFF6B7280),
                   size: 20.sp,
                 ),

@@ -19,6 +19,7 @@ import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -218,8 +219,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
+                                          ? AppIcons.visibility_off
+                                          : AppIcons.visibility,
                                       color: context.colors.primary,
                                     ),
                                     onPressed: () {
@@ -251,8 +252,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscureConfirmPassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
+                                          ? AppIcons.visibility_off
+                                          : AppIcons.visibility,
                                       color: context.colors.primary,
                                     ),
                                     onPressed: () {

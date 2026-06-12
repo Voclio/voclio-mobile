@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../domain/entities/notification_entity.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class NotificationCard extends StatelessWidget {
   final NotificationEntity notification;
@@ -20,15 +21,15 @@ class NotificationCard extends StatelessWidget {
   IconData _getIcon() {
     switch (notification.type.toLowerCase()) {
       case 'task':
-        return Icons.check_circle;
+        return AppIcons.check_circle;
       case 'reminder':
-        return Icons.alarm;
+        return AppIcons.alarm;
       case 'achievement':
-        return Icons.emoji_events;
+        return AppIcons.emoji_events;
       case 'system':
-        return Icons.settings;
+        return AppIcons.settings;
       default:
-        return Icons.info;
+        return AppIcons.info;
     }
   }
 
@@ -75,7 +76,7 @@ class NotificationCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.delete_rounded, color: Colors.white, size: 28.sp),
+                Icon(AppIcons.delete_rounded, color: Colors.white, size: 28.sp),
                 SizedBox(height: 4.h),
                 Text(
                   'Delete',
@@ -226,7 +227,7 @@ class NotificationCard extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
-                                        Icons.access_time_rounded,
+                                        AppIcons.access_time_rounded,
                                         size: 12.sp,
                                         color: Colors.grey.shade500,
                                       ),
@@ -248,7 +249,7 @@ class NotificationCard extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      Icons.swipe_left_rounded,
+                                      AppIcons.swipe_left_rounded,
                                       size: 14.sp,
                                       color: Colors.grey.shade400,
                                     ),

@@ -9,6 +9,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../bloc/voice_bloc.dart';
 import '../bloc/voice_event.dart';
 import '../bloc/voice_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class VoiceRecordingsListScreen extends StatelessWidget {
   const VoiceRecordingsListScreen({super.key});
@@ -21,7 +22,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
         builder: (context) => HomeSecondaryScaffold(
           title: 'Voice Recordings',
           subtitle: 'Your saved recordings',
-          icon: Icons.mic_rounded,
+          icon: AppIcons.mic_rounded,
           accent: HomeSystemTokens.blue,
           floatingActionButton: FloatingActionButton(
             backgroundColor: HomeSystemTokens.purple,
@@ -31,7 +32,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                 context.read<VoiceBloc>().add(LoadVoiceRecordings());
               }
             },
-            child: const Icon(Icons.mic),
+            child: Icon(AppIcons.mic),
           ),
           body: BlocConsumer<VoiceBloc, VoiceState>(
             listener: (context, state) {
@@ -54,7 +55,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
               } else if (state is VoiceLoaded) {
                 if (state.recordings.isEmpty) {
                   return HomeEmptyState(
-                    icon: Icons.mic_off_rounded,
+                    icon: AppIcons.mic_off_rounded,
                     title: 'No recordings yet',
                     message: 'Tap the mic button to record your first voice note.',
                     accent: HomeSystemTokens.blue,
@@ -81,7 +82,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: Icon(
-                              Icons.mic_rounded,
+                              AppIcons.mic_rounded,
                               color: HomeSystemTokens.blue,
                               size: 22.sp,
                             ),
@@ -113,7 +114,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                             ),
                           ),
                           HomeIconButton(
-                            icon: Icons.note_add_outlined,
+                            icon: AppIcons.note_add_outlined,
                             color: HomeSystemTokens.purple,
                             onTap: () {
                               context.read<VoiceBloc>().add(
@@ -123,7 +124,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           HomeIconButton(
-                            icon: Icons.task_alt_outlined,
+                            icon: AppIcons.task_alt_outlined,
                             color: HomeSystemTokens.green,
                             onTap: () {
                               context.read<VoiceBloc>().add(
@@ -133,7 +134,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           HomeIconButton(
-                            icon: Icons.delete_outline,
+                            icon: AppIcons.delete_outline,
                             color: HomeSystemTokens.coral,
                             onTap: () {
                               showDialog(
@@ -174,7 +175,7 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                 );
               } else if (state is VoiceError) {
                 return HomeEmptyState(
-                  icon: Icons.error_outline_rounded,
+                  icon: AppIcons.error_outline_rounded,
                   title: 'Failed to load',
                   message: state.message,
                   actionLabel: 'Retry',

@@ -8,6 +8,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../domain/entities/tag_entity.dart';
 import '../bloc/tags_cubit.dart';
 import '../bloc/tags_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TagsScreen extends StatefulWidget {
   const TagsScreen({super.key});
@@ -49,12 +50,12 @@ class _TagsScreenState extends State<TagsScreen> {
         return HomeSecondaryScaffold(
           title: 'Tags',
           subtitle: tagCount == 0 ? 'Organize your tasks' : '$tagCount tags',
-          icon: Icons.label_rounded,
+          icon: AppIcons.label_rounded,
           accent: HomeSystemTokens.green,
           showBack: Navigator.canPop(context),
           actions: [
             HomeIconButton(
-              icon: Icons.add_rounded,
+              icon: AppIcons.add_rounded,
               color: HomeSystemTokens.green,
               onTap: () => _showCreateTagDialog(context),
             ),
@@ -204,7 +205,7 @@ class _TagsBody extends StatelessWidget {
       final tags = currentState.tags;
       if (tags.isEmpty) {
         return HomeEmptyState(
-          icon: Icons.label_off_rounded,
+          icon: AppIcons.label_off_rounded,
           title: 'No tags yet',
           message: 'Create tags to organize and filter your tasks',
           actionLabel: 'Create Tag',
@@ -226,7 +227,7 @@ class _TagsBody extends StatelessWidget {
           return HomeSectionCard(
             padding: EdgeInsets.zero,
             child: HomeMenuTile(
-              icon: Icons.label_rounded,
+              icon: AppIcons.label_rounded,
               title: tag.name,
               subtitle: tag.description,
               iconColor: tagColor,
@@ -235,13 +236,13 @@ class _TagsBody extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   HomeIconButton(
-                    icon: Icons.edit_rounded,
+                    icon: AppIcons.edit_rounded,
                     color: HomeSystemTokens.blue,
                     onTap: () => onEditTag(tag),
                   ),
                   SizedBox(width: 8.w),
                   HomeIconButton(
-                    icon: Icons.delete_rounded,
+                    icon: AppIcons.delete_rounded,
                     color: HomeSystemTokens.coral,
                     onTap: () => onDeleteTag(tag.id),
                   ),

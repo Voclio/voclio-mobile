@@ -26,9 +26,36 @@ class NotesCubit extends Cubit<NotesState> {
     required this.getTagsUseCase,
   }) : super(const NotesState());
 
-  Future<void> init() async {
-    await fetchTags();
-    await getNotes();
+  Future<void> init({bool force = false}) async {
+    if (!force && state.status == NotesStatus.success && state.notes.isNotEmpty) {
+      return;
+    }
+    if (!force && state.status == NotesStatus.loading) return;
+
+    emit(state.copyWith(status: NotesStatus.loading));
+
+    final tagsResult = getTagsUseCase();
+    final notesResult = getAllNotesUseCase();
+
+    final tags = await tagsResult;
+    final notes = await notesResult;
+    if (isClosed) return;
+
+    tags.fold(
+      (failure) => print('Failed to fetch tags: ${failure.message}'),
+      (tagList) => emit(state.copyWith(availableTags: tagList)),
+    );
+
+    notes.fold(
+      (failure) => emit(
+        state.copyWith(
+          status: NotesStatus.failure,
+          errorMessage: failure.message,
+        ),
+      ),
+      (noteList) =>
+          emit(state.copyWith(status: NotesStatus.success, notes: noteList)),
+    );
   }
 
   Future<void> fetchTags() async {

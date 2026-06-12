@@ -13,6 +13,7 @@ import 'package:voclio_app/features/tasks/presentation/screens/task_details_scre
 
 import '../bloc/tasks_cubit.dart';
 import '../widgets/task_tile.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 int _taskCountForTag(TasksState state, String? tagName) {
   final source = state.allTasks.isNotEmpty ? state.allTasks : state.tasks;
@@ -43,8 +44,10 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
   @override
   void initState() {
     super.initState();
-    // Initialize data when screen mounts
-    context.read<TasksCubit>().init();
+    final cubit = context.read<TasksCubit>();
+    if (cubit.state.status != TasksStatus.success) {
+      cubit.init();
+    }
   }
 
   void _showAddTaskSheet(BuildContext context) {
@@ -115,11 +118,11 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                     HomeScreenHeader(
                       title: 'Tasks',
                       subtitle: '$totalTasks total · $pendingTasks remaining',
-                      icon: Icons.task_alt_rounded,
+                      icon: AppIcons.task_alt_rounded,
                       accent: HomeSystemTokens.purple,
                       actions: [
                         HomeIconButton(
-                          icon: Icons.add_rounded,
+                          icon: AppIcons.add_rounded,
                           onTap: () => _showAddTaskSheet(context),
                         ),
                       ],
@@ -127,37 +130,38 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                     SizedBox(height: 18.h),
                     _buildProgressCard(context, progressValue, progressPercent),
                     SizedBox(height: 14.h),
-                    SizedBox(
-                      height: 96.h,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        children: [
-                          HomeStatTile(
-                            icon: Icons.pending_actions_rounded,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: HomeStatTile(
+                            icon: AppIcons.pending_actions_rounded,
                             color: HomeSystemTokens.purple,
                             label: 'Pending',
                             value: pendingTasks.toString(),
                             subtitle: 'To complete',
                           ),
-                          SizedBox(width: 10.w),
-                          HomeStatTile(
-                            icon: Icons.check_circle_outline_rounded,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: HomeStatTile(
+                            icon: AppIcons.check_circle_outline_rounded,
                             color: HomeSystemTokens.green,
                             label: 'Done',
                             value: completedTasks.toString(),
                             subtitle: 'Completed',
                           ),
-                          SizedBox(width: 10.w),
-                          HomeStatTile(
-                            icon: Icons.percent_rounded,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: HomeStatTile(
+                            icon: AppIcons.percent_rounded,
                             color: HomeSystemTokens.orange,
                             label: 'Progress',
                             value: '$progressPercent%',
                             subtitle: 'Overall',
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 16.h),
                     BlocBuilder<TasksCubit, TasksState>(
@@ -331,8 +335,8 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
                 ),
                 child: Icon(
                   isComplete
-                      ? Icons.celebration_rounded
-                      : Icons.trending_up_rounded,
+                      ? AppIcons.celebration_rounded
+                      : AppIcons.trending_up_rounded,
                   color: barColor,
                   size: 18.sp,
                 ),
@@ -446,7 +450,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.task_alt_rounded,
+              AppIcons.task_alt_rounded,
               size: 52.sp,
               color: HomeSystemTokens.purple,
             ),
@@ -480,7 +484,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
           SizedBox(height: 28.h),
           ElevatedButton.icon(
             onPressed: () => _showAddTaskSheet(context),
-            icon: Icon(Icons.add_rounded, size: 20.sp),
+            icon: Icon(AppIcons.add_rounded, size: 20.sp),
             label: Text(
               'Create Task',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.sp),

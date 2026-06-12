@@ -7,6 +7,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
 import '../bloc/tasks_cubit.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final TaskEntity task;
@@ -37,7 +38,7 @@ class TaskDetailScreen extends StatelessWidget {
             leading: Padding(
               padding: EdgeInsets.only(left: 8.w),
               child: HomeIconButton(
-                icon: Icons.arrow_back_ios_new_rounded,
+                icon: AppIcons.arrow_back_ios_new_rounded,
                 color: HomeSystemTokens.inkSoft,
                 onTap: () => Navigator.pop(context),
               ),
@@ -45,7 +46,7 @@ class TaskDetailScreen extends StatelessWidget {
             leadingWidth: 56.w,
             actions: [
               HomeIconButton(
-                icon: Icons.share_outlined,
+                icon: AppIcons.share_outlined,
                 color: HomeSystemTokens.inkSoft,
                 onTap: () {},
               ),
@@ -53,7 +54,7 @@ class TaskDetailScreen extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.only(right: 12.w),
                 child: HomeIconButton(
-                  icon: Icons.more_horiz_rounded,
+                  icon: AppIcons.more_horiz_rounded,
                   color: HomeSystemTokens.inkSoft,
                   onTap: () {},
                 ),
@@ -135,7 +136,7 @@ class TaskDetailScreen extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isCompleted ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+            isCompleted ? AppIcons.check_circle_rounded : AppIcons.warning_amber_rounded,
             color: isCompleted ? Colors.green : Colors.red,
             size: 24.sp,
           ),
@@ -212,7 +213,7 @@ class TaskDetailScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.check,
+                    AppIcons.check,
                     color: Colors.white,
                     size: 16.sp,
                   ),
@@ -244,14 +245,14 @@ class TaskDetailScreen extends StatelessWidget {
             if (task.tags.isNotEmpty)
               _buildTagChip(
                 context, 
-                Icons.label_rounded, 
+                AppIcons.label_rounded, 
                 tagLabel, 
                 tagBgColor,
                 tagTextColor,
               ),
             _buildTagChip(
               context,
-              Icons.flag_rounded,
+              AppIcons.flag_rounded,
               "${task.priority.displayName}",
               task.priority.color.withOpacity(0.15),
               task.priority.color,
@@ -320,7 +321,7 @@ class TaskDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14.r),
                 ),
                 child: Icon(
-                  isOverdue ? Icons.event_busy_rounded : Icons.calendar_today_rounded,
+                  isOverdue ? AppIcons.event_busy_rounded : AppIcons.calendar_today_rounded,
                   color: isOverdue ? Colors.red : theme.colorScheme.primary,
                   size: 22.sp,
                 ),
@@ -360,7 +361,7 @@ class TaskDetailScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.access_time_rounded,
+                      AppIcons.access_time_rounded,
                       size: 16.sp,
                       color: theme.colorScheme.secondary,
                     ),
@@ -382,7 +383,7 @@ class TaskDetailScreen extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {},
-              icon: Icon(Icons.push_pin_outlined, size: 16.sp),
+              icon: Icon(AppIcons.push_pin_outlined, size: 16.sp),
               label: const Text("Pin to Calendar"),
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -411,7 +412,7 @@ class TaskDetailScreen extends StatelessWidget {
         Row(
           children: [
             Icon(
-              Icons.description_outlined,
+              AppIcons.description_outlined,
               size: 20.sp,
               color: theme.colorScheme.primary,
             ),
@@ -439,7 +440,7 @@ class TaskDetailScreen extends StatelessWidget {
               : Row(
                   children: [
                     Icon(
-                      Icons.notes_rounded,
+                      AppIcons.notes_rounded,
                       color: theme.colorScheme.secondary.withOpacity(0.5),
                       size: 20.sp,
                     ),
@@ -473,7 +474,7 @@ class TaskDetailScreen extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.checklist_rounded,
+                  AppIcons.checklist_rounded,
                   size: 20.sp,
                   color: theme.colorScheme.primary,
                 ),
@@ -567,7 +568,7 @@ class TaskDetailScreen extends StatelessWidget {
                           ),
                           child: subtask.isDone
                               ? Icon(
-                                  Icons.check,
+                                  AppIcons.check,
                                   size: 14.sp,
                                   color: Colors.white,
                                 )
@@ -652,7 +653,7 @@ class TaskDetailScreen extends StatelessWidget {
                             ),
                           ),
                           child: Icon(
-                            Icons.add,
+                            AppIcons.add,
                             size: 14.sp,
                             color: theme.colorScheme.primary,
                           ),
@@ -714,7 +715,7 @@ class RelatedNoteWIdget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Icon(
-                  Icons.description,
+                  AppIcons.description,
                   color: Colors.blueAccent,
                   size: 18.sp,
                 ),
@@ -782,7 +783,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
               Navigator.pop(context);
             },
             icon: Icon(
-              isCompleted ? Icons.refresh_rounded : Icons.check_circle_outline_rounded,
+              isCompleted ? AppIcons.refresh_rounded : AppIcons.check_circle_outline_rounded,
               size: 22.sp,
             ),
             label: Text(
@@ -816,7 +817,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
             onPressed: () {
               // TODO: Implement edit functionality
             },
-            icon: Icon(Icons.edit_outlined, size: 20.sp),
+            icon: Icon(AppIcons.edit_outlined, size: 20.sp),
             label: Text(
               "Edit Task",
               style: TextStyle(
@@ -846,7 +847,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
             onPressed: () {
               _showDeleteConfirmation(context);
             },
-            icon: Icon(Icons.delete_outline_rounded, size: 20.sp),
+            icon: Icon(AppIcons.delete_outline_rounded, size: 20.sp),
             label: Text(
               "Delete Task",
               style: TextStyle(
@@ -881,7 +882,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
         title: Row(
           children: [
             Icon(
-              Icons.warning_amber_rounded,
+              AppIcons.warning_amber_rounded,
               color: Colors.red.shade400,
               size: 28.sp,
             ),

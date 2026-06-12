@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 enum VoclioDialogType { info, success, error, warning, confirm }
 
@@ -141,16 +142,16 @@ class VoclioDialog extends StatelessWidget {
   IconData get _icon {
     switch (type) {
       case VoclioDialogType.success:
-        return Icons.check_circle_rounded;
+        return AppIcons.check_circle_rounded;
       case VoclioDialogType.error:
-        return Icons.error_rounded;
+        return AppIcons.error_rounded;
       case VoclioDialogType.warning:
-        return Icons.warning_rounded;
+        return AppIcons.warning_rounded;
       case VoclioDialogType.confirm:
-        return Icons.help_rounded;
+        return AppIcons.help_rounded;
       case VoclioDialogType.info:
       default:
-        return Icons.info_rounded;
+        return AppIcons.info_rounded;
     }
   }
 

@@ -48,9 +48,15 @@ class VoiceRepositoryImpl implements VoiceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createNoteFromVoice(String id) async {
+  Future<Either<Failure, void>> createNoteFromVoice(
+    String id, {
+    String? transcription,
+  }) async {
     try {
-      await remoteDataSource.createNoteFromVoice(id);
+      await remoteDataSource.createNoteFromVoice(
+        id,
+        transcription: transcription,
+      );
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
@@ -60,9 +66,15 @@ class VoiceRepositoryImpl implements VoiceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createTasksFromVoice(String id) async {
+  Future<Either<Failure, void>> createTasksFromVoice(
+    String id, {
+    String? transcription,
+  }) async {
     try {
-      await remoteDataSource.createTasksFromVoice(id);
+      await remoteDataSource.createTasksFromVoice(
+        id,
+        transcription: transcription,
+      );
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

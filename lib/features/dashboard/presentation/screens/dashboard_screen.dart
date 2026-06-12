@@ -7,6 +7,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../domain/entities/dashboard_stats_entity.dart';
 import '../bloc/dashboard_cubit.dart';
 import '../bloc/dashboard_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,11 +28,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return HomeSecondaryScaffold(
       title: 'Dashboard',
       subtitle: 'Your productivity at a glance',
-      icon: Icons.insights_rounded,
+      icon: AppIcons.insights_rounded,
       accent: HomeSystemTokens.purple,
       actions: [
         HomeIconButton(
-          icon: Icons.refresh_rounded,
+          icon: AppIcons.refresh_rounded,
           color: HomeSystemTokens.inkSoft,
           onTap: () => context.read<DashboardCubit>().refresh(),
         ),
@@ -44,7 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           if (state is DashboardError) {
             return HomeEmptyState(
-              icon: Icons.cloud_off_rounded,
+              icon: AppIcons.cloud_off_rounded,
               title: 'Could not load dashboard',
               message: state.message,
               actionLabel: 'Try again',
@@ -82,45 +83,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             _buildHeroCard(overview, progress),
             SizedBox(height: 16.h),
-            SizedBox(
-              height: 96.h,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  HomeStatTile(
-                    icon: Icons.task_alt_rounded,
+            Row(
+              children: [
+                Expanded(
+                  child: HomeStatTile(
+                    icon: AppIcons.task_alt_rounded,
                     color: HomeSystemTokens.purple,
                     label: 'Tasks',
                     value: '${overview.completedTasks}/${overview.totalTasks}',
                     subtitle: 'Completed',
                   ),
-                  SizedBox(width: 10.w),
-                  HomeStatTile(
-                    icon: Icons.notes_rounded,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: HomeStatTile(
+                    icon: AppIcons.notes_rounded,
                     color: HomeSystemTokens.blue,
                     label: 'Notes',
                     value: '${overview.totalNotes}',
                     subtitle: 'Saved',
                   ),
-                  SizedBox(width: 10.w),
-                  HomeStatTile(
-                    icon: Icons.local_fire_department_rounded,
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: HomeStatTile(
+                    icon: AppIcons.local_fire_department_rounded,
                     color: HomeSystemTokens.orange,
                     label: 'Streak',
                     value: '${productivity.currentStreak}',
                     subtitle: 'Days',
                   ),
-                  SizedBox(width: 10.w),
-                  HomeStatTile(
-                    icon: Icons.timer_outlined,
-                    color: HomeSystemTokens.green,
-                    label: 'Focus',
-                    value: '${productivity.todayFocusMinutes}m',
-                    subtitle: 'Today',
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
             SizedBox(height: 20.h),
             HomeSectionTitle(title: 'Activity'),
@@ -141,7 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (stats.upcomingTasks.isEmpty && stats.recentNotes.isEmpty) ...[
               SizedBox(height: 24.h),
               HomeEmptyState(
-                icon: Icons.rocket_launch_outlined,
+                icon: AppIcons.rocket_launch_outlined,
                 title: 'You are all caught up',
                 message:
                     'Create tasks or notes to see your activity summary here.',
@@ -305,25 +299,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ) {
     final items = [
       _ActivityItem(
-        icon: Icons.mic_rounded,
+        icon: AppIcons.mic_rounded,
         label: 'Voice notes',
         value: '${overview.totalRecordings}',
         color: HomeSystemTokens.blue,
       ),
       _ActivityItem(
-        icon: Icons.emoji_events_outlined,
+        icon: AppIcons.emoji_events_outlined,
         label: 'Achievements',
         value: '${overview.totalAchievements}',
         color: HomeSystemTokens.orange,
       ),
       _ActivityItem(
-        icon: Icons.bolt_rounded,
+        icon: AppIcons.bolt_rounded,
         label: 'Best streak',
         value: '${productivity.longestStreak}d',
         color: HomeSystemTokens.purple,
       ),
       _ActivityItem(
-        icon: Icons.check_circle_outline_rounded,
+        icon: AppIcons.check_circle_outline_rounded,
         label: 'Completion',
         value: '${overview.overallProgress.toStringAsFixed(0)}%',
         color: HomeSystemTokens.green,
@@ -420,7 +414,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   child: isDone
-                      ? Icon(Icons.check, size: 14.sp, color: Colors.white)
+                      ? Icon(AppIcons.check, size: 14.sp, color: Colors.white)
                       : null,
                 ),
                 SizedBox(width: 12.w),
@@ -447,7 +441,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           children: [
                             Icon(
-                              Icons.schedule_rounded,
+                              AppIcons.schedule_rounded,
                               size: 13.sp,
                               color: isUrgent
                                   ? HomeSystemTokens.coral
@@ -516,7 +510,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Icon(
-                    Icons.article_outlined,
+                    AppIcons.article_outlined,
                     color: HomeSystemTokens.blue,
                     size: 20.sp,
                   ),

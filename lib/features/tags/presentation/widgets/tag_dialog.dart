@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/tag_entity.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TagDialog extends StatefulWidget {
   final TagEntity? tag;
@@ -102,7 +103,7 @@ class _TagDialogState extends State<TagDialog> {
                         ),
                         child:
                             isSelected
-                                ? const Icon(Icons.check, color: Colors.white)
+                                ? Icon(AppIcons.check, color: Colors.white)
                                 : null,
                       ),
                     );

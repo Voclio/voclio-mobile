@@ -7,6 +7,7 @@ import '../../domain/entities/productivity_entities.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/productivity_cubit.dart';
 import '../bloc/productivity_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AchievementsScreen extends StatelessWidget {
   const AchievementsScreen({super.key});
@@ -18,7 +19,7 @@ class AchievementsScreen extends StatelessWidget {
       child: HomeSecondaryScaffold(
         title: 'Achievements',
         subtitle: 'Track your milestones',
-        icon: Icons.emoji_events_rounded,
+        icon: AppIcons.emoji_events_rounded,
         accent: HomeSystemTokens.orange,
         body: BlocBuilder<ProductivityCubit, ProductivityState>(
           builder: (context, state) {
@@ -52,7 +53,7 @@ class AchievementsScreen extends StatelessWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: 12.w,
                         mainAxisSpacing: 12.h,
-                        childAspectRatio: 0.82,
+                        childAspectRatio: 0.74,
                       ),
                       itemCount: allAchievements.length,
                       itemBuilder: (context, index) {
@@ -66,7 +67,7 @@ class AchievementsScreen extends StatelessWidget {
 
             if (state is ProductivityError) {
               return HomeEmptyState(
-                icon: Icons.error_outline_rounded,
+                icon: AppIcons.error_outline_rounded,
                 title: 'Something went wrong',
                 message: state.message,
                 actionLabel: 'Retry',
@@ -189,7 +190,7 @@ class AchievementsScreen extends StatelessWidget {
                         ),
                         SizedBox(width: 8.w),
                         Icon(
-                          Icons.local_fire_department_rounded,
+                          AppIcons.local_fire_department_rounded,
                           color: HomeSystemTokens.orange,
                           size: 32.sp,
                         ),
@@ -254,14 +255,15 @@ class AchievementsScreen extends StatelessWidget {
     final isUnlocked = achievement.isUnlocked;
 
     return HomeSectionCard(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       child: Stack(
         children: [
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: EdgeInsets.all(12.r),
+                padding: EdgeInsets.all(10.r),
                 decoration: BoxDecoration(
                   color: isUnlocked
                       ? HomeSystemTokens.orange.withValues(alpha: 0.1)
@@ -283,13 +285,13 @@ class AchievementsScreen extends StatelessWidget {
                   child: Text(
                     achievement.icon,
                     style: TextStyle(
-                      fontSize: 36.sp,
+                      fontSize: 32.sp,
                       color: isUnlocked ? null : HomeSystemTokens.inkMuted,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 12.h),
+              SizedBox(height: 8.h),
               Text(
                 achievement.title,
                 textAlign: TextAlign.center,
@@ -316,7 +318,7 @@ class AchievementsScreen extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (isUnlocked) ...[
-                SizedBox(height: 10.h),
+                SizedBox(height: 6.h),
                 Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
@@ -328,7 +330,7 @@ class AchievementsScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.stars_rounded,
+                        AppIcons.stars_rounded,
                         color: HomeSystemTokens.orange,
                         size: 12.sp,
                       ),
@@ -359,7 +361,7 @@ class AchievementsScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.lock_outline_rounded,
+                  AppIcons.lock_outline_rounded,
                   size: 14.sp,
                   color: HomeSystemTokens.inkMuted,
                 ),

@@ -20,6 +20,7 @@ import '../widgets/auth_loading_widget.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
 import '../../domain/entities/otp_request.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -209,8 +210,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                                  ? AppIcons.visibility_off
+                                  : AppIcons.visibility,
                               color: context.colors.primary,
                             ),
                             onPressed: () {

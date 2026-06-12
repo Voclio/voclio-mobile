@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:voclio_app/features/notes/domain/usecases/ai_usecases.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AiActionsDialog extends StatefulWidget {
   final String noteId;
@@ -75,7 +76,7 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
           children: [
             Row(
               children: [
-                Icon(Icons.auto_awesome, color: Colors.purple, size: 24.sp),
+                Icon(AppIcons.auto_awesome, color: Colors.purple, size: 24.sp),
                 SizedBox(width: 8.w),
                 Text(
                   'AI Actions',
@@ -86,7 +87,7 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: Icon(AppIcons.close),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -94,14 +95,14 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
             SizedBox(height: 20.h),
             if (_result == null && _error == null) ...[
               _buildActionButton(
-                icon: Icons.summarize,
+                icon: AppIcons.summarize,
                 title: 'Summarize Note',
                 description: 'Get a concise summary of your note',
                 onTap: () => _performAction('summarize'),
               ),
               SizedBox(height: 12.h),
               _buildActionButton(
-                icon: Icons.task_alt,
+                icon: AppIcons.task_alt,
                 title: 'Extract Tasks',
                 description: 'Find actionable items and create tasks',
                 onTap: () => _performAction('extract'),
@@ -228,7 +229,7 @@ class _AiActionsDialogState extends State<AiActionsDialog> {
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey),
+              Icon(AppIcons.chevron_right, color: Colors.grey),
             ],
           ),
         ),

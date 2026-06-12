@@ -8,6 +8,7 @@ import 'package:voclio_app/core/enums/enums.dart';
 import '../../domain/entities/task_entity.dart';
 import '../bloc/tasks_cubit.dart';
 import '../bloc/tasks_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AddTaskBottomSheet extends StatefulWidget {
   const AddTaskBottomSheet({super.key});
@@ -105,66 +106,69 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // We calculate the bottom inset manually to pad the content
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final bottomSafe = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
-      // Constrain height to 85% of screen or less if keyboard is open
-      height: 0.85.sh,
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      child: Column(
-        children: [
-          // --- HEADER ---
-          SizedBox(height: 12.h),
-          Container(
-            width: 40.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2.r),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "New Task",
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.92),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        child: SingleChildScrollView(
+          physics:
+              bottomInset > 0
+                  ? const ClampingScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 12.h),
+              Center(
+                child: Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2.r),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.close, color: theme.colorScheme.onSurface),
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          Divider(
-            height: 1,
-            color: theme.colorScheme.onSurface.withOpacity(0.1),
-          ),
-
-          // --- SCROLLABLE FORM ---
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(
-                20.r,
-                20.r,
-                20.r,
-                20.r + bottomInset,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "New Task",
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        AppIcons.close,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.onSurface.withOpacity(0.1),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   // Title
                   Text(
                     "Title",
@@ -221,7 +225,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.calendar_today,
+                            AppIcons.calendar_today,
                             color: theme.colorScheme.primary,
                           ),
                           SizedBox(width: 12.w),
@@ -377,7 +381,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                   SizedBox(height: 8.h),
                   TextField(
                     controller: _descController,
-                    maxLines: 4,
+                    maxLines: 3,
                     style: theme.textTheme.bodyLarge,
                     decoration: InputDecoration(
                       hintText: "Add details...",
@@ -396,46 +400,47 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                     ),
                   ),
 
-                  // CREATE BUTTON (Inside ScrollView to move with keyboard)
-                  SizedBox(height: 40.h),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50.h,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _createTask,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        elevation: 0,
-                      ),
-                      child:
-                          _isLoading
-                              ? SizedBox(
-                                width: 20.w,
-                                height: 20.h,
-                                child: const CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : Text(
-                                "Create Task",
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                ],
+                  ],
+                ),
               ),
-            ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 20.h + bottomSafe),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50.h,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _createTask,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child:
+                        _isLoading
+                            ? SizedBox(
+                              width: 20.w,
+                              height: 20.h,
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : Text(
+                              "Create Task",
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

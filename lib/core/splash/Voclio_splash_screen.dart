@@ -107,7 +107,7 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
     await Future.delayed(const Duration(milliseconds: 500));
     if (mounted) _progressController.forward();
 
-    await Future.delayed(const Duration(milliseconds: 3500));
+    await Future.delayed(const Duration(milliseconds: 1400));
     if (mounted) _navigateToNextScreen();
   }
 

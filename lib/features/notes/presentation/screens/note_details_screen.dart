@@ -12,6 +12,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../widgets/ai_actions_dialog.dart';
 import '../widgets/tag_selection_sheet.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final NoteEntity? note; // Null implies "Create New Note"
@@ -136,7 +137,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           leading: Padding(
             padding: EdgeInsets.only(left: 8.w),
             child: HomeIconButton(
-              icon: Icons.arrow_back_ios_new_rounded,
+              icon: AppIcons.arrow_back_ios_new_rounded,
               color: HomeSystemTokens.inkSoft,
               onTap: () => Navigator.pop(context),
             ),
@@ -154,7 +155,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.edit, size: 14.sp, color: HomeSystemTokens.orange),
+                    Icon(AppIcons.edit, size: 14.sp, color: HomeSystemTokens.orange),
                     SizedBox(width: 4.w),
                     Text(
                       'Unsaved',
@@ -173,7 +174,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               Padding(
                 padding: EdgeInsets.only(right: 4.w),
                 child: HomeIconButton(
-                  icon: Icons.auto_awesome,
+                  icon: AppIcons.auto_awesome,
                   color: HomeSystemTokens.purple,
                   onTap: () {
                     showDialog(
@@ -189,7 +190,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             Padding(
               padding: EdgeInsets.only(right: 4.w),
               child: HomeIconButton(
-                icon: Icons.share_outlined,
+                icon: AppIcons.share_outlined,
                 color: HomeSystemTokens.inkSoft,
                 onTap: () {},
               ),
@@ -198,7 +199,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               Padding(
                 padding: EdgeInsets.only(right: 12.w),
                 child: HomeIconButton(
-                  icon: Icons.delete_outline,
+                  icon: AppIcons.delete_outline,
                   color: HomeSystemTokens.coral,
                   onTap: () => _showDeleteConfirmation(context),
                 ),
@@ -234,7 +235,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.add_circle_outline,
+                          AppIcons.add_circle_outline,
                           size: 18.sp,
                           color: theme.colorScheme.primary,
                         ),
@@ -285,7 +286,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       prefixIcon: Padding(
                         padding: EdgeInsets.only(right: 12.w),
                         child: Icon(
-                          Icons.title,
+                          AppIcons.title,
                           color: theme.colorScheme.primary.withOpacity(0.5),
                           size: 22.sp,
                         ),
@@ -323,7 +324,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Icon(
-                                Icons.access_time,
+                                AppIcons.access_time,
                                 size: 16.sp,
                                 color: theme.colorScheme.primary,
                               ),
@@ -371,7 +372,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                           Row(
                             children: [
                               Icon(
-                                Icons.text_fields,
+                                AppIcons.text_fields,
                                 size: 14.sp,
                                 color: theme.colorScheme.secondary,
                               ),
@@ -409,7 +410,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 Row(
                   children: [
                     Icon(
-                      Icons.local_offer_outlined,
+                      AppIcons.local_offer_outlined,
                       size: 18.sp,
                       color: theme.colorScheme.primary,
                     ),
@@ -496,7 +497,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  _selectedTags.isEmpty ? Icons.add : Icons.edit,
+                                  _selectedTags.isEmpty ? AppIcons.add : AppIcons.edit,
                                   size: 14.sp,
                                   color: theme.colorScheme.primary,
                                 ),
@@ -526,7 +527,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 Row(
                   children: [
                     Icon(
-                      Icons.article_outlined,
+                      AppIcons.article_outlined,
                       size: 18.sp,
                       color: theme.colorScheme.primary,
                     ),
@@ -605,7 +606,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.tag,
+            AppIcons.tag,
             size: 12.sp,
             color: theme.colorScheme.primary,
           ),

@@ -7,7 +7,13 @@ class CreateNoteFromVoiceUseCase {
 
   CreateNoteFromVoiceUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(String id) async {
-    return await repository.createNoteFromVoice(id);
+  Future<Either<Failure, void>> call(
+    String id, {
+    String? transcription,
+  }) async {
+    return await repository.createNoteFromVoice(
+      id,
+      transcription: transcription,
+    );
   }
 }

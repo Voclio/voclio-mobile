@@ -19,6 +19,7 @@ import 'package:voclio_app/features/calendar/domain/entities/calendar_month_enti
 import '../../domain/entities/widget_preference.dart';
 import '../bloc/widget_config_cubit.dart';
 import '../bloc/widget_config_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 DayEventsEntity? _eventsForDate(DateTime date, CalendarMonthEntity? monthData) {
   if (monthData == null) return null;
@@ -77,7 +78,7 @@ class HomeWidgetsContainer extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            Icons.widgets_outlined,
+            AppIcons.widgets_outlined,
             size: 40.sp,
             color: HomeSystemTokens.inkMuted,
           ),
@@ -211,7 +212,7 @@ class TodayTasksWidget extends StatelessWidget {
 
           return _BaseWidgetCard(
             title: "Today's Tasks",
-            icon: Icons.today_rounded,
+            icon: AppIcons.today_rounded,
             onViewAll: onViewAll,
             accent: HomeSystemTokens.purple,
             child: todayTasks.isEmpty
@@ -249,7 +250,7 @@ class UpcomingTasksWidget extends StatelessWidget {
 
         return _BaseWidgetCard(
           title: 'Upcoming Tasks',
-          icon: Icons.upcoming_rounded,
+          icon: AppIcons.upcoming_rounded,
           onViewAll: onViewAll,
           accent: HomeSystemTokens.orange,
           child: state is DashboardLoading
@@ -285,7 +286,7 @@ class RecentNotesWidget extends StatelessWidget {
 
         return _BaseWidgetCard(
           title: 'Recent Notes',
-          icon: Icons.note_alt_rounded,
+          icon: AppIcons.note_alt_rounded,
           onViewAll: onViewAll,
           accent: HomeSystemTokens.blue,
           child: state is DashboardLoading
@@ -320,7 +321,7 @@ class RemindersWidget extends StatelessWidget {
 
         return _BaseWidgetCard(
           title: 'Reminders',
-          icon: Icons.notifications_active_rounded,
+          icon: AppIcons.notifications_active_rounded,
           onViewAll: onViewAll,
           accent: HomeSystemTokens.orange,
           child: state is DashboardLoading
@@ -351,7 +352,7 @@ class ProductivityWidget extends StatelessWidget {
         if (state is DashboardLoading) {
           return _BaseWidgetCard(
             title: 'Productivity',
-            icon: Icons.insights_rounded,
+            icon: AppIcons.insights_rounded,
             accent: HomeSystemTokens.green,
             child: _loadingBody(),
           );
@@ -366,7 +367,7 @@ class ProductivityWidget extends StatelessWidget {
 
         return _BaseWidgetCard(
           title: 'Productivity',
-          icon: Icons.insights_rounded,
+          icon: AppIcons.insights_rounded,
           accent: HomeSystemTokens.green,
           child: Padding(
             padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
@@ -376,7 +377,7 @@ class ProductivityWidget extends StatelessWidget {
                   child: _StatCard(
                     label: 'Completed',
                     value: '${overview?.completedTasks ?? 0}',
-                    icon: Icons.check_circle_rounded,
+                    icon: AppIcons.check_circle_rounded,
                     color: HomeSystemTokens.green,
                   ),
                 ),
@@ -385,7 +386,7 @@ class ProductivityWidget extends StatelessWidget {
                   child: _StatCard(
                     label: 'Pending',
                     value: '${overview?.pendingTasks ?? 0}',
-                    icon: Icons.pending_rounded,
+                    icon: AppIcons.pending_rounded,
                     color: HomeSystemTokens.orange,
                   ),
                 ),
@@ -394,7 +395,7 @@ class ProductivityWidget extends StatelessWidget {
                   child: _StatCard(
                     label: 'Focus',
                     value: '${productivity?.todayFocusMinutes ?? 0}m',
-                    icon: Icons.timer_outlined,
+                    icon: AppIcons.timer_outlined,
                     color: HomeSystemTokens.purple,
                   ),
                 ),
@@ -420,25 +421,36 @@ class QuickActionsWidget extends StatelessWidget {
             ? state.stats.quickActions
             : <dashboard.QuickActionEntity>[];
 
+        final visibleActions = actions
+            .where((action) => action.id != 'record_voice')
+            .take(3)
+            .toList();
+        final displayActions = visibleActions.isNotEmpty
+            ? visibleActions
+            : actions.take(3).toList();
+
         return _BaseWidgetCard(
           title: 'Quick Actions',
-          icon: Icons.flash_on_rounded,
+          icon: AppIcons.flash_on_rounded,
           accent: HomeSystemTokens.purple,
           child: Padding(
             padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 16.h),
-            child: actions.isEmpty
+            child: displayActions.isEmpty
                 ? _emptyRow('No quick actions available')
                 : Row(
-                    children: actions.take(4).map((action) {
-                      return Expanded(
-                        child: _QuickActionButton(
-                          icon: _iconFromApi(action.icon),
-                          label: action.label,
-                          color: HomeSystemTokens.purple,
-                          onTap: () => _handleAction(action.id),
+                    children: [
+                      for (var i = 0; i < displayActions.length; i++) ...[
+                        if (i > 0) SizedBox(width: 10.w),
+                        Expanded(
+                          child: _QuickActionButton(
+                            icon: _iconFromApi(displayActions[i].icon),
+                            label: _quickActionLabel(displayActions[i]),
+                            color: HomeSystemTokens.purple,
+                            onTap: () => _handleAction(displayActions[i].id),
+                          ),
                         ),
-                      );
-                    }).toList(),
+                      ],
+                    ],
                   ),
           ),
         );
@@ -456,6 +468,21 @@ class QuickActionsWidget extends StatelessWidget {
         onTabChange?.call(3);
       case 'record_voice':
         break;
+    }
+  }
+
+  String _quickActionLabel(dashboard.QuickActionEntity action) {
+    switch (action.id) {
+      case 'create_task':
+        return 'New Task';
+      case 'view_calendar':
+        return 'Calendar';
+      case 'create_note':
+        return 'New Note';
+      case 'record_voice':
+        return 'Voice';
+      default:
+        return action.label;
     }
   }
 }
@@ -476,7 +503,7 @@ class CalendarWidget extends StatelessWidget {
 
         return _BaseWidgetCard(
           title: 'Calendar',
-          icon: Icons.calendar_month_rounded,
+          icon: AppIcons.calendar_month_rounded,
           onViewAll: onViewAll,
           accent: HomeSystemTokens.purple,
           child: Column(
@@ -711,7 +738,7 @@ class _NoteItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.description_outlined,
+          Icon(AppIcons.description_outlined,
               color: HomeSystemTokens.blue, size: 18.sp),
           SizedBox(width: 10.w),
           Expanded(
@@ -760,7 +787,7 @@ class _ReminderItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.alarm_rounded,
+          Icon(AppIcons.alarm_rounded,
               color: HomeSystemTokens.orange, size: 18.sp),
           SizedBox(width: 10.w),
           Expanded(
@@ -805,7 +832,7 @@ class _CalendarEventRow extends StatelessWidget {
       padding: EdgeInsets.only(bottom: 8.h),
       child: Row(
         children: [
-          Icon(Icons.event_rounded,
+          Icon(AppIcons.event_rounded,
               size: 16.sp, color: HomeSystemTokens.purple),
           SizedBox(width: 8.w),
           Expanded(
@@ -885,34 +912,38 @@ class _QuickActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 10.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                child: Icon(icon, color: color, size: 22.sp),
               ),
-              child: Icon(icon, color: color, size: 20.sp),
-            ),
-            SizedBox(height: 6.h),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w500,
-                color: HomeSystemTokens.inkSoft,
+              SizedBox(height: 8.h),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                  color: HomeSystemTokens.inkSoft,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -930,15 +961,15 @@ Color _priorityColor(String priority) {
 IconData _iconFromApi(String icon) {
   switch (icon) {
     case 'microphone':
-      return Icons.mic_rounded;
+      return AppIcons.mic_rounded;
     case 'check-circle':
-      return Icons.add_task_rounded;
+      return AppIcons.add_task_rounded;
     case 'calendar':
-      return Icons.calendar_today_rounded;
+      return AppIcons.calendar_today_rounded;
     case 'file-text':
-      return Icons.note_add_rounded;
+      return AppIcons.note_add_rounded;
     default:
-      return Icons.flash_on_rounded;
+      return AppIcons.flash_on_rounded;
   }
 }
 

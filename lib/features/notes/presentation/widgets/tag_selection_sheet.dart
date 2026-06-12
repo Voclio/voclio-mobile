@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/features/tags/domain/entities/tag_entity.dart';
 import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
 import 'package:voclio_app/features/tags/presentation/bloc/tags_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class TagSelectionSheet extends StatefulWidget {
   final List<String> selectedTags;
@@ -93,7 +94,7 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
                 style: theme.textTheme.headlineSmall?.copyWith(fontSize: 18.sp),
               ),
               IconButton(
-                icon: const Icon(Icons.close),
+                icon: Icon(AppIcons.close),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -123,11 +124,11 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
                 ),
                 SizedBox(width: 8.w),
                 IconButton(
-                  icon: const Icon(Icons.check_circle, color: Colors.green),
+                  icon: Icon(AppIcons.check_circle, color: Colors.green),
                   onPressed: _createTag,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.cancel, color: Colors.red),
+                  icon: Icon(AppIcons.cancel, color: Colors.red),
                   onPressed: () => setState(() => _isCreating = false),
                 ),
               ],
@@ -148,7 +149,7 @@ class _TagSelectionSheetState extends State<TagSelectionSheet> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.add,
+                      AppIcons.add,
                       color: theme.colorScheme.primary,
                       size: 20.sp,
                     ),

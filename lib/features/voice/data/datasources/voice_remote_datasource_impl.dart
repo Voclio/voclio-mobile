@@ -5,6 +5,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
 import 'package:voclio_app/core/api/api_response.dart';
+import 'package:voclio_app/core/app/language_controller.dart';
 import 'voice_remote_datasource.dart';
 import '../models/voice_recording_model.dart';
 
@@ -25,13 +26,13 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     try {
       return await _uploadViaProcessComplete(file);
     } on ServerException catch (e) {
-      if (e.statusCode == 503) {
+      if (_shouldFallbackUpload(e.statusCode)) {
         return _uploadSimple(file);
       }
       debugPrint('PROCESS-COMPLETE ERROR: ${e.message}');
       rethrow;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 503) {
+      if (_shouldFallbackUpload(e.response?.statusCode)) {
         return _uploadSimple(file);
       }
       debugPrint('PROCESS-COMPLETE ERROR: ${e.response?.data}');
@@ -39,17 +40,51 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     }
   }
 
+  bool _shouldFallbackUpload(int? statusCode) {
+    return statusCode != null && statusCode >= 500;
+  }
+
+  /// Uses the app's selected language (Settings → Language).
+  String get _transcriptionLanguage =>
+      LanguageController.instance.currentLocale.value.languageCode;
+
+  String _transcriptionFrom(Map<String, dynamic> recording) {
+    final value = recording['transcription_text'] ?? recording['transcription'];
+    return value?.toString().trim() ?? '';
+  }
+
+  MediaType _audioContentTypeFor(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.m4a')) {
+      // AAC in MP4 container — widely accepted by servers and transcoders.
+      return MediaType('audio', 'mp4');
+    }
+    if (lower.endsWith('.wav')) {
+      return MediaType('audio', 'wav');
+    }
+    if (lower.endsWith('.mp3')) {
+      return MediaType('audio', 'mpeg');
+    }
+    if (lower.endsWith('.webm')) {
+      return MediaType('audio', 'webm');
+    }
+    if (lower.endsWith('.ogg')) {
+      return MediaType('audio', 'ogg');
+    }
+    return MediaType('audio', 'mp4');
+  }
+
   Future<FormData> _buildUploadFormData(File file) async {
     final fileName = file.path.split('/').last;
     final audioFile = await MultipartFile.fromFile(
       file.path,
       filename: fileName,
-      contentType: MediaType('audio', 'mp4'),
+      contentType: _audioContentTypeFor(fileName),
     );
 
     return FormData.fromMap({
       'audio_file': audioFile,
-      'language': 'ar',
+      'language': _transcriptionLanguage,
       'auto_create_tasks': 'true',
       'auto_create_notes': 'true',
     });
@@ -71,7 +106,27 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
 
     final data = ApiResponse.unwrapMap(response.data);
     final recordingId = data['recording_id']?.toString();
+    final inlineTranscription = data['transcription']?.toString();
+    final status = data['status']?.toString();
+
     if (recordingId != null && recordingId.isNotEmpty) {
+      if (inlineTranscription != null && inlineTranscription.isNotEmpty) {
+        final recording = await _getRecording(recordingId);
+        recording['transcription_text'] = inlineTranscription;
+        return VoiceRecordingModel.fromJson(recording);
+      }
+
+      if (status == 'processing') {
+        final jobs = data['jobs'];
+        final jobId = jobs is Map ? jobs['transcription']?.toString() : null;
+        if (jobId != null && jobId.isNotEmpty) {
+          final transcription = await _pollTranscriptionJob(jobId, recordingId);
+          final recording = await _getRecording(recordingId);
+          recording['transcription_text'] = transcription;
+          return VoiceRecordingModel.fromJson(recording);
+        }
+      }
+
       final recording = await _getRecording(recordingId);
       return VoiceRecordingModel.fromJson(recording);
     }
@@ -88,12 +143,12 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     final audioFile = await MultipartFile.fromFile(
       file.path,
       filename: fileName,
-      contentType: MediaType('audio', 'mp4'),
+      contentType: _audioContentTypeFor(fileName),
     );
 
     final formData = FormData.fromMap({
       'audio_file': audioFile,
-      'language': 'ar',
+      'language': _transcriptionLanguage,
     });
 
     final response = await apiClient.uploadFile(
@@ -126,10 +181,15 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
   }
 
   @override
-  Future<void> createNoteFromVoice(String id) async {
-    final recording = await _getRecording(id);
-    final transcription = recording['transcription_text']?.toString() ?? '';
-    if (transcription.isEmpty) {
+  Future<void> createNoteFromVoice(
+    String id, {
+    String? transcription,
+  }) async {
+    final text = transcription?.trim() ?? '';
+    final resolved = text.isNotEmpty
+        ? text
+        : _transcriptionFrom(await _getRecording(id));
+    if (resolved.isEmpty) {
       throw Exception('Recording is not transcribed yet');
     }
 
@@ -137,17 +197,22 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
       ApiEndpoints.notes,
       data: {
         'title': 'Voice Note',
-        'content': transcription,
+        'content': resolved,
         'voice_recording_id': int.tryParse(id) ?? id,
       },
     );
   }
 
   @override
-  Future<void> createTasksFromVoice(String id) async {
-    final recording = await _getRecording(id);
-    final transcription = recording['transcription_text']?.toString() ?? '';
-    if (transcription.isEmpty) {
+  Future<void> createTasksFromVoice(
+    String id, {
+    String? transcription,
+  }) async {
+    final text = transcription?.trim() ?? '';
+    final resolved = text.isNotEmpty
+        ? text
+        : _transcriptionFrom(await _getRecording(id));
+    if (resolved.isEmpty) {
       throw Exception('Recording is not transcribed yet');
     }
 
@@ -155,7 +220,7 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
       ApiEndpoints.notes,
       data: {
         'title': 'Voice Tasks',
-        'content': transcription,
+        'content': resolved,
         'voice_recording_id': int.tryParse(id) ?? id,
       },
     );
@@ -164,16 +229,32 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
     final note = noteData['note'] ?? noteData;
     final noteId = (note['note_id'] ?? note['id']).toString();
 
-    await apiClient.post(
+    final response = await apiClient.post(
       ApiEndpoints.extractTasksFromNote(noteId),
-      data: {'auto_create': true},
+      data: {
+        'auto_create': true,
+        'default_due_if_missing': true,
+        'discard_staging_note': true,
+        'voice_recording_id': int.tryParse(id) ?? id,
+      },
     );
+
+    final data = ApiResponse.unwrapMap(response.data);
+    final tasks = data['tasks'];
+    final count = data['count'] is int
+        ? data['count'] as int
+        : (tasks is List ? tasks.length : 0);
+    if (count == 0) {
+      throw Exception(
+        'Could not create a task from this recording. Try being more specific.',
+      );
+    }
   }
 
   @override
   Future<String> transcribe(String id) async {
     final recording = await _getRecording(id);
-    final existing = recording['transcription_text']?.toString() ?? '';
+    final existing = _transcriptionFrom(recording);
     if (existing.isNotEmpty) {
       return existing;
     }
@@ -182,7 +263,7 @@ class VoiceRemoteDataSourceImpl implements VoiceRemoteDataSource {
       ApiEndpoints.transcribe,
       data: {
         'recording_id': int.tryParse(id) ?? id,
-        'language': 'ar',
+        'language': _transcriptionLanguage,
       },
     );
 

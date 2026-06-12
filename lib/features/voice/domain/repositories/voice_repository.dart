@@ -7,8 +7,14 @@ abstract class VoiceRepository {
   Future<Either<Failure, List<VoiceRecording>>> getVoiceRecordings();
   Future<Either<Failure, VoiceRecording>> uploadVoice(File file);
   Future<Either<Failure, void>> deleteVoice(String id);
-  Future<Either<Failure, void>> createNoteFromVoice(String id);
-  Future<Either<Failure, void>> createTasksFromVoice(String id);
+  Future<Either<Failure, void>> createNoteFromVoice(
+    String id, {
+    String? transcription,
+  });
+  Future<Either<Failure, void>> createTasksFromVoice(
+    String id, {
+    String? transcription,
+  });
   Future<Either<Failure, String>> transcribe(String id);
   Future<Either<Failure, void>> updateTranscription({
     required String recordingId,

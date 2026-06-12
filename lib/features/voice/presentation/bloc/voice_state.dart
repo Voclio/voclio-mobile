@@ -51,13 +51,19 @@ class VoiceTranscriptionUpdated extends VoiceState {
   List<Object?> get props => [recordingId, message];
 }
 
+enum VoiceSuccessDestination { tasks, notes, calendar }
+
 class VoiceOperationSuccess extends VoiceState {
   final String message;
+  final VoiceSuccessDestination? destination;
 
-  const VoiceOperationSuccess(this.message);
+  const VoiceOperationSuccess(
+    this.message, {
+    this.destination,
+  });
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, destination];
 }
 
 class VoiceError extends VoiceState {

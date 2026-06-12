@@ -9,6 +9,7 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/productivity_cubit.dart';
 import '../bloc/productivity_state.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class FocusTimerScreen extends StatelessWidget {
   const FocusTimerScreen({super.key});
@@ -42,15 +43,15 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
   late Animation<double> _pulseAnimation;
 
   final List<Map<String, dynamic>> ambientSounds = [
-    {'value': null, 'label': 'None', 'icon': Icons.volume_off},
-    {'value': 'rain', 'label': 'Rain', 'icon': Icons.water_drop},
-    {'value': 'ocean', 'label': 'Ocean', 'icon': Icons.waves},
-    {'value': 'forest', 'label': 'Forest', 'icon': Icons.forest},
-    {'value': 'cafe', 'label': 'Cafe', 'icon': Icons.coffee},
+    {'value': null, 'label': 'None', 'icon': AppIcons.volume_off},
+    {'value': 'rain', 'label': 'Rain', 'icon': AppIcons.water_drop},
+    {'value': 'ocean', 'label': 'Ocean', 'icon': AppIcons.waves},
+    {'value': 'forest', 'label': 'Forest', 'icon': AppIcons.forest},
+    {'value': 'cafe', 'label': 'Cafe', 'icon': AppIcons.coffee},
     {
       'value': 'fire',
       'label': 'Fireplace',
-      'icon': Icons.local_fire_department,
+      'icon': AppIcons.local_fire_department,
     },
   ];
 
@@ -117,7 +118,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.celebration, size: 64.sp, color: Colors.amber),
+                Icon(AppIcons.celebration, size: 64.sp, color: Colors.amber),
                 SizedBox(height: 16.h),
                 Text(
                   '🎉 Great Job!',
@@ -225,11 +226,11 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                   HomeScreenHeader(
                     title: 'Focus Timer',
                     subtitle: 'Stay in the zone',
-                    icon: Icons.timer_rounded,
+                    icon: AppIcons.timer_rounded,
                     accent: HomeSystemTokens.purple,
                     actions: [
                       HomeIconButton(
-                        icon: Icons.history_rounded,
+                        icon: AppIcons.history_rounded,
                         color: HomeSystemTokens.inkSoft,
                         onTap: () {
                           // TODO: Show focus history
@@ -468,10 +469,10 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
             child: DropdownButton<String?>(
               value: selectedSound,
               isExpanded: true,
-              icon: Icon(Icons.keyboard_arrow_down, color: primaryColor),
+              icon: Icon(AppIcons.keyboard_arrow_down, color: primaryColor),
               hint: Row(
                 children: [
-                  Icon(Icons.volume_off, size: 20.sp, color: Colors.grey[600]),
+                  Icon(AppIcons.volume_off, size: 20.sp, color: Colors.grey[600]),
                   SizedBox(width: 12.w),
                   Text('None', style: TextStyle(fontSize: 16.sp)),
                 ],
@@ -529,7 +530,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28.sp),
+            Icon(AppIcons.play_arrow_rounded, color: Colors.white, size: 28.sp),
             SizedBox(width: 8.w),
             Text(
               'Start Focus Session',
@@ -549,17 +550,17 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
             color: primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(30.r),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 12.w,
-                height: 12.w,
+                width: 10.w,
+                height: 10.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.green,
@@ -571,13 +572,17 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                   ],
                 ),
               ),
-              SizedBox(width: 12.w),
-              Text(
-                'Stay focused! You\'re doing great.',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                  color: primaryColor,
+              SizedBox(width: 10.w),
+              Expanded(
+                child: Text(
+                  'Stay focused! You\'re doing great.',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: primaryColor,
+                  ),
                 ),
               ),
             ],
@@ -588,7 +593,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.music_note, size: 18.sp, color: Colors.grey[600]),
+              Icon(AppIcons.music_note, size: 18.sp, color: Colors.grey[600]),
               SizedBox(width: 8.w),
               Text(
                 'Playing: ${selectedSound!.substring(0, 1).toUpperCase()}${selectedSound!.substring(1)}',
@@ -615,7 +620,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.stop_rounded, color: Colors.red, size: 24.sp),
+            Icon(AppIcons.stop_rounded, color: Colors.red, size: 24.sp),
             SizedBox(width: 8.w),
             Text(
               'Stop',

@@ -12,7 +12,10 @@ class DashboardCubit extends Cubit<DashboardState> {
     required this.getQuickStatsUseCase,
   }) : super(DashboardInitial());
 
-  Future<void> loadDashboardStats() async {
+  Future<void> loadDashboardStats({bool force = false}) async {
+    if (!force && state is DashboardStatsLoaded) return;
+    if (!force && state is DashboardLoading) return;
+
     emit(DashboardLoading());
 
     final result = await getDashboardStatsUseCase();

@@ -17,6 +17,7 @@ import '../../domain/entities/calendar_month_entity.dart';
 import '../../domain/entities/google_calendar_entity.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
 import '../../../../core/widgets/home_system/home_system_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class MonthlyCalendarScreen extends StatelessWidget {
   const MonthlyCalendarScreen({super.key});
@@ -48,9 +49,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
-    // Check Google Calendar status on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CalendarCubit>().checkGoogleCalendarStatus();
+      final cubit = context.read<CalendarCubit>();
+      if (cubit.state is! CalendarLoaded) {
+        final now = DateTime.now();
+        cubit.loadMonth(now.year, now.month);
+      }
     });
   }
 
@@ -237,7 +241,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.event_available,
+                        AppIcons.event_available,
                         color: Colors.green,
                         size: 24.sp,
                       ),
@@ -270,7 +274,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 // Toggle show Google events
                 ListTile(
                   leading: Icon(
-                    _showGoogleEvents ? Icons.visibility : Icons.visibility_off,
+                    _showGoogleEvents ? AppIcons.visibility : AppIcons.visibility_off,
                     color: theme.colorScheme.primary,
                   ),
                   title: Text(
@@ -288,7 +292,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 // Refresh events
                 ListTile(
                   leading: Icon(
-                    Icons.refresh,
+                    AppIcons.refresh,
                     color: theme.colorScheme.primary,
                   ),
                   title: const Text('Refresh Events'),
@@ -302,7 +306,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ),
                 // Disconnect
                 ListTile(
-                  leading: const Icon(Icons.link_off, color: Colors.red),
+                  leading: Icon(AppIcons.link_off, color: Colors.red),
                   title: const Text(
                     'Disconnect Google Calendar',
                     style: TextStyle(color: Colors.red),
@@ -342,7 +346,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.video_call,
+                        AppIcons.video_call,
                         color: Colors.blue,
                         size: 24.sp,
                       ),
@@ -375,7 +379,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 // Refresh meetings
                 ListTile(
                   leading: Icon(
-                    Icons.refresh,
+                    AppIcons.refresh,
                     color: theme.colorScheme.primary,
                   ),
                   title: const Text('Refresh Meetings'),
@@ -389,7 +393,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ),
                 // Disconnect
                 ListTile(
-                  leading: const Icon(Icons.link_off, color: Colors.red),
+                  leading: Icon(AppIcons.link_off, color: Colors.red),
                   title: const Text(
                     'Disconnect Webex',
                     style: TextStyle(color: Colors.red),
@@ -403,6 +407,48 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               ],
             ),
           ),
+    );
+  }
+
+  Widget _buildCalendarDayCell(
+    DateTime day,
+    CalendarMonthEntity monthData,
+    ThemeData theme, {
+    required BoxDecoration? decoration,
+    required TextStyle textStyle,
+    required bool isSelected,
+  }) {
+    if (day.month != monthData.month) return const SizedBox.shrink();
+
+    final hasEvents =
+        monthData.eventsByDay[day.day]?.tasks.isNotEmpty ?? false;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          width: 32.w,
+          height: 32.w,
+          decoration: decoration ?? const BoxDecoration(shape: BoxShape.circle),
+          alignment: Alignment.center,
+          child: Text('${day.day}', style: textStyle),
+        ),
+        SizedBox(height: 2.h),
+        Container(
+          width: 5.r,
+          height: 5.r,
+          decoration: BoxDecoration(
+            color:
+                hasEvents
+                    ? (isSelected
+                        ? Colors.white
+                        : theme.colorScheme.primary)
+                    : Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ],
     );
   }
 
@@ -472,7 +518,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ),
                 child: IconButton(
                   icon: Icon(
-                    isConnected ? Icons.event_available : Icons.event_busy,
+                    isConnected ? AppIcons.event_available : AppIcons.event_busy,
                     color:
                         isConnected
                             ? Colors.green
@@ -519,7 +565,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ),
                 child: IconButton(
                   icon: Icon(
-                    isConnected ? Icons.video_call : Icons.video_call_outlined,
+                    isConnected ? AppIcons.video_call : AppIcons.video_call_outlined,
                     color:
                         isConnected ? Colors.blue : theme.colorScheme.secondary,
                     size: 18.sp,
@@ -546,10 +592,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             child: IconButton(
               icon: Icon(
                 _calendarFormat == CalendarFormat.month
-                    ? Icons.calendar_view_week
+                    ? AppIcons.calendar_view_week
                     : _calendarFormat == CalendarFormat.twoWeeks
-                    ? Icons.calendar_view_day
-                    : Icons.calendar_month,
+                    ? AppIcons.calendar_view_day
+                    : AppIcons.calendar_month,
                 color: theme.colorScheme.onSurface,
                 size: 18.sp,
               ),
@@ -576,7 +622,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             ),
             child: IconButton(
               icon: Icon(
-                Icons.today,
+                AppIcons.today,
                 color: theme.colorScheme.onSurface,
                 size: 20.sp,
               ),
@@ -641,7 +687,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                  Icon(AppIcons.error_outline, size: 48.sp, color: Colors.red),
                   SizedBox(height: 16.h),
                   Text(state.message, textAlign: TextAlign.center),
                   TextButton(
@@ -723,6 +769,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                           firstDay: DateTime.utc(2020, 1, 1),
                           lastDay: DateTime.utc(2030, 12, 31),
                           focusedDay: _focusedDay,
+                          rowHeight: 52.h,
                           calendarFormat: _calendarFormat,
                           selectedDayPredicate:
                               (day) => isSameDay(effectiveSelection, day),
@@ -753,30 +800,72 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                             );
                           },
                           calendarStyle: CalendarStyle(
-                            todayDecoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            todayTextStyle: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            selectedDecoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            markerDecoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                            markersMaxCount: 1,
+                            cellMargin: EdgeInsets.zero,
                             outsideDaysVisible: false,
                             defaultTextStyle: TextStyle(
                               color: theme.colorScheme.onSurface,
+                              fontSize: 14.sp,
                             ),
                             weekendTextStyle: TextStyle(
-                              color: theme.colorScheme.primary.withOpacity(0.7),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.7,
+                              ),
+                              fontSize: 14.sp,
                             ),
+                          ),
+                          calendarBuilders: CalendarBuilders(
+                            markerBuilder: (context, day, events) =>
+                                const SizedBox.shrink(),
+                            defaultBuilder: (context, day, focusedDay) =>
+                                _buildCalendarDayCell(
+                                  day,
+                                  monthData,
+                                  theme,
+                                  decoration: null,
+                                  textStyle: TextStyle(
+                                    color:
+                                        day.weekday == DateTime.saturday ||
+                                                day.weekday == DateTime.sunday
+                                            ? theme.colorScheme.primary
+                                                .withValues(alpha: 0.7)
+                                            : theme.colorScheme.onSurface,
+                                    fontSize: 14.sp,
+                                  ),
+                                  isSelected: false,
+                                ),
+                            todayBuilder: (context, day, focusedDay) =>
+                                _buildCalendarDayCell(
+                                  day,
+                                  monthData,
+                                  theme,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  textStyle: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14.sp,
+                                  ),
+                                  isSelected: false,
+                                ),
+                            selectedBuilder: (context, day, focusedDay) =>
+                                _buildCalendarDayCell(
+                                  day,
+                                  monthData,
+                                  theme,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  isSelected: true,
+                                ),
                           ),
                           headerStyle: const HeaderStyle(
                             formatButtonVisible: false,
@@ -988,10 +1077,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               ),
               child: Icon(
                 task.isCompleted
-                    ? Icons.check_circle_rounded
+                    ? AppIcons.check_circle_rounded
                     : isOverdue
-                    ? Icons.warning_amber_rounded
-                    : Icons.task_alt_rounded,
+                    ? AppIcons.warning_amber_rounded
+                    : AppIcons.task_alt_rounded,
                 color: isOverdue ? Colors.red : priorityColor,
                 size: 20.sp,
               ),
@@ -1049,7 +1138,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   Row(
                     children: [
                       Icon(
-                        Icons.access_time_rounded,
+                        AppIcons.access_time_rounded,
                         size: 13.sp,
                         color:
                             isOverdue
@@ -1096,7 +1185,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             SizedBox(width: 8.w),
             // Navigation arrow
             Icon(
-              Icons.chevron_right_rounded,
+              AppIcons.chevron_right_rounded,
               color: theme.colorScheme.secondary.withOpacity(0.4),
               size: 22.sp,
             ),
@@ -1141,7 +1230,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             child: Row(
               children: [
                 Icon(
-                  Icons.calendar_month_rounded,
+                  AppIcons.calendar_month_rounded,
                   size: 14.sp,
                   color: Colors.blue,
                 ),
@@ -1193,7 +1282,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             child: Row(
               children: [
                 Icon(
-                  Icons.task_alt_rounded,
+                  AppIcons.task_alt_rounded,
                   size: 14.sp,
                   color: theme.colorScheme.primary,
                 ),
@@ -1225,7 +1314,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             Colors.purple,
             theme,
             isDark,
-            Icons.notifications_active_outlined,
+            AppIcons.notifications_active_outlined,
           ),
         ),
 
@@ -1245,7 +1334,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Icons.event_available_outlined,
+            AppIcons.event_available_outlined,
             size: 48.sp,
             color: theme.colorScheme.primary.withOpacity(0.5),
           ),
@@ -1276,7 +1365,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 _selectedFilter = 'all';
               });
             },
-            icon: Icon(Icons.filter_alt_off, size: 18.sp),
+            icon: Icon(AppIcons.filter_alt_off, size: 18.sp),
             label: const Text('Clear filter'),
             style: TextButton.styleFrom(
               foregroundColor: theme.colorScheme.primary,
@@ -1361,7 +1450,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             ),
           ),
           Icon(
-            Icons.chevron_right,
+            AppIcons.chevron_right,
             color: theme.colorScheme.secondary.withOpacity(0.3),
           ),
         ],
@@ -1412,7 +1501,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.event_note_rounded,
+              AppIcons.event_note_rounded,
               color: Colors.blue,
               size: 20.sp,
             ),
@@ -1450,7 +1539,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.calendar_month_rounded,
+                            AppIcons.calendar_month_rounded,
                             size: 10.sp,
                             color: Colors.blue,
                           ),
@@ -1472,7 +1561,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 Row(
                   children: [
                     Icon(
-                      Icons.access_time_rounded,
+                      AppIcons.access_time_rounded,
                       size: 13.sp,
                       color: theme.colorScheme.secondary,
                     ),
@@ -1488,7 +1577,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         event.location!.isNotEmpty) ...[
                       SizedBox(width: 10.w),
                       Icon(
-                        Icons.location_on_outlined,
+                        AppIcons.location_on_outlined,
                         size: 13.sp,
                         color: theme.colorScheme.secondary,
                       ),
@@ -1526,7 +1615,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Icon(
-                  Icons.videocam_rounded,
+                  AppIcons.videocam_rounded,
                   color: Colors.green,
                   size: 18.sp,
                 ),
@@ -1576,7 +1665,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   theme: theme,
                   isDark: isDark,
                   title: 'Google',
-                  icon: Icons.calendar_month_rounded,
+                  icon: AppIcons.calendar_month_rounded,
                   color: Colors.green,
                   isConnected: isGoogleConnected,
                   onConnect: () => _connectGoogleCalendar(context),
@@ -1591,7 +1680,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   theme: theme,
                   isDark: isDark,
                   title: 'Webex',
-                  icon: Icons.video_call_rounded,
+                  icon: AppIcons.video_call_rounded,
                   color: Colors.blue,
                   isConnected: isWebexConnected,
                   onConnect: () => _connectWebex(context),
@@ -1646,10 +1735,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   size: 20.sp,
                 ),
                 if (isConnected)
-                  Icon(Icons.check_circle, color: color, size: 16.sp)
+                  Icon(AppIcons.check_circle, color: color, size: 16.sp)
                 else
                   Icon(
-                    Icons.add_circle_outline,
+                    AppIcons.add_circle_outline,
                     color: theme.colorScheme.secondary,
                     size: 16.sp,
                   ),
@@ -1713,7 +1802,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.calendar_month_rounded,
+              AppIcons.calendar_month_rounded,
               color: Colors.blue,
               size: 24.sp,
             ),
@@ -1776,7 +1865,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Row(
             children: [
-              Icon(Icons.videocam_rounded, color: Colors.green, size: 18.sp),
+              Icon(AppIcons.videocam_rounded, color: Colors.green, size: 18.sp),
               SizedBox(width: 8.w),
               Text(
                 "Today's Meetings",
@@ -1847,7 +1936,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         Row(
                           children: [
                             Icon(
-                              Icons.access_time_rounded,
+                              AppIcons.access_time_rounded,
                               size: 12.sp,
                               color: theme.colorScheme.secondary,
                             ),
@@ -1866,7 +1955,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                             if (meeting.meetLink != null) ...[
                               const Spacer(),
                               Icon(
-                                Icons.videocam_rounded,
+                                AppIcons.videocam_rounded,
                                 size: 14.sp,
                                 color: Colors.green,
                               ),

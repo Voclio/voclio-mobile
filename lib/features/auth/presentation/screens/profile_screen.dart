@@ -9,6 +9,7 @@ import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/features/auth/presentation/widgets/auth_button.dart';
 import 'package:voclio_app/features/auth/presentation/widgets/auth_loading_widget.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -53,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: BackButton(onPressed: () => context.pop()),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(AppIcons.refresh),
             onPressed: () {
               context.read<AuthBloc>().add(const GetProfileEvent());
             },
@@ -146,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.error_outline,
+                            AppIcons.error_outline,
                             color: Colors.red,
                             size: 20.sp,
                           ),
@@ -169,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Continue showing profile items...
                     _buildProfileItem(
                       context,
-                      Icons.email,
+                      AppIcons.email,
                       'Email',
                       user.email,
                     ),
@@ -268,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           _buildProfileItem(
                             context,
-                            Icons.email_outlined,
+                            AppIcons.email_outlined,
                             'Email',
                             user.email,
                           ),
@@ -277,14 +278,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               user.phoneNumber!.isNotEmpty)
                             _buildProfileItem(
                               context,
-                              Icons.phone_outlined,
+                              AppIcons.phone_outlined,
                               'Phone',
                               user.phoneNumber!,
                             ),
 
                           _buildProfileItem(
                             context,
-                            Icons.calendar_today_outlined,
+                            AppIcons.calendar_today_outlined,
                             'Member Since',
                             _formatDate(user.createdAt),
                           ),
@@ -333,7 +334,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Logout Button
                     TextButton.icon(
                       onPressed: _handleLogout,
-                      icon: const Icon(Icons.logout, color: Colors.red),
+                      icon: Icon(AppIcons.logout, color: Colors.red),
                       label: Text(
                         'Logout',
                         style: TextStyle(
@@ -367,7 +368,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    isTokenError ? Icons.lock_outline : Icons.error_outline,
+                    isTokenError ? AppIcons.lock_outline : AppIcons.error_outline,
                     size: 64.sp,
                     color: isTokenError ? Colors.orange : Colors.red,
                   ),
@@ -399,7 +400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         context.read<AuthBloc>().add(const GetProfileEvent());
                       }
                     },
-                    icon: Icon(isTokenError ? Icons.login : Icons.refresh),
+                    icon: Icon(isTokenError ? AppIcons.login : AppIcons.refresh),
                     label: Text(isTokenError ? 'Go to Login' : 'Retry'),
                   ),
                 ],

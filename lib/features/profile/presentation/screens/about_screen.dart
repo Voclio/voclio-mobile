@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -11,7 +12,7 @@ class AboutScreen extends StatelessWidget {
     return HomeSecondaryScaffold(
       title: 'About',
       subtitle: 'Voclio · Productivity companion',
-      icon: Icons.info_outline_rounded,
+      icon: AppIcons.info_outline_rounded,
       accent: HomeSystemTokens.blue,
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -35,7 +36,7 @@ class AboutScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(22.r),
                       boxShadow: HomeSystemTokens.cardShadow(opacity: 0.08),
                     ),
-                    child: Icon(Icons.mic_rounded, color: Colors.white, size: 42.sp),
+                    child: Icon(AppIcons.mic_rounded, color: Colors.white, size: 42.sp),
                   ),
                   SizedBox(height: 16.h),
                   Text(
@@ -87,7 +88,7 @@ class AboutScreen extends StatelessWidget {
               title: 'Connect',
               children: [
                 HomeMenuTile(
-                  icon: Icons.language_rounded,
+                  icon: AppIcons.language_rounded,
                   iconColor: HomeSystemTokens.blue,
                   title: 'Website',
                   subtitle: 'voclio.app',

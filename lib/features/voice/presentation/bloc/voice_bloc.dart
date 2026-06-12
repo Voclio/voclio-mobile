@@ -66,20 +66,27 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
 
       // If upload succeeds, immediately transcribe
       (recording) async {
-        // 3. Change state to show 'Transcribing...'
+        final existingTranscription = recording.transcription?.trim();
+        if (existingTranscription != null && existingTranscription.isNotEmpty) {
+          emit(VoiceTranscriptionLoaded(existingTranscription, recording.id));
+          add(LoadVoiceRecordings());
+          return;
+        }
+
         emit(const VoiceLoading('Transcribing...'));
 
-        // 4. Call the transcribe use case directly
         final transcribeResult = await transcribeVoiceUseCase(recording.id);
 
         transcribeResult.fold(
-          // If transcription fails, emit an error
           (failure) => emit(VoiceError(failure.message)),
-
-          // If transcription succeeds, emit the final success state!
           (transcriptionText) {
+            if (transcriptionText.trim().isEmpty) {
+              emit(const VoiceError(
+                'No speech detected. Try speaking louder or closer to the mic.',
+              ));
+              return;
+            }
             emit(VoiceTranscriptionLoaded(transcriptionText, recording.id));
-            // Also refresh the list in the background
             add(LoadVoiceRecordings());
           },
         );
@@ -117,9 +124,15 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
     Emitter<VoiceState> emit,
   ) async {
     emit(const VoiceLoading('Creating note...'));
-    final result = await createNoteFromVoiceUseCase(event.id);
+    final result = await createNoteFromVoiceUseCase(
+      event.id,
+      transcription: event.transcription,
+    );
     result.fold((failure) => emit(VoiceError(failure.message)), (_) {
-      emit(const VoiceOperationSuccess('Note created from voice'));
+      emit(const VoiceOperationSuccess(
+        'Note saved',
+        destination: VoiceSuccessDestination.notes,
+      ));
       add(LoadVoiceRecordings());
     });
   }
@@ -129,13 +142,38 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
     Emitter<VoiceState> emit,
   ) async {
     emit(const VoiceLoading('Creating tasks...'));
-    final result = await createTasksFromVoiceUseCase(event.id);
+    final result = await createTasksFromVoiceUseCase(
+      event.id,
+      transcription: event.transcription,
+    );
     result.fold((failure) => emit(VoiceError(failure.message)), (_) {
-      emit(const VoiceOperationSuccess('Tasks created from voice'));
-      // Trigger tasks refresh automatically
+      final destination = _destinationForTaskCreation(event.transcription);
+      final message = destination == VoiceSuccessDestination.calendar
+          ? 'Added to your calendar'
+          : 'Tasks created';
+      emit(VoiceOperationSuccess(message, destination: destination));
       GetIt.I<TasksCubit>().getTasks();
       add(LoadVoiceRecordings());
     });
+  }
+
+  VoiceSuccessDestination _destinationForTaskCreation(String? transcription) {
+    final text = transcription?.toLowerCase() ?? '';
+    const calendarHints = [
+      'calendar',
+      'add to calendar',
+      'schedule',
+      'appointment',
+      'meeting',
+      'تقويم',
+      'كاليندر',
+      'موعد',
+      'اجتماع',
+    ];
+    if (calendarHints.any(text.contains)) {
+      return VoiceSuccessDestination.calendar;
+    }
+    return VoiceSuccessDestination.tasks;
   }
 
   Future<void> _onUpdateTranscription(

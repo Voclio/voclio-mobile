@@ -10,6 +10,7 @@ import 'package:voclio_app/features/notes/presentation/screens/note_details_scre
 import 'package:voclio_app/features/notes/presentation/widgets/add_note_bottom_sheet.dart';
 import '../bloc/notes_cubit.dart';
 import '../widgets/note_card.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class NotesScreen extends StatelessWidget {
   const NotesScreen({super.key});
@@ -83,19 +84,19 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                           title: 'Notes',
                           subtitle:
                               '${state.notes.length} notes · ${_formatNumber(totalWords)} words',
-                          icon: Icons.note_alt_rounded,
+                          icon: AppIcons.note_alt_rounded,
                           accent: HomeSystemTokens.blue,
                           actions: [
                             HomeIconButton(
-                              icon: Icons.add_rounded,
+                              icon: AppIcons.add_rounded,
                               color: HomeSystemTokens.blue,
                               onTap: () => _showAddNoteSheet(context),
                             ),
                             SizedBox(width: 8.w),
                             HomeIconButton(
                               icon: _isGridMode
-                                  ? Icons.view_list_rounded
-                                  : Icons.grid_view_rounded,
+                                  ? AppIcons.view_list_rounded
+                                  : AppIcons.grid_view_rounded,
                               color: HomeSystemTokens.inkSoft,
                               onTap: () =>
                                   setState(() => _isGridMode = !_isGridMode),
@@ -103,37 +104,38 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                           ],
                         ),
                         SizedBox(height: 18.h),
-                        SizedBox(
-                          height: 96.h,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            children: [
-                              HomeStatTile(
-                                icon: Icons.folder_open_rounded,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: HomeStatTile(
+                                icon: AppIcons.folder_open_rounded,
                                 color: HomeSystemTokens.blue,
                                 label: 'Notes',
                                 value: state.notes.length.toString(),
                                 subtitle: 'Total saved',
                               ),
-                              SizedBox(width: 10.w),
-                              HomeStatTile(
-                                icon: Icons.text_fields_rounded,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: HomeStatTile(
+                                icon: AppIcons.text_fields_rounded,
                                 color: HomeSystemTokens.purple,
                                 label: 'Words',
                                 value: _formatNumber(totalWords),
                                 subtitle: 'Written',
                               ),
-                              SizedBox(width: 10.w),
-                              HomeStatTile(
-                                icon: Icons.local_offer_outlined,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: HomeStatTile(
+                                icon: AppIcons.local_offer_outlined,
                                 color: HomeSystemTokens.orange,
                                 label: 'Tags',
                                 value: tagCount.toString(),
                                 subtitle: 'Categories',
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     );
@@ -229,7 +231,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.error_outline,
+                                AppIcons.error_outline,
                                 color: theme.colorScheme.error,
                                 size: 48.r,
                               ),
@@ -286,23 +288,12 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                             ),
                         child:
                             _isGridMode
-                                ? Builder(
-                                  builder: (context) {
-                                    // 1. Calculate dynamic aspect ratio
-                                    // We want the card to have a fixed height (e.g., 200.h) regardless of width
-                                    // Formula: Ratio = Width / DesiredHeight
-
-                                    final double screenWidth =
-                                        MediaQuery.of(context).size.width;
-                                    // Total Horizontal Padding = 20.w (left) + 20.w (right) + 16.w (middle gap)
-                                    final double totalPadding = 56.w;
-                                    final double cardWidth =
-                                        (screenWidth - totalPadding) / 2;
-
-                                    // Adjust this value (210.h) until your content fits perfectly
-                                    final double desiredCardHeight = 230.h;
-                                    final double childAspectRatio =
-                                        cardWidth / desiredCardHeight;
+                                ? LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final cardWidth =
+                                        (constraints.maxWidth - 12.w) / 2;
+                                    final childAspectRatio =
+                                        cardWidth / 168.h;
 
                                     return GridView.builder(
                                       physics:
@@ -313,9 +304,8 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                       gridDelegate:
                                           SliverGridDelegateWithFixedCrossAxisCount(
                                             crossAxisCount: 2,
-                                            crossAxisSpacing: 16.w,
-                                            mainAxisSpacing: 16.h,
-                                            // 2. Use the calculated ratio
+                                            crossAxisSpacing: 12.w,
+                                            mainAxisSpacing: 12.h,
                                             childAspectRatio: childAspectRatio,
                                           ),
                                       itemCount: filteredNotes.length,
@@ -323,6 +313,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                                           (context, index) => NoteCard(
                                                 key: ValueKey(filteredNotes[index].id),
                                                 note: filteredNotes[index],
+                                                compact: true,
                                                 onTap: () {
                                                   Navigator.push(
                                                     context,
@@ -535,8 +526,8 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                 // Main icon
                 Icon(
                   hasSearchOrFilter
-                      ? Icons.search_off_rounded
-                      : Icons.note_alt_outlined,
+                      ? AppIcons.search_off_rounded
+                      : AppIcons.note_alt_outlined,
                   size: 64.sp,
                   color: theme.colorScheme.primary.withOpacity(0.7),
                 ),
@@ -545,7 +536,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                   bottom: 25.r,
                   left: 20.r,
                   child: Icon(
-                    Icons.edit_note_rounded,
+                    AppIcons.edit_note_rounded,
                     size: 24.sp,
                     color: theme.colorScheme.secondary.withOpacity(0.5),
                   ),
@@ -609,7 +600,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                   ),
                 );
               },
-              icon: const Icon(Icons.add, size: 20),
+              icon: Icon(AppIcons.add, size: 20),
               label: const Text("Create Note"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
@@ -634,7 +625,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
                 });
                 context.read<NotesCubit>().getNotes();
               },
-              icon: Icon(Icons.clear_all, size: 20.sp),
+              icon: Icon(AppIcons.clear_all, size: 20.sp),
               label: const Text("Clear Filters"),
               style: TextButton.styleFrom(
                 foregroundColor: theme.colorScheme.primary,
@@ -664,7 +655,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.lightbulb_outline,
+                    AppIcons.lightbulb_outline,
                     size: 20.sp,
                     color: theme.colorScheme.primary,
                   ),

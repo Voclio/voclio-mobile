@@ -9,6 +9,7 @@ import '../../../tasks/presentation/screens/task_details_screen.dart';
 import '../../../tasks/presentation/bloc/tasks_cubit.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
 import '../../../../core/widgets/home_system/home_system_widgets.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -158,10 +159,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 child: IconButton(
                   icon: Icon(
                     _calendarFormat == CalendarFormat.month
-                        ? Icons.calendar_view_week
+                        ? AppIcons.calendar_view_week
                         : _calendarFormat == CalendarFormat.twoWeeks
-                        ? Icons.calendar_view_day
-                        : Icons.calendar_month,
+                        ? AppIcons.calendar_view_day
+                        : AppIcons.calendar_month,
                     color: theme.colorScheme.onSurface,
                   ),
                   onPressed: () {
@@ -185,7 +186,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: IconButton(
-                  icon: Icon(Icons.today, color: theme.colorScheme.onSurface),
+                  icon: Icon(AppIcons.today, color: theme.colorScheme.onSurface),
                   onPressed: () {
                     setState(() {
                       _focusedDay = DateTime.now();
@@ -271,11 +272,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
             color: theme.colorScheme.onSurface,
           ),
           leftChevronIcon: Icon(
-            Icons.chevron_left,
+            AppIcons.chevron_left,
             color: theme.colorScheme.onSurface,
           ),
           rightChevronIcon: Icon(
-            Icons.chevron_right,
+            AppIcons.chevron_right,
             color: theme.colorScheme.onSurface,
           ),
         ),
@@ -434,7 +435,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              isToday ? Icons.today_outlined : Icons.event_available_outlined,
+              isToday ? AppIcons.today_outlined : AppIcons.event_available_outlined,
               size: 48.sp,
               color: theme.colorScheme.primary.withOpacity(0.6),
             ),
@@ -469,7 +470,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   _selectedFilter = 'all';
                 });
               },
-              icon: Icon(Icons.filter_alt_off, size: 18.sp),
+              icon: Icon(AppIcons.filter_alt_off, size: 18.sp),
               label: Text('Clear filter'),
               style: TextButton.styleFrom(
                 foregroundColor: theme.colorScheme.primary,
@@ -553,7 +554,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
                 child:
                     task.isDone
-                        ? Icon(Icons.check, size: 16.sp, color: Colors.white)
+                        ? Icon(AppIcons.check, size: 16.sp, color: Colors.white)
                         : null,
               ),
             ),
@@ -597,7 +598,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.warning_amber_rounded,
+                                AppIcons.warning_amber_rounded,
                                 size: 12.sp,
                                 color: Colors.red,
                               ),
@@ -619,7 +620,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   Row(
                     children: [
                       Icon(
-                        Icons.access_time_rounded,
+                        AppIcons.access_time_rounded,
                         size: 14.sp,
                         color:
                             isOverdue
@@ -654,7 +655,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.checklist_rounded,
+                                AppIcons.checklist_rounded,
                                 size: 12.sp,
                                 color: theme.colorScheme.secondary,
                               ),
@@ -700,7 +701,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             SizedBox(width: 8.w),
             // Arrow indicator for navigation
             Icon(
-              Icons.chevron_right_rounded,
+              AppIcons.chevron_right_rounded,
               color: theme.colorScheme.secondary.withOpacity(0.5),
               size: 24.sp,
             ),
@@ -782,7 +783,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Icons.warning_amber_rounded,
+                              AppIcons.warning_amber_rounded,
                               size: 14.sp,
                               color: Colors.red,
                             ),
@@ -863,7 +864,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.event_available_outlined,
+                              AppIcons.event_available_outlined,
                               size: 48.sp,
                               color: theme.colorScheme.primary.withOpacity(0.5),
                             ),

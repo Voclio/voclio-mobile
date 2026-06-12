@@ -1,5 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:voclio_app/core/app/language_controller.dart';
 import 'package:voclio_app/features/settings/domain/entities/user_settings_entity.dart';
 import 'package:voclio_app/features/settings/domain/usecases/settings_usecases.dart';
 
@@ -24,7 +26,10 @@ class SettingsCubit extends Cubit<SettingsState> {
       (failure) => emit(
         state.copyWith(isLoading: false, error: 'Failed to load settings'),
       ),
-      (settings) {
+      (settings) async {
+        await LanguageController.instance.changeLanguage(
+          Locale(settings.language),
+        );
         emit(
           state.copyWith(
             isLoading: false,
@@ -65,7 +70,10 @@ class SettingsCubit extends Cubit<SettingsState> {
       (failure) => emit(
         state.copyWith(isLoading: false, error: 'Failed to update language'),
       ),
-      (settings) => emit(state.copyWith(isLoading: false, language: lang)),
+      (settings) async {
+        await LanguageController.instance.changeLanguage(Locale(lang));
+        emit(state.copyWith(isLoading: false, language: lang));
+      },
     );
   }
 

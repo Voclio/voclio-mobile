@@ -78,7 +78,7 @@ class ErrorInterceptor extends Interceptor {
       case 422:
         return message ?? 'Validation error';
       case 500:
-        return 'Internal server error';
+        return message ?? 'Internal server error';
       default:
         return message ?? 'Server error occurred';
     }

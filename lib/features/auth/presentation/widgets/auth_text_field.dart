@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
 import '../../../../core/common/animation/animate_do.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AuthTextField extends StatelessWidget {
   final String label;
@@ -31,15 +32,15 @@ class AuthTextField extends StatelessWidget {
 
   IconData _getDefaultIcon() {
     if (keyboardType == TextInputType.emailAddress) {
-      return Icons.email_outlined;
+      return AppIcons.email_outlined;
     } else if (keyboardType == TextInputType.phone) {
-      return Icons.phone_outlined;
+      return AppIcons.phone_outlined;
     } else if (obscureText) {
-      return Icons.lock_outline_rounded;
+      return AppIcons.lock_outline_rounded;
     } else if (label.toLowerCase().contains('name')) {
-      return Icons.person_outline_rounded;
+      return AppIcons.person_outline_rounded;
     }
-    return Icons.text_fields_rounded;
+    return AppIcons.text_fields_rounded;
   }
 
   @override

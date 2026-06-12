@@ -9,12 +9,15 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:voclio_app/core/di/injection_container.dart';
+import 'package:voclio_app/core/layout/main_layout.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../bloc/voice_bloc.dart';
 import '../bloc/voice_state.dart';
 import '../bloc/voice_event.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class VoiceRecordingScreen extends StatelessWidget {
   const VoiceRecordingScreen({super.key});
@@ -190,13 +193,23 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
 
   void _createTask() {
     if (recordingId != null) {
-      context.read<VoiceBloc>().add(CreateTasksFromVoice(recordingId!));
+      context.read<VoiceBloc>().add(
+            CreateTasksFromVoice(
+              recordingId!,
+              transcription: _transcriptController.text.trim(),
+            ),
+          );
     }
   }
 
   void _createNote() {
     if (recordingId != null) {
-      context.read<VoiceBloc>().add(CreateNoteFromVoice(recordingId!));
+      context.read<VoiceBloc>().add(
+            CreateNoteFromVoice(
+              recordingId!,
+              transcription: _transcriptController.text.trim(),
+            ),
+          );
     }
   }
 
@@ -205,9 +218,24 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
     return BlocListener<VoiceBloc, VoiceState>(
       listener: (context, state) {
         if (state is VoiceOperationSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          if (state.destination != null) {
+            final tabIndex = switch (state.destination!) {
+              VoiceSuccessDestination.tasks => 1,
+              VoiceSuccessDestination.calendar => 2,
+              VoiceSuccessDestination.notes => 3,
+            };
+            if (state.destination == VoiceSuccessDestination.tasks ||
+                state.destination == VoiceSuccessDestination.calendar) {
+              final now = DateTime.now();
+              context.read<CalendarCubit>().loadMonth(now.year, now.month);
+            }
+            Navigator.of(context).pop();
+            MainLayout.goToTab(tabIndex);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
         } else if (state is VoiceError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -230,7 +258,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
         accent: HomeSystemTokens.purple,
         actions: [
           HomeIconButton(
-            icon: Icons.history_rounded,
+            icon: AppIcons.history_rounded,
             color: HomeSystemTokens.inkSoft,
             onTap: () => context.push(AppRouter.voice),
           ),
@@ -426,7 +454,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                       BorderRadius.circular(HomeSystemTokens.radiusSm.r),
                 ),
                 child: Icon(
-                  Icons.transcribe_rounded,
+                  AppIcons.transcribe_rounded,
                   color: HomeSystemTokens.blue,
                   size: 18.sp,
                 ),
@@ -484,7 +512,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
               Expanded(
                 child: _ActionChip(
                   label: 'Make Task',
-                  icon: Icons.check_circle_outline_rounded,
+                  icon: AppIcons.check_circle_outline_rounded,
                   color: HomeSystemTokens.purple,
                   onTap: _createTask,
                 ),
@@ -493,7 +521,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
               Expanded(
                 child: _ActionChip(
                   label: 'Make Note',
-                  icon: Icons.sticky_note_2_outlined,
+                  icon: AppIcons.sticky_note_2_outlined,
                   color: HomeSystemTokens.green,
                   onTap: _createNote,
                 ),
@@ -571,8 +599,8 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                         )
                       : Icon(
                           isRecording
-                              ? Icons.stop_rounded
-                              : Icons.mic_rounded,
+                              ? AppIcons.stop_rounded
+                              : AppIcons.mic_rounded,
                           color: Colors.white,
                           size: 48.sp,
                         ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/reminder_entity.dart';
+import 'package:voclio_app/core/icons/app_icons.dart';
 
 class ReminderCard extends StatelessWidget {
   final ReminderEntity reminder;
@@ -85,8 +86,8 @@ class ReminderCard extends StatelessWidget {
                   ),
                   child: Icon(
                     isPast
-                        ? Icons.notification_important
-                        : Icons.notifications_active,
+                        ? AppIcons.notification_important
+                        : AppIcons.notifications_active,
                     color: Colors.white,
                     size: 28.sp,
                   ),
@@ -173,7 +174,7 @@ class ReminderCard extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.calendar_today,
+                            AppIcons.calendar_today,
                             size: 14.sp,
                             color: Colors.grey[600],
                           ),
@@ -188,7 +189,7 @@ class ReminderCard extends StatelessWidget {
                           SizedBox(width: 12.w),
                           SizedBox(width: 12.w),
                           Icon(
-                            Icons.access_time,
+                            AppIcons.access_time,
                             size: 14.sp,
                             color: Colors.grey[600],
                           ),
@@ -207,7 +208,7 @@ class ReminderCard extends StatelessWidget {
                 ),
                 // Actions
                 PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                  icon: Icon(AppIcons.more_vert, color: Colors.grey[600]),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.r),
                   ),
@@ -231,7 +232,7 @@ class ReminderCard extends StatelessWidget {
                             value: 'snooze',
                             child: Row(
                               children: [
-                                Icon(Icons.snooze, color: Colors.orange[700]),
+                                Icon(AppIcons.snooze, color: Colors.orange[700]),
                                 SizedBox(width: 12.w),
                                 const Text('Snooze 15 min'),
                               ],
@@ -242,7 +243,7 @@ class ReminderCard extends StatelessWidget {
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.check_circle,
+                                  AppIcons.check_circle,
                                   color: Colors.green[700],
                                 ),
                                 SizedBox(width: 12.w),
@@ -255,8 +256,8 @@ class ReminderCard extends StatelessWidget {
                           value: 'delete',
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.delete_outline,
+                              Icon(
+                                AppIcons.delete_outline,
                                 color: Colors.red,
                               ),
                               SizedBox(width: 12.w),
