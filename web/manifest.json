@@ -1,6 +1,6 @@
 {
-    "name": "voclio_app",
-    "short_name": "voclio_app",
+    "name": "Voclio",
+    "short_name": "Voclio",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

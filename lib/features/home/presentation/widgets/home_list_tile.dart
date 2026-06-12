@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/features/auth/domain/entities/user.dart';
 import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
@@ -19,6 +20,34 @@ class HomeListTile extends StatelessWidget {
     if (hour >= 12 && hour < 17) return 'Good Afternoon';
     if (hour >= 17 && hour < 21) return 'Good Evening';
     return 'Good Night';
+  }
+
+  User? _userFromState(AuthState state) {
+    return switch (state) {
+      AuthSuccess(:final response) => response.user,
+      ProfileUpdateError(:final response) => response.user,
+      RegistrationPending(:final response) => response.user,
+      _ => null,
+    };
+  }
+
+  String _displayName(User? user) {
+    if (user == null) return 'User';
+
+    final name = user.name.trim();
+    if (name.isNotEmpty && name != 'Unknown User') {
+      return name.split(RegExp(r'\s+')).first;
+    }
+
+    final email = user.email.trim();
+    if (email.contains('@')) {
+      final local = email.split('@').first.trim();
+      if (local.isNotEmpty) {
+        return local[0].toUpperCase() + local.substring(1);
+      }
+    }
+
+    return 'User';
   }
 
   void _showProfileMenu(BuildContext context) {
@@ -108,7 +137,6 @@ class HomeListTile extends StatelessWidget {
       confirmText: 'Logout',
       cancelText: 'Cancel',
       onConfirm: () {
-        Navigator.of(context).pop();
         context.read<AuthBloc>().add(const LogoutEvent());
         context.go(AppRouter.login);
       },
@@ -155,9 +183,8 @@ class HomeListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        final user = state is AuthSuccess ? state.response.user : null;
-        final userName =
-            user?.name.isNotEmpty == true ? user!.name.split(' ').first : 'User';
+        final user = _userFromState(state);
+        final userName = _displayName(user);
         final avatarUrl = user?.avatar;
 
         return Padding(

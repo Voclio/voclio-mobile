@@ -11,7 +11,9 @@ import '../bloc/tasks_state.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AddTaskBottomSheet extends StatefulWidget {
-  const AddTaskBottomSheet({super.key});
+  final TaskEntity? taskToEdit;
+
+  const AddTaskBottomSheet({super.key, this.taskToEdit});
 
   @override
   State<AddTaskBottomSheet> createState() => _AddTaskBottomSheetState();
@@ -26,6 +28,21 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
   String? _selectedTagName;
   bool _isLoading = false;
 
+  bool get _isEditing => widget.taskToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final task = widget.taskToEdit;
+    if (task == null) return;
+
+    _titleController.text = task.title;
+    _descController.text = task.description ?? '';
+    _selectedDate = task.date;
+    _selectedPriority = task.priority;
+    _selectedTagName = task.tags.isNotEmpty ? task.tags.first : null;
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -33,12 +50,11 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
     super.dispose();
   }
 
-  void _createTask() async {
+  Future<void> _saveTask() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
     if (_isLoading) return;
 
-    // Get the current tags from state to handle default selection if needed
     final state = context.read<TasksCubit>().state;
     final effectiveTag =
         _selectedTagName ??
@@ -46,29 +62,44 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
             ? state.availableTags.first.name
             : null);
 
-    final uniqueId =
-        '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(10000)}';
-    final newTask = TaskEntity(
-      id: uniqueId,
-      title: title,
-      description: _descController.text.trim(),
-      date: _selectedDate,
-      createdAt: DateTime.now(),
-      isDone: false,
-      priority: _selectedPriority,
-      tags: effectiveTag != null ? [effectiveTag] : [],
-      subtasks: const [],
-    );
-
     setState(() => _isLoading = true);
 
-    // 1. Unfocus the keyboard immediately
     FocusManager.instance.primaryFocus?.unfocus();
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
 
-    context.read<TasksCubit>().addTask(newTask);
-    Navigator.pop(context);
+    final cubit = context.read<TasksCubit>();
+    if (_isEditing) {
+      final existing = widget.taskToEdit!;
+      await cubit.updateTask(
+        existing.copyWith(
+          title: title,
+          description: _descController.text.trim(),
+          date: _selectedDate,
+          priority: _selectedPriority,
+          tags: effectiveTag != null ? [effectiveTag] : existing.tags,
+        ),
+      );
+    } else {
+      final uniqueId =
+          '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(10000)}';
+      final newTask = TaskEntity(
+        id: uniqueId,
+        title: title,
+        description: _descController.text.trim(),
+        date: _selectedDate,
+        createdAt: DateTime.now(),
+        isDone: false,
+        priority: _selectedPriority,
+        tags: effectiveTag != null ? [effectiveTag] : [],
+        subtasks: const [],
+      );
+      cubit.addTask(newTask);
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> _pickDateTime() async {
@@ -143,7 +174,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "New Task",
+                      _isEditing ? "Edit Task" : "New Task",
                       style: TextStyle(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.bold,
@@ -409,7 +440,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                   width: double.infinity,
                   height: 50.h,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _createTask,
+                    onPressed: _isLoading ? null : _saveTask,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: Colors.white,
@@ -429,7 +460,7 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
                               ),
                             )
                             : Text(
-                              "Create Task",
+                              _isEditing ? "Save Changes" : "Create Task",
                               style: TextStyle(
                                 fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,

@@ -15,12 +15,20 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../../core/enums/enums.dart';
 import '../../domain/entities/calendar_month_entity.dart';
 import '../../domain/entities/google_calendar_entity.dart';
+import '../../../../core/common/dialogs/voclio_dialog.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
 import '../../../../core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
 class MonthlyCalendarScreen extends StatelessWidget {
   const MonthlyCalendarScreen({super.key});
+
+  static final ValueNotifier<DateTime?> pendingJumpDate =
+      ValueNotifier<DateTime?>(null);
+
+  static void jumpTo(DateTime date) {
+    pendingJumpDate.value = DateTime(date.year, date.month, date.day);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,13 +57,37 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
+    MonthlyCalendarScreen.pendingJumpDate.addListener(_handlePendingJump);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPendingJump();
       final cubit = context.read<CalendarCubit>();
       if (cubit.state is! CalendarLoaded) {
         final now = DateTime.now();
         cubit.loadMonth(now.year, now.month);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    MonthlyCalendarScreen.pendingJumpDate.removeListener(_handlePendingJump);
+    super.dispose();
+  }
+
+  void _handlePendingJump() {
+    _applyPendingJump();
+  }
+
+  void _applyPendingJump() {
+    final target = MonthlyCalendarScreen.pendingJumpDate.value;
+    if (target == null || !mounted) return;
+
+    setState(() {
+      _focusedDay = target;
+      _selectedDay = target;
+    });
+    context.read<CalendarCubit>().loadMonth(target.year, target.month);
+    MonthlyCalendarScreen.pendingJumpDate.value = null;
   }
 
   void _showAddTaskSheet(BuildContext context) {
@@ -141,26 +173,13 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   }
 
   Future<void> _disconnectGoogleCalendar(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await VoclioDialog.showConfirm(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Disconnect Google Calendar?'),
-            content: const Text(
-              'This will remove the Google Calendar sync. Your Google events will no longer appear in the calendar.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Disconnect'),
-              ),
-            ],
-          ),
+      title: 'Disconnect Google Calendar?',
+      message:
+          'This will remove the Google Calendar sync. Your Google events will no longer appear in the calendar.',
+      confirmText: 'Disconnect',
+      cancelText: 'Cancel',
     );
 
     if (confirmed == true && context.mounted) {
@@ -187,26 +206,13 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   }
 
   Future<void> _disconnectWebex(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await VoclioDialog.showConfirm(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Disconnect Webex?'),
-            content: const Text(
-              'This will remove the Webex sync. Your Webex meetings will no longer appear in the calendar.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Disconnect'),
-              ),
-            ],
-          ),
+      title: 'Disconnect Webex?',
+      message:
+          'This will remove the Webex sync. Your Webex meetings will no longer appear in the calendar.',
+      confirmText: 'Disconnect',
+      cancelText: 'Cancel',
     );
 
     if (confirmed == true && context.mounted) {

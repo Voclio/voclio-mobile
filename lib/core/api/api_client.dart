@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_endpoints.dart';
+import 'interceptors/arabic_to_english_interceptor.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
@@ -31,6 +32,7 @@ class ApiClient {
     _dio.interceptors.addAll([
       AuthInterceptor(_storage, _dio),
       ErrorInterceptor(),
+      ArabicToEnglishInterceptor(),
       LoggingInterceptor(),
     ]);
   }

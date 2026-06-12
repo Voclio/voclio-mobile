@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
 import '../cubit/notifications_cubit.dart';
+import '../utils/notification_action_handler.dart';
 import '../widgets/notification_card.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<NotificationsCubit>().loadNotifications();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,54 +65,14 @@ class NotificationsScreen extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(BuildContext context, NotificationsCubit cubit) {
-    showDialog(
+    VoclioDialog.showConfirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
-        title: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: HomeSystemTokens.coral.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                AppIcons.delete_forever_rounded,
-                color: HomeSystemTokens.coral,
-                size: 24.sp,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            const Text('Clear All'),
-          ],
-        ),
-        content: const Text(
+      title: 'Clear All',
+      message:
           'Are you sure you want to delete all notifications? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: HomeSystemTokens.inkSoft),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              cubit.deleteAllNotifications();
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: HomeSystemTokens.coral,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: const Text('Delete All', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+      confirmText: 'Delete All',
+      cancelText: 'Cancel',
+      onConfirm: () => cubit.deleteAllNotifications(),
     );
   }
 }
@@ -113,7 +86,8 @@ class _NotificationsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentState = state;
 
-    if (currentState is NotificationsLoading) {
+    if (currentState is NotificationsInitial ||
+        currentState is NotificationsLoading) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -139,9 +113,20 @@ class _NotificationsBody extends StatelessWidget {
       );
     }
 
-    if (currentState is NotificationsError ||
-        (currentState is NotificationsLoaded &&
-            currentState.notifications.isEmpty)) {
+    if (currentState is NotificationsError) {
+      return HomeEmptyState(
+        icon: AppIcons.error_outline_rounded,
+        title: 'Could not load notifications',
+        message: currentState.message,
+        actionLabel: 'Try again',
+        accent: HomeSystemTokens.coral,
+        onAction: () =>
+            context.read<NotificationsCubit>().loadNotifications(),
+      );
+    }
+
+    if (currentState is NotificationsLoaded &&
+        currentState.notifications.isEmpty) {
       return HomeEmptyState(
         icon: AppIcons.notifications_off_outlined,
         title: 'All Caught Up!',
@@ -155,7 +140,9 @@ class _NotificationsBody extends StatelessWidget {
       final notifications = currentState.notifications;
       return RefreshIndicator(
         onRefresh: () async {
-          await context.read<NotificationsCubit>().loadNotifications();
+          await context
+              .read<NotificationsCubit>()
+              .loadNotifications(force: true);
         },
         color: HomeSystemTokens.blue,
         child: ListView.builder(
@@ -169,13 +156,10 @@ class _NotificationsBody extends StatelessWidget {
             return NotificationCard(
               notification: notification,
               index: index,
-              onTap: () {
-                if (!notification.isRead) {
-                  context.read<NotificationsCubit>().markAsRead(
-                    notification.id,
-                  );
-                }
-              },
+              onTap: () => NotificationActionHandler.handleTap(
+                context,
+                notification,
+              ),
               onDelete: () {
                 context.read<NotificationsCubit>().deleteNotification(
                   notification.id,

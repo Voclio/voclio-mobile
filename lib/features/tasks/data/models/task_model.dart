@@ -98,7 +98,7 @@ class TaskModel extends TaskEntity {
 
     final Map<String, dynamic> data = {
       'title': title,
-      'status': isDone ? 'completed' : 'pending',
+      'status': isDone ? 'completed' : 'todo',
       'priority': priorityValue,
       'due_date': date.toIso8601String().split('.').first, // Clean ISO format
     };

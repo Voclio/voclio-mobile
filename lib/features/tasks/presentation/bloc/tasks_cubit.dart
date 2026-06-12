@@ -448,18 +448,13 @@ class TasksCubit extends Cubit<TasksState> {
   }
 
   Future<void> toggleTaskStatus(TaskEntity task) async {
-    // 1. Optimistic UI Update
-    final int index = state.tasks.indexWhere((t) => t.id == task.id);
-    if (index != -1) {
-      final updatedList = List<TaskEntity>.from(state.tasks);
-      // Toggle status
-      final newTask = task.copyWith(isDone: !task.isDone);
-      updatedList[index] = newTask;
-      emit(state.copyWith(tasks: updatedList));
-    }
+    final markComplete = !task.isDone;
+    final optimisticTask = task.copyWith(isDone: markComplete);
+    _replaceTaskInState(optimisticTask);
 
-    // 2. Call API using updateTask to persist the new isDone status
-    final result = await updateTaskUseCase(task.copyWith(isDone: !task.isDone));
+    final result = markComplete
+        ? await completeTaskUseCase(task.id)
+        : await updateTaskUseCase(task.copyWith(isDone: false));
 
     result.fold((failure) {
       emit(
@@ -468,7 +463,27 @@ class TasksCubit extends Cubit<TasksState> {
           errorMessage: failure.message,
         ),
       );
-      getTasks(); // Re-fetch to revert to server state
+      getTasks();
     }, (_) => null);
+  }
+
+  void _replaceTaskInState(TaskEntity updatedTask) {
+    emit(
+      state.copyWith(
+        tasks: _replaceTaskInList(state.tasks, updatedTask),
+        allTasks: _replaceTaskInList(state.allTasks, updatedTask),
+      ),
+    );
+  }
+
+  List<TaskEntity> _replaceTaskInList(
+    List<TaskEntity> list,
+    TaskEntity updatedTask,
+  ) {
+    final index = list.indexWhere((t) => t.id == updatedTask.id);
+    if (index == -1) return list;
+    final copy = List<TaskEntity>.from(list);
+    copy[index] = updatedTask;
+    return copy;
   }
 }

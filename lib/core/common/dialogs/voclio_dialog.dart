@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/constants/app_assets.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 
 enum VoclioDialogType { info, success, error, warning, confirm }
 
@@ -12,7 +14,6 @@ class VoclioDialog extends StatelessWidget {
   final String? secondaryButtonText;
   final VoidCallback? onPrimaryPressed;
   final VoidCallback? onSecondaryPressed;
-  final bool showLogo;
 
   const VoclioDialog({
     super.key,
@@ -23,7 +24,6 @@ class VoclioDialog extends StatelessWidget {
     this.secondaryButtonText,
     this.onPrimaryPressed,
     this.onSecondaryPressed,
-    this.showLogo = true,
   });
 
   static Future<bool?> show({
@@ -36,14 +36,13 @@ class VoclioDialog extends StatelessWidget {
     VoidCallback? onPrimaryPressed,
     VoidCallback? onSecondaryPressed,
     bool barrierDismissible = true,
-    bool showLogo = true,
   }) {
     return showGeneralDialog<bool>(
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Voclio Dialog',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 300),
+      barrierColor: Colors.black45,
+      transitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (context, animation, secondaryAnimation) {
         return VoclioDialog(
           title: title,
@@ -53,25 +52,29 @@ class VoclioDialog extends StatelessWidget {
           secondaryButtonText: secondaryButtonText,
           onPrimaryPressed: onPrimaryPressed,
           onSecondaryPressed: onSecondaryPressed,
-          showLogo: showLogo,
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return ScaleTransition(
-          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-          child: FadeTransition(opacity: animation, child: child),
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            ),
+            child: child,
+          ),
         );
       },
     );
   }
 
-  /// Quick success dialog
   static Future<void> showSuccess({
     required BuildContext context,
     required String title,
     required String message,
     String buttonText = 'OK',
     VoidCallback? onPressed,
+    bool barrierDismissible = true,
   }) {
     return show(
       context: context,
@@ -79,17 +82,21 @@ class VoclioDialog extends StatelessWidget {
       message: message,
       type: VoclioDialogType.success,
       primaryButtonText: buttonText,
-      onPrimaryPressed: onPressed ?? () => Navigator.of(context).pop(),
+      barrierDismissible: barrierDismissible,
+      onPrimaryPressed: () {
+        Navigator.of(context).pop();
+        onPressed?.call();
+      },
     );
   }
 
-  /// Quick error dialog
   static Future<void> showError({
     required BuildContext context,
     required String title,
     required String message,
     String buttonText = 'OK',
     VoidCallback? onPressed,
+    bool barrierDismissible = true,
   }) {
     return show(
       context: context,
@@ -97,11 +104,14 @@ class VoclioDialog extends StatelessWidget {
       message: message,
       type: VoclioDialogType.error,
       primaryButtonText: buttonText,
-      onPrimaryPressed: onPressed ?? () => Navigator.of(context).pop(),
+      barrierDismissible: barrierDismissible,
+      onPrimaryPressed: () {
+        Navigator.of(context).pop();
+        onPressed?.call();
+      },
     );
   }
 
-  /// Quick confirm dialog
   static Future<bool?> showConfirm({
     required BuildContext context,
     required String title,
@@ -110,6 +120,7 @@ class VoclioDialog extends StatelessWidget {
     String cancelText = 'Cancel',
     VoidCallback? onConfirm,
     VoidCallback? onCancel,
+    bool barrierDismissible = true,
   }) {
     return show(
       context: context,
@@ -118,28 +129,33 @@ class VoclioDialog extends StatelessWidget {
       type: VoclioDialogType.confirm,
       primaryButtonText: confirmText,
       secondaryButtonText: cancelText,
-      onPrimaryPressed: onConfirm ?? () => Navigator.of(context).pop(true),
-      onSecondaryPressed: onCancel ?? () => Navigator.of(context).pop(false),
+      barrierDismissible: barrierDismissible,
+      onPrimaryPressed: () {
+        Navigator.of(context).pop(true);
+        onConfirm?.call();
+      },
+      onSecondaryPressed: () {
+        Navigator.of(context).pop(false);
+        onCancel?.call();
+      },
     );
   }
 
-  Color get _primaryColor {
+  Color get _accentColor {
     switch (type) {
       case VoclioDialogType.success:
-        return const Color(0xFF10B981);
+        return HomeSystemTokens.green;
       case VoclioDialogType.error:
-        return const Color(0xFFEF4444);
+        return HomeSystemTokens.coral;
       case VoclioDialogType.warning:
-        return const Color(0xFFF59E0B);
+        return HomeSystemTokens.orange;
       case VoclioDialogType.confirm:
-        return const Color(0xFF6C4FBB);
       case VoclioDialogType.info:
-      default:
-        return const Color(0xFF6C4FBB);
+        return HomeSystemTokens.purple;
     }
   }
 
-  IconData get _icon {
+  IconData? get _leadingIcon {
     switch (type) {
       case VoclioDialogType.success:
         return AppIcons.check_circle_rounded;
@@ -147,135 +163,66 @@ class VoclioDialog extends StatelessWidget {
         return AppIcons.error_rounded;
       case VoclioDialogType.warning:
         return AppIcons.warning_rounded;
-      case VoclioDialogType.confirm:
-        return AppIcons.help_rounded;
       case VoclioDialogType.info:
-      default:
         return AppIcons.info_rounded;
+      case VoclioDialogType.confirm:
+        return null;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final icon = _leadingIcon;
+
     return Center(
       child: Material(
         color: Colors.transparent,
         child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 32.w),
-          constraints: BoxConstraints(maxWidth: 340.w),
+          margin: EdgeInsets.symmetric(horizontal: 40.w),
+          constraints: BoxConstraints(maxWidth: 300.w),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24.r),
+            borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: _primaryColor.withOpacity(0.2),
-                blurRadius: 30,
-                offset: const Offset(0, 15),
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with gradient
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(vertical: 24.h),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_primaryColor, _primaryColor.withOpacity(0.8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 16.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DialogBrand(accent: _accentColor),
+                SizedBox(height: 14.h),
+                if (icon != null) ...[
+                  Icon(icon, size: 26.sp, color: _accentColor),
+                  SizedBox(height: 10.h),
+                ],
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w700,
+                    color: HomeSystemTokens.ink,
+                    height: 1.25,
                   ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24.r),
-                    topRight: Radius.circular(24.r),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: HomeSystemTokens.inkSoft,
+                    height: 1.45,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    if (showLogo) ...[
-                      // Voclio Logo
-                      Container(
-                        width: 50.r,
-                        height: 50.r,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/images/12.png',
-                            width: 40.r,
-                            height: 40.r,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Voclio',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white.withOpacity(0.9),
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      SizedBox(height: 12.h),
-                    ],
-                    // Icon
-                    Container(
-                      padding: EdgeInsets.all(12.r),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(_icon, size: 32.sp, color: _primaryColor),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 8.h),
-                child: Column(
-                  children: [
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1A1A2E),
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Text(
-                      message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: Colors.grey.shade600,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Buttons
-              Padding(
-                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
-                child: Row(
+                SizedBox(height: 20.h),
+                Row(
                   children: [
                     if (secondaryButtonText != null) ...[
                       Expanded(
@@ -284,77 +231,90 @@ class VoclioDialog extends StatelessWidget {
                               onSecondaryPressed ??
                               () => Navigator.of(context).pop(false),
                           style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            side: BorderSide(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
-                            ),
+                            padding: EdgeInsets.symmetric(vertical: 11.h),
+                            side: BorderSide(color: Colors.grey.shade300),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
+                              borderRadius: BorderRadius.circular(10.r),
                             ),
                           ),
                           child: Text(
                             secondaryButtonText!,
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
+                              color: HomeSystemTokens.inkSoft,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 12.w),
+                      SizedBox(width: 10.w),
                     ],
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12.r),
-                          gradient: LinearGradient(
-                            colors: [
-                              _primaryColor,
-                              _primaryColor.withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                      child: ElevatedButton(
+                        onPressed:
+                            onPrimaryPressed ??
+                            () => Navigator.of(context).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _accentColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(vertical: 11.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.r),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _primaryColor.withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
                         ),
-                        child: ElevatedButton(
-                          onPressed:
-                              onPrimaryPressed ??
-                              () => Navigator.of(context).pop(true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                          ),
-                          child: Text(
-                            primaryButtonText ?? 'OK',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                        child: Text(
+                          primaryButtonText ?? 'OK',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DialogBrand extends StatelessWidget {
+  const _DialogBrand({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6.r),
+              child: AppLogo(width: 28.w, height: 28.w),
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              'Voclio',
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w700,
+                color: accent,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Divider(height: 1, color: Colors.grey.shade200),
+      ],
     );
   }
 }

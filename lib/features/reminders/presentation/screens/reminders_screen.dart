@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
@@ -11,14 +12,26 @@ import '../cubit/reminders_cubit.dart';
 import '../widgets/reminder_card.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
-class RemindersScreen extends StatefulWidget {
+class RemindersScreen extends StatelessWidget {
   const RemindersScreen({super.key});
 
   @override
-  State<RemindersScreen> createState() => _RemindersScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => getIt<RemindersCubit>()..loadReminders(),
+      child: const _RemindersView(),
+    );
+  }
 }
 
-class _RemindersScreenState extends State<RemindersScreen> {
+class _RemindersView extends StatefulWidget {
+  const _RemindersView();
+
+  @override
+  State<_RemindersView> createState() => _RemindersViewState();
+}
+
+class _RemindersViewState extends State<_RemindersView> {
   int _currentTab = 0;
   int _allRemindersCount = 0;
   int _upcomingRemindersCount = 0;
@@ -40,6 +53,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   void _showSnoozeDialog(String reminderId) {
+    final cubit = context.read<RemindersCubit>();
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -52,7 +66,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               title: const Text('5 minutes'),
               onTap: () {
                 Navigator.pop(dialogContext);
-                context.read<RemindersCubit>().snoozeReminder(reminderId, 5);
+                cubit.snoozeReminder(reminderId, 5);
               },
             ),
             ListTile(
@@ -60,7 +74,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               title: const Text('15 minutes'),
               onTap: () {
                 Navigator.pop(dialogContext);
-                context.read<RemindersCubit>().snoozeReminder(reminderId, 15);
+                cubit.snoozeReminder(reminderId, 15);
               },
             ),
             ListTile(
@@ -68,7 +82,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               title: const Text('30 minutes'),
               onTap: () {
                 Navigator.pop(dialogContext);
-                context.read<RemindersCubit>().snoozeReminder(reminderId, 30);
+                cubit.snoozeReminder(reminderId, 30);
               },
             ),
             ListTile(
@@ -76,7 +90,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
               title: const Text('1 hour'),
               onTap: () {
                 Navigator.pop(dialogContext);
-                context.read<RemindersCubit>().snoozeReminder(reminderId, 60);
+                cubit.snoozeReminder(reminderId, 60);
               },
             ),
           ],
@@ -92,162 +106,146 @@ class _RemindersScreenState extends State<RemindersScreen> {
   }
 
   void _showDeleteConfirmation(String reminderId) {
-    showDialog(
+    final cubit = context.read<RemindersCubit>();
+    VoclioDialog.showConfirm(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Reminder'),
-        content: const Text('Are you sure you want to delete this reminder?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              context.read<RemindersCubit>().deleteReminder(reminderId);
-            },
-            style: TextButton.styleFrom(foregroundColor: HomeSystemTokens.coral),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Reminder?',
+      message:
+          'Are you sure you want to delete this reminder? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: () => cubit.deleteReminder(reminderId),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => getIt<RemindersCubit>()..loadReminders(),
-      child: Builder(
-        builder: (context) => BlocListener<RemindersCubit, RemindersState>(
-          listener: (context, state) {
-            if (state is RemindersLoaded) {
-              setState(() {
-                if (_currentTab == 0) {
-                  _allRemindersCount = state.reminders.length;
-                } else {
-                  _upcomingRemindersCount = state.reminders.length;
-                }
-              });
+    return BlocListener<RemindersCubit, RemindersState>(
+      listener: (context, state) {
+        if (state is RemindersLoaded) {
+          setState(() {
+            if (_currentTab == 0) {
+              _allRemindersCount = state.reminders.length;
+            } else {
+              _upcomingRemindersCount = state.reminders.length;
             }
-          },
-          child: HomeSecondaryScaffold(
-          title: 'Reminders',
-          subtitle: _currentTab == 0 ? 'All reminders' : 'Upcoming only',
-          icon: AppIcons.alarm_rounded,
-          accent: HomeSystemTokens.orange,
-          showBack: Navigator.canPop(context),
-          actions: [
-            HomeIconButton(
-              icon: AppIcons.add_rounded,
-              onTap: _openAddReminder,
+          });
+        }
+      },
+      child: HomeSecondaryScaffold(
+        title: 'Reminders',
+        subtitle: _currentTab == 0 ? 'All reminders' : 'Upcoming only',
+        icon: AppIcons.alarm_rounded,
+        accent: HomeSystemTokens.orange,
+        showBack: Navigator.canPop(context),
+        actions: [
+          HomeIconButton(
+            icon: AppIcons.add_rounded,
+            onTap: _openAddReminder,
+          ),
+        ],
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _openAddReminder,
+          icon: Icon(AppIcons.add),
+          label: const Text('Add Reminder'),
+          backgroundColor: HomeSystemTokens.orange,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
+              child: SizedBox(
+                height: 32.h,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    HomeCountedFilterPill(
+                      label: 'All',
+                      count: _allRemindersCount,
+                      selected: _currentTab == 0,
+                      onTap: () {
+                        if (_currentTab == 0) return;
+                        setState(() => _currentTab = 0);
+                        _loadReminders();
+                      },
+                    ),
+                    HomeCountedFilterPill(
+                      label: 'Upcoming',
+                      count: _upcomingRemindersCount,
+                      selected: _currentTab == 1,
+                      onTap: () {
+                        if (_currentTab == 1) return;
+                        setState(() => _currentTab = 1);
+                        _loadReminders();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Expanded(
+              child: BlocBuilder<RemindersCubit, RemindersState>(
+                builder: (context, state) {
+                  if (state is RemindersLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: HomeSystemTokens.orange,
+                      ),
+                    );
+                  }
+
+                  if (state is RemindersError) {
+                    return _buildErrorState(state.message);
+                  }
+
+                  if (state is RemindersLoaded) {
+                    if (state.reminders.isEmpty) {
+                      return _buildEmptyState();
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: () async => _loadReminders(),
+                      color: HomeSystemTokens.orange,
+                      child: ListView.builder(
+                        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 100.h),
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        itemCount: state.reminders.length,
+                        itemBuilder: (context, index) {
+                          final reminder = state.reminders[index];
+                          return ReminderCard(
+                            reminder: reminder,
+                            onSnooze: () => _showSnoozeDialog(reminder.id),
+                            onDismiss: () {
+                              context.read<RemindersCubit>().dismissReminder(
+                                reminder.id,
+                              );
+                            },
+                            onDelete: () =>
+                                _showDeleteConfirmation(reminder.id),
+                          );
+                        },
+                      ),
+                    );
+                  }
+
+                  return const SizedBox();
+                },
+              ),
             ),
           ],
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: _openAddReminder,
-            icon: Icon(AppIcons.add),
-            label: const Text('Add Reminder'),
-            backgroundColor: HomeSystemTokens.orange,
-            foregroundColor: Colors.white,
-            elevation: 0,
-          ),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
-                child: SizedBox(
-                  height: 32.h,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      HomeCountedFilterPill(
-                        label: 'All',
-                        count: _allRemindersCount,
-                        selected: _currentTab == 0,
-                        onTap: () {
-                          if (_currentTab == 0) return;
-                          setState(() => _currentTab = 0);
-                          _loadReminders();
-                        },
-                      ),
-                      HomeCountedFilterPill(
-                        label: 'Upcoming',
-                        count: _upcomingRemindersCount,
-                        selected: _currentTab == 1,
-                        onTap: () {
-                          if (_currentTab == 1) return;
-                          setState(() => _currentTab = 1);
-                          _loadReminders();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Expanded(
-                child: BlocBuilder<RemindersCubit, RemindersState>(
-                  builder: (context, state) {
-                    if (state is RemindersLoading) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: HomeSystemTokens.orange,
-                        ),
-                      );
-                    }
-
-                    if (state is RemindersError) {
-                      return _buildErrorState(context, state.message);
-                    }
-
-                    if (state is RemindersLoaded) {
-                      if (state.reminders.isEmpty) {
-                        return _buildEmptyState(context);
-                      }
-
-                      return RefreshIndicator(
-                        onRefresh: () async => _loadReminders(),
-                        color: HomeSystemTokens.orange,
-                        child: ListView.builder(
-                          padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 100.h),
-                          physics: const BouncingScrollPhysics(
-                            parent: AlwaysScrollableScrollPhysics(),
-                          ),
-                          itemCount: state.reminders.length,
-                          itemBuilder: (context, index) {
-                            final reminder = state.reminders[index];
-                            return ReminderCard(
-                              reminder: reminder,
-                              onSnooze: () => _showSnoozeDialog(reminder.id),
-                              onDismiss: () {
-                                context.read<RemindersCubit>().dismissReminder(
-                                  reminder.id,
-                                );
-                              },
-                              onDelete: () =>
-                                  _showDeleteConfirmation(reminder.id),
-                            );
-                          },
-                        ),
-                      );
-                    }
-
-                    return const SizedBox();
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
         ),
       ),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState() {
     return HomeEmptyState(
       icon: AppIcons.notifications_off_outlined,
       title: _currentTab == 0
@@ -262,7 +260,7 @@ class _RemindersScreenState extends State<RemindersScreen> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, String message) {
+  Widget _buildErrorState(String message) {
     return HomeEmptyState(
       icon: AppIcons.error_outline_rounded,
       title: 'Oops! Something went wrong',

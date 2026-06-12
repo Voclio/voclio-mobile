@@ -102,16 +102,8 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       confirmText: 'Delete',
       cancelText: 'Cancel',
       onConfirm: () {
-        // 1. Close the Dialog
-        Navigator.pop(context);
-
-        // 2. Prevent Auto-Save from running when we pop the screen
         _isModified = false;
-
-        // 3. Delete logic
         cubit.deleteNote(widget.note!.id);
-
-        // 4. Close the Detail Screen
         Navigator.pop(context);
       },
     );
@@ -177,12 +169,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   icon: AppIcons.auto_awesome,
                   color: HomeSystemTokens.purple,
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => AiActionsDialog(
-                        noteId: widget.note!.id,
-                        noteContent: _contentController.text,
-                      ),
+                    AiActionsDialog.show(
+                      context,
+                      noteId: widget.note!.id,
+                      noteContent: _contentController.text,
                     );
                   },
                 ),

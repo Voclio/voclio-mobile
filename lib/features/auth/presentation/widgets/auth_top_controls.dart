@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/constants/app_assets.dart';
 import 'package:voclio_app/core/extentions/context_extentions.dart';
-import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/app_cubit.dart';
 import '../../../../core/language/lang_keys.dart';
 
@@ -14,16 +14,9 @@ class AuthTopControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: ThemeController.instance.isDarkMode,
-      builder: (context, isDarkMode, child) {
-        return BlocBuilder<AppCubit, AppState>(
-          buildWhen: (previous, current) => previous.locale != current.locale,
-          builder: (context, appState) {
-            return _buildTopControls(context, appState);
-          },
-        );
-      },
+    return BlocBuilder<AppCubit, AppState>(
+      buildWhen: (previous, current) => previous.locale != current.locale,
+      builder: (context, appState) => _buildTopControls(context, appState),
     );
   }
 
@@ -33,19 +26,14 @@ class AuthTopControls extends StatelessWidget {
     final isSmall = size.height < 700;
 
     return SizedBox(
-      height: isSmall ? 100.h : 120.h,
+      height: isSmall ? 112.h : 136.h,
       width: double.infinity,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          SizedBox(
-            width: isSmall ? 100.w : 120.w,
-            height: isSmall ? 100.h : 120.h,
-            child: Image.asset(
-              'assets/images/12.png',
-              fit: BoxFit.contain,
-              colorBlendMode: BlendMode.srcIn,
-            ),
+          AppLogo(
+            width: isSmall ? 112.w : 136.w,
+            height: isSmall ? 112.h : 136.h,
           ),
           if (showSkip && onSkip != null)
             Positioned(

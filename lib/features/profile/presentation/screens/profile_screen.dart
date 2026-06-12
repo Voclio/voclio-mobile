@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'edit_profile_screen.dart';
@@ -152,30 +155,16 @@ class ProfileScreen extends StatelessWidget {
                   iconColor: HomeSystemTokens.coral,
                   showDivider: false,
                   onTap: () {
-                    showDialog(
+                    VoclioDialog.showConfirm(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Logout'),
-                        content: const Text(
-                          'Are you sure you want to logout?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              // Add logout logic
-                            },
-                            child: const Text(
-                              'Logout',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
+                      title: 'Logout',
+                      message: 'Are you sure you want to logout from Voclio?',
+                      confirmText: 'Logout',
+                      cancelText: 'Cancel',
+                      onConfirm: () {
+                        context.read<AuthBloc>().add(const LogoutEvent());
+                        context.go(AppRouter.login);
+                      },
                     );
                   },
                 ),

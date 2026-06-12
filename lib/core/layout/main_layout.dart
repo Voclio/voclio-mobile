@@ -11,15 +11,18 @@ import 'package:voclio_app/core/icons/app_icons.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
-  static final GlobalKey<State<MainLayout>> mainLayoutKey =
-      GlobalKey<State<MainLayout>>();
+  static final GlobalKey<_MainLayoutState> mainLayoutKey =
+      GlobalKey<_MainLayoutState>();
 
   /// Switch main bottom-nav tab from anywhere (e.g. after voice actions).
-  static void goToTab(int index) {
-    final state = mainLayoutKey.currentState;
-    if (state is _MainLayoutState) {
-      state.changeTab(index);
+  static bool goToTab(int index, {DateTime? calendarDate}) {
+    if (calendarDate != null) {
+      MonthlyCalendarScreen.jumpTo(calendarDate);
     }
+    final state = mainLayoutKey.currentState;
+    if (state == null) return false;
+    state.changeTab(index);
+    return true;
   }
 
   @override
@@ -87,7 +90,6 @@ class _MainLayoutState extends State<MainLayout>
     final theme = Theme.of(context);
 
     return Scaffold(
-      key: MainLayout.mainLayoutKey,
       backgroundColor: const Color(0xFFF5F6FA),
       extendBody: true,
       resizeToAvoidBottomInset: false,

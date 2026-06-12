@@ -20,14 +20,28 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     // Save User Data to SharedPreferences
     UserModel userModel = UserModel.fromEntity(response.user);
 
-    // If refresh response doesn't include user data, keep existing cached user
-    if ((userModel.email.isEmpty && userModel.name == 'Unknown User') ||
-        userModel.id.isEmpty) {
+    // If refresh/profile response is missing user fields, keep cached user data.
+    if (userModel.id.isEmpty ||
+        userModel.email.isEmpty ||
+        userModel.name.trim().isEmpty ||
+        userModel.name == 'Unknown User') {
       final cachedUserString = _prefs.getString('auth_user');
       if (cachedUserString != null) {
         try {
-          final cachedUserJson = jsonDecode(cachedUserString);
-          userModel = UserModel.fromJson(cachedUserJson);
+          final cachedUser = UserModel.fromJson(jsonDecode(cachedUserString));
+          userModel = UserModel(
+            id: userModel.id.isNotEmpty ? userModel.id : cachedUser.id,
+            email:
+                userModel.email.isNotEmpty ? userModel.email : cachedUser.email,
+            name: userModel.name.trim().isNotEmpty &&
+                    userModel.name != 'Unknown User'
+                ? userModel.name
+                : cachedUser.name,
+            phoneNumber: userModel.phoneNumber ?? cachedUser.phoneNumber,
+            avatar: userModel.avatar ?? cachedUser.avatar,
+            createdAt: userModel.createdAt,
+            updatedAt: userModel.updatedAt ?? cachedUser.updatedAt,
+          );
         } catch (_) {}
       }
     }
@@ -82,7 +96,8 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       }
 
       // Validate user data has required fields
-      if (userJson['email'] == null || userJson['id'] == null) {
+      final userId = userJson['id'] ?? userJson['user_id'];
+      if (userJson['email'] == null || userId == null) {
         await clearAuthData();
         return null;
       }

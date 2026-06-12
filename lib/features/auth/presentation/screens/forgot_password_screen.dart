@@ -74,7 +74,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             message: 'We have sent a password reset code to your email.',
             buttonText: 'Continue',
             onPressed: () {
-              Navigator.of(context).pop();
               context.pushRoute(
                 '${AppRouter.otp}?email=$email&type=forgotPassword',
               );

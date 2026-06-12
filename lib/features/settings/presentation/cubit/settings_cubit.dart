@@ -27,14 +27,15 @@ class SettingsCubit extends Cubit<SettingsState> {
         state.copyWith(isLoading: false, error: 'Failed to load settings'),
       ),
       (settings) async {
-        await LanguageController.instance.changeLanguage(
-          Locale(settings.language),
-        );
+        const language = 'en';
+        if (settings.language != language) {
+          await updateSettingsUseCase(language: language);
+        }
+        await LanguageController.instance.changeLanguage(const Locale(language));
         emit(
           state.copyWith(
             isLoading: false,
-            theme: settings.theme,
-            language: settings.language,
+            language: language,
             timezone: settings.timezone,
             pushEnabled: settings.notificationPreferences.pushEnabled,
             emailEnabled: settings.notificationPreferences.emailEnabled,
@@ -50,33 +51,6 @@ class SettingsCubit extends Cubit<SettingsState> {
     );
   }
 
-  Future<void> updateTheme(String theme) async {
-    emit(state.copyWith(isLoading: true));
-    final result = await updateSettingsUseCase(theme: theme);
-
-    result.fold(
-      (failure) => emit(
-        state.copyWith(isLoading: false, error: 'Failed to update theme'),
-      ),
-      (settings) => emit(state.copyWith(isLoading: false, theme: theme)),
-    );
-  }
-
-  Future<void> updateLanguage(String lang) async {
-    emit(state.copyWith(isLoading: true));
-    final result = await updateSettingsUseCase(language: lang);
-
-    result.fold(
-      (failure) => emit(
-        state.copyWith(isLoading: false, error: 'Failed to update language'),
-      ),
-      (settings) async {
-        await LanguageController.instance.changeLanguage(Locale(lang));
-        emit(state.copyWith(isLoading: false, language: lang));
-      },
-    );
-  }
-
   Future<void> updateTimezone(String tz) async {
     emit(state.copyWith(isLoading: true));
     final result = await updateSettingsUseCase(timezone: tz);
@@ -85,7 +59,9 @@ class SettingsCubit extends Cubit<SettingsState> {
       (failure) => emit(
         state.copyWith(isLoading: false, error: 'Failed to update timezone'),
       ),
-      (settings) => emit(state.copyWith(isLoading: false, timezone: tz)),
+      (settings) => emit(
+        state.copyWith(isLoading: false, timezone: tz, error: null),
+      ),
     );
   }
 
@@ -127,8 +103,13 @@ class SettingsCubit extends Cubit<SettingsState> {
           emailForReminders: currentPrefs.emailForReminders,
           emailForTasks: currentPrefs.emailForTasks,
           whatsappForReminders: currentPrefs.whatsappForReminders,
+          error: null,
         ),
       ),
     );
+  }
+
+  void clearError() {
+    emit(state.copyWith(error: null));
   }
 }

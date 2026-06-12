@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/constants/app_assets.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
@@ -24,19 +25,15 @@ class AboutScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 88.r,
-                    height: 88.r,
+                    width: 104.r,
+                    height: 104.r,
+                    padding: EdgeInsets.all(12.r),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          HomeSystemTokens.purple,
-                          HomeSystemTokens.purple.withValues(alpha: 0.75),
-                        ],
-                      ),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(22.r),
                       boxShadow: HomeSystemTokens.cardShadow(opacity: 0.08),
                     ),
-                    child: Icon(AppIcons.mic_rounded, color: Colors.white, size: 42.sp),
+                    child: const AppLogo(),
                   ),
                   SizedBox(height: 16.h),
                   Text(

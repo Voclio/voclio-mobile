@@ -16,12 +16,10 @@ class UserModel extends User {
     final userId = (json['user_id'] ?? json['id'] ?? '').toString();
 
     // Handle both 'name' (from API) and 'fullName' (possible local format)
-    final userName =
-        (json['name'] ??
-                json['full_name'] ??
-                json['fullName'] ??
-                'Unknown User')
-            as String;
+    final rawName = json['name'] ?? json['full_name'] ?? json['fullName'];
+    final userName = rawName is String && rawName.trim().isNotEmpty
+        ? rawName.trim()
+        : 'Unknown User';
 
     return UserModel(
       id: userId,

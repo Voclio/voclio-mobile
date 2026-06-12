@@ -320,8 +320,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     // Save current state in case profile fetch fails
     final previousState = state;
+    final isSilentRefresh = previousState is AuthSuccess;
 
-    emit(AuthLoading());
+    if (!isSilentRefresh) {
+      emit(AuthLoading());
+    }
+
     final result = await _getProfileUseCase();
     result.fold((failure) {
       // If we had a valid auth state before, don't show error

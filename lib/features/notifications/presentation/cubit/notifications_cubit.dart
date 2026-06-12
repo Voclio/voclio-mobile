@@ -1,7 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../../domain/usecases/notification_usecases.dart';
-import 'package:translator/translator.dart';
 
 part 'notifications_state.dart';
 
@@ -11,10 +10,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   final MarkAllAsReadUseCase markAllAsReadUseCase;
   final DeleteNotificationUseCase deleteNotificationUseCase;
   final DeleteAllNotificationsUseCase deleteAllNotificationsUseCase;
-  final GoogleTranslator _translator = GoogleTranslator();
-
-  // In-memory cache for translations to avoid redundant API calls
-  static final Map<String, String> _translationCache = {};
 
   NotificationsCubit({
     required this.getNotificationsUseCase,
@@ -24,117 +19,97 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     required this.deleteAllNotificationsUseCase,
   }) : super(NotificationsInitial());
 
-  Future<void> loadNotifications() async {
-    emit(NotificationsLoading());
+  Future<void> loadNotifications({bool force = false, bool silent = false}) async {
+    if (!force && state is NotificationsLoaded) return;
+    if (!silent) {
+      emit(NotificationsLoading());
+    }
+
     final result = await getNotificationsUseCase();
-    result.fold((failure) => emit(NotificationsError(failure.toString())), (
-      notifications,
-    ) async {
-      try {
-        final translatedNotifications = await _translateNotifications(
-          notifications,
-        );
-        emit(NotificationsLoaded(translatedNotifications));
-      } catch (e) {
-        // If translation fails, show original notifications
-        emit(NotificationsLoaded(notifications));
-      }
-    });
-  }
-
-  Future<List<NotificationEntity>> _translateNotifications(
-    List<NotificationEntity> notifications,
-  ) async {
-    // Translate all notifications in parallel for better performance
-    final results = await Future.wait(
-      notifications.map((notification) async {
-        String title = notification.title;
-        String message = notification.message;
-
-        // Translate title if Arabic
-        if (_isArabic(title)) {
-          title = await _getCachedOrTranslate(title);
-        }
-
-        // Translate message if Arabic
-        if (_isArabic(message)) {
-          message = await _getCachedOrTranslate(message);
-        }
-
-        return NotificationEntity(
-          id: notification.id,
-          userId: notification.userId,
-          title: title,
-          message: message,
-          type: notification.type,
-          priority: notification.priority,
-          isRead: notification.isRead,
-          readAt: notification.readAt,
-          relatedId: notification.relatedId,
-          createdAt: notification.createdAt,
-        );
-      }),
+    result.fold(
+      (failure) => emit(NotificationsError(failure.toString())),
+      (notifications) => emit(NotificationsLoaded(notifications)),
     );
-    return results;
-  }
-
-  Future<String> _getCachedOrTranslate(String text) async {
-    if (_translationCache.containsKey(text)) {
-      return _translationCache[text]!;
-    }
-
-    try {
-      final translated = await _translator.translate(
-        text,
-        from: 'ar',
-        to: 'en',
-      );
-      _translationCache[text] = translated.text;
-      return translated.text;
-    } catch (e) {
-      // Return original text on failure
-      return text;
-    }
-  }
-
-  bool _isArabic(String text) {
-    return RegExp(r'[\u0600-\u06FF]').hasMatch(text);
   }
 
   Future<void> markAsRead(int id) async {
+    _patchNotifications((notifications) {
+      return notifications
+          .map(
+            (notification) => notification.id == id
+                ? notification.copyWith(isRead: true, readAt: DateTime.now())
+                : notification,
+          )
+          .toList();
+    });
+
     final result = await markAsReadUseCase(id);
     result.fold(
-      (failure) => emit(NotificationsError('Failed to mark as read: $failure')),
-      (_) => loadNotifications(),
+      (failure) {
+        emit(NotificationsError('Failed to mark as read: $failure'));
+        loadNotifications(force: true, silent: true);
+      },
+      (_) => loadNotifications(force: true, silent: true),
     );
   }
 
   Future<void> markAllAsRead() async {
+    _patchNotifications(
+      (notifications) => notifications
+          .map(
+            (notification) => notification.copyWith(
+              isRead: true,
+              readAt: notification.readAt ?? DateTime.now(),
+            ),
+          )
+          .toList(),
+    );
+
     final result = await markAllAsReadUseCase();
     result.fold(
-      (failure) =>
-          emit(NotificationsError('Failed to mark all as read: $failure')),
-      (_) => loadNotifications(),
+      (failure) {
+        emit(NotificationsError('Failed to mark all as read: $failure'));
+        loadNotifications(force: true, silent: true);
+      },
+      (_) => loadNotifications(force: true, silent: true),
     );
   }
 
   Future<void> deleteNotification(int id) async {
+    _patchNotifications(
+      (notifications) =>
+          notifications.where((notification) => notification.id != id).toList(),
+    );
+
     final result = await deleteNotificationUseCase(id);
     result.fold(
-      (failure) =>
-          emit(NotificationsError('Failed to delete notification: $failure')),
-      (_) => loadNotifications(),
+      (failure) {
+        emit(NotificationsError('Failed to delete notification: $failure'));
+        loadNotifications(force: true, silent: true);
+      },
+      (_) => loadNotifications(force: true, silent: true),
     );
   }
 
   Future<void> deleteAllNotifications() async {
+    emit(NotificationsLoaded([]));
+
     final result = await deleteAllNotificationsUseCase();
     result.fold(
-      (failure) => emit(
-        NotificationsError('Failed to delete all notifications: $failure'),
-      ),
-      (_) => loadNotifications(),
+      (failure) {
+        emit(NotificationsError('Failed to delete all notifications: $failure'));
+        loadNotifications(force: true, silent: true);
+      },
+      (_) => loadNotifications(force: true, silent: true),
     );
+  }
+
+  void _patchNotifications(
+    List<NotificationEntity> Function(List<NotificationEntity>) update,
+  ) {
+    final current = state;
+    if (current is! NotificationsLoaded) return;
+    emit(NotificationsLoaded(update(current.notifications)));
   }
 
   int get unreadCount {

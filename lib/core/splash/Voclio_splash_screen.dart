@@ -1,145 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:voclio_app/core/constants/app_assets.dart';
+import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
-import 'dart:math' as math;
-
-import '../extentions/color_extentions.dart';
+import 'package:voclio_app/core/styles/fonts/font_family_helper.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import 'package:voclio_app/features/auth/presentation/bloc/auth_bloc.dart';
 
 class VoclioSplashScreen extends StatefulWidget {
-  const VoclioSplashScreen({Key? key}) : super(key: key);
+  const VoclioSplashScreen({super.key});
 
   @override
   State<VoclioSplashScreen> createState() => _VoclioSplashScreenState();
 }
 
 class _VoclioSplashScreenState extends State<VoclioSplashScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _logoController;
-  late AnimationController _textController;
-  late AnimationController _progressController;
-  late AnimationController _waveController;
-  late AnimationController _floatController;
-
-  late Animation<double> _logoScale;
-  late Animation<double> _logoOpacity;
-  late Animation<double> _textOpacity;
-  late Animation<Offset> _textSlide;
-  late Animation<double> _progressValue;
-  late Animation<double> _waveAnimation;
-  late Animation<double> _floatAnimation;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _reveal;
+  late final Animation<double> _logoFade;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _nameFade;
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
-    _initializeAnimations();
-    _startAnimationSequence();
-  }
-
-  void _initializeAnimations() {
-    _logoController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
-    _textController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _progressController = AnimationController(
-      duration: const Duration(milliseconds: 2500),
-      vsync: this,
-    );
-
-    _waveController = AnimationController(
-      duration: const Duration(milliseconds: 3000),
-      vsync: this,
-    )..repeat();
-
-    _floatController = AnimationController(
-      duration: const Duration(milliseconds: 2500),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _logoScale = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
-    );
-
-    _logoOpacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
-
-    _textOpacity = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
-
-    _textSlide = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
-
-    _progressValue = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
-    );
-
-    _waveAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_waveController);
-    _floatAnimation = Tween<double>(begin: -10.0, end: 10.0).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-  }
-
-  void _startAnimationSequence() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (mounted) _logoController.forward();
-
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (mounted) _textController.forward();
-
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) _progressController.forward();
-
-    await Future.delayed(const Duration(milliseconds: 1400));
-    if (mounted) _navigateToNextScreen();
-  }
-
-  void _navigateToNextScreen() async {
-    _waveController.stop();
-    _floatController.stop();
-    _logoController.stop();
-    _textController.stop();
-    _progressController.stop();
-
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (!mounted) return;
-
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Color(0xFFFAFAFE),
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
+
+    _reveal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+
+    final curve = CurvedAnimation(parent: _reveal, curve: Curves.easeOutCubic);
+
+    _logoFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _reveal, curve: const Interval(0, 0.65, curve: Curves.easeOut)),
+    );
+    _logoScale = Tween<double>(begin: 0.94, end: 1).animate(curve);
+    _nameFade = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _reveal, curve: const Interval(0.4, 1, curve: Curves.easeOut)),
+    );
+
+    _reveal.forward();
+    Future.delayed(const Duration(milliseconds: 2000), _finishSplash);
+  }
+
+  void _finishSplash() {
+    if (!mounted) return;
     context.read<AuthBloc>().add(CheckAuthStatusEvent());
   }
 
   @override
   void dispose() {
-    _logoController.dispose();
-    _textController.dispose();
-    _progressController.dispose();
-    _waveController.dispose();
-    _floatController.dispose();
+    _reveal.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isSmallScreen = size.height < 600;
-    final colors = context.colors;
+    final size = MediaQuery.sizeOf(context);
+    final primary = context.colors.primary ?? HomeSystemTokens.purple;
+    final logoSize = size.width * 0.38;
 
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -150,346 +80,198 @@ class _VoclioSplashScreenState extends State<VoclioSplashScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Container(
-          width: size.width,
-          height: size.height,
-          color: Colors.white,
-          child: Stack(
-            children: [
-              _buildSoundWaves(size, colors),
-              _buildFloatingShapes(size, colors),
-              SafeArea(
-                child: SizedBox(
-                  width: size.width,
-                  height: size.height,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        backgroundColor: const Color(0xFFFAFAFE),
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            _LuxuryBackdrop(primary: primary),
+            Center(
+              child: AnimatedBuilder(
+                animation: _reveal,
+                builder: (context, child) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(
-                        height:
-                            isSmallScreen
-                                ? size.height * 0.1
-                                : size.height * 0.15,
-                      ),
-                      Flexible(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _buildAnimatedLogo(size, isSmallScreen, colors),
-                            SizedBox(height: isSmallScreen ? 20 : 30),
-                            _buildAnimatedText(size, isSmallScreen, colors),
-                          ],
+                      Opacity(
+                        opacity: _logoFade.value,
+                        child: Transform.scale(
+                          scale: _logoScale.value,
+                          child: _LuxuryLogoMark(
+                            logoSize: logoSize,
+                            primary: primary,
+                          ),
                         ),
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom: isSmallScreen ? 40 : 60,
-                        ),
-                        child: _buildLoadingSection(
-                          size,
-                          isSmallScreen,
-                          colors,
-                        ),
+                      const SizedBox(height: 36),
+                      Opacity(
+                        opacity: _nameFade.value,
+                        child: _LuxuryWordmark(primary: primary),
                       ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LuxuryBackdrop extends StatelessWidget {
+  const _LuxuryBackdrop({required this.primary});
+
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color.lerp(primary, Colors.white, 0.92)!,
+            const Color(0xFFFAFAFE),
+            Colors.white,
+          ],
+          stops: const [0, 0.45, 1],
+        ),
+      ),
+      child: CustomPaint(
+        painter: _LuxuryBackdropPainter(primary: primary),
+      ),
+    );
+  }
+}
+
+class _LuxuryBackdropPainter extends CustomPainter {
+  _LuxuryBackdropPainter({required this.primary});
+
+  final Color primary;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.5, size.height * 0.42);
+    final halo = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          primary.withValues(alpha: 0.1),
+          primary.withValues(alpha: 0.03),
+          Colors.transparent,
+        ],
+        stops: const [0, 0.45, 1],
+      ).createShader(Rect.fromCircle(center: center, radius: size.width * 0.65));
+    canvas.drawCircle(center, size.width * 0.65, halo);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LuxuryBackdropPainter oldDelegate) =>
+      oldDelegate.primary != primary;
+}
+
+class _LuxuryLogoMark extends StatelessWidget {
+  const _LuxuryLogoMark({
+    required this.logoSize,
+    required this.primary,
+  });
+
+  final double logoSize;
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final frame = logoSize * 1.18;
+
+    return SizedBox(
+      width: frame,
+      height: frame,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: 0.85),
+          border: Border.all(
+            color: primary.withValues(alpha: 0.12),
+            width: 0.8,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.1),
+              blurRadius: 56,
+              spreadRadius: -8,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Center(
+          child: AppLogo(
+            width: logoSize * 0.76,
+            height: logoSize * 0.76,
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildSoundWaves(Size size, MyColors colors) {
-    return AnimatedBuilder(
-      animation: _waveAnimation,
-      builder: (context, child) {
-        return Stack(
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              top: size.height * 0.15,
-              child: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(15, (index) {
-                    final wave = math.sin(
-                      (_waveAnimation.value * 2 * math.pi * 2) + (index * 0.5),
-                    );
-                    final height = 15.0 + (wave * 25).abs();
-                    final opacity = 0.15 + (wave.abs() * 0.15);
+class _LuxuryWordmark extends StatelessWidget {
+  const _LuxuryWordmark({required this.primary});
 
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      width: 3,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: colors.primary!.withOpacity(opacity),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: size.height * 0.22,
-              child: Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(12, (index) {
-                    final wave = math.sin(
-                      (_waveAnimation.value * 2 * math.pi * 1.5) -
-                          (index * 0.6),
-                    );
-                    final height = 12.0 + (wave * 20).abs();
-                    final opacity = 0.1 + (wave.abs() * 0.15);
+  final Color primary;
 
-                    return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: 4,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: colors.primary!.withOpacity(opacity),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingShapes(Size size, MyColors colors) {
-    return AnimatedBuilder(
-      animation: _waveAnimation,
-      builder: (context, child) {
-        return Stack(
-          children: [
-            // 🔹 مثلث أعلى اليسار
-            Positioned(
-              top:
-                  size.height * 0.12 +
-                  (math.sin(_waveAnimation.value * 2 * math.pi) * 20),
-              left: size.width * 0.1,
-              child: Transform.rotate(
-                angle: _waveAnimation.value * 2 * math.pi,
-                child: CustomPaint(
-                  size: Size(size.width * 0.08, size.width * 0.08),
-                  painter: TrianglePainter(colors.primary!.withOpacity(0.15)),
-                ),
-              ),
-            ),
-
-            // 🔹 مثلث أسفل اليمين
-            Positioned(
-              bottom:
-                  size.height * 0.2 +
-                  (math.sin(_waveAnimation.value * 2 * math.pi + 1) * 15),
-              right: size.width * 0.12,
-              child: Transform.rotate(
-                angle: -_waveAnimation.value * 2 * math.pi,
-                child: CustomPaint(
-                  size: Size(size.width * 0.07, size.width * 0.07),
-                  painter: TrianglePainter(colors.primary!.withOpacity(0.2)),
-                ),
-              ),
-            ),
-
-            // 🟦 مكعب أعلى اليمين
-            Positioned(
-              top:
-                  size.height * 0.28 +
-                  (math.sin(_waveAnimation.value * 2 * math.pi + 2) * 25),
-              right: size.width * 0.15,
-              child: Transform.rotate(
-                angle: _waveAnimation.value * 2 * math.pi * 0.5,
-                child: Container(
-                  width: size.width * 0.065,
-                  height: size.width * 0.065,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        colors.primary!.withOpacity(0.25),
-                        colors.primary!.withOpacity(0.15),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-              ),
-            ),
-
-            // 🟪 مكعب أسفل اليسار
-            Positioned(
-              bottom:
-                  size.height * 0.3 +
-                  (math.sin(_waveAnimation.value * 2 * math.pi + 3) * 20),
-              left: size.width * 0.12,
-              child: Transform.rotate(
-                angle: -_waveAnimation.value * 2 * math.pi * 0.7,
-                child: Container(
-                  width: size.width * 0.06,
-                  height: size.width * 0.06,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomRight,
-                      end: Alignment.topLeft,
-                      colors: [
-                        colors.accent!.withOpacity(0.2),
-                        colors.primary!.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildAnimatedLogo(Size size, bool isSmall, MyColors colors) {
-    final logoSize = isSmall ? size.width * 0.3 : size.width * 0.35;
-    return AnimatedBuilder(
-      animation: Listenable.merge([_logoController, _floatController]),
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _floatAnimation.value),
-          child: Transform.scale(
-            scale: _logoScale.value,
-            child: Opacity(
-              opacity: _logoOpacity.value,
-              child: Image.asset(
-                'assets/images/12.png',
-                width: logoSize,
-                height: logoSize,
-              ),
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LuxuryRule(color: primary, alignEnd: false),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          child: Text(
+            'VOCLIO',
+            style: TextStyle(
+              fontFamily: FontFamilyHelper.poppinsEnglish,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 6,
+              color: primary,
+              height: 1,
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAnimatedText(Size size, bool isSmall, MyColors colors) {
-    final titleSize = isSmall ? 40.0 : 48.0;
-    final subtitleSize = isSmall ? 14.0 : 16.0;
-
-    return AnimatedBuilder(
-      animation: _textController,
-      builder: (context, child) {
-        return SlideTransition(
-          position: _textSlide,
-          child: Opacity(
-            opacity: _textOpacity.value,
-            child: Column(
-              children: [
-                Text(
-                  'Voclio',
-                  style: TextStyle(
-                    fontSize: titleSize,
-                    fontWeight: FontWeight.w900,
-                    color: colors.primary,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Your Voice, Your Story',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: subtitleSize,
-                    color: colors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLoadingSection(Size size, bool isSmall, MyColors colors) {
-    final barWidth = size.width * 0.6;
-    return AnimatedBuilder(
-      animation: _progressController,
-      builder: (context, child) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: barWidth,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colors.primary!.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: _progressValue.value.clamp(0.0, 1.0),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  decoration: BoxDecoration(
-                    color: colors.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Initializing Voclio...',
-              style: TextStyle(
-                color: colors.primary,
-                fontSize: isSmall ? 14 : 16,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
-        );
-      },
+        ),
+        _LuxuryRule(color: primary, alignEnd: true),
+      ],
     );
   }
 }
 
-class TrianglePainter extends CustomPainter {
+class _LuxuryRule extends StatelessWidget {
+  const _LuxuryRule({
+    required this.color,
+    required this.alignEnd,
+  });
+
   final Color color;
-  TrianglePainter(this.color);
+  final bool alignEnd;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.fill;
-    final path = Path();
-    path.moveTo(size.width / 2, 0);
-    path.lineTo(0, size.height);
-    path.lineTo(size.width, size.height);
-    path.close();
-    canvas.drawPath(path, paint);
+  Widget build(BuildContext context) {
+    final solid = color.withValues(alpha: 0.45);
+    final clear = color.withValues(alpha: 0);
+
+    return Container(
+      width: 32,
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: alignEnd ? [solid, clear] : [clear, solid],
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -155,6 +155,7 @@ class NotificationCard extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     notification.title,
+                                    textDirection: TextDirection.ltr,
                                     style: TextStyle(
                                       fontSize: 15.sp,
                                       fontWeight:
@@ -203,6 +204,7 @@ class NotificationCard extends StatelessWidget {
                             SizedBox(height: 6.h),
                             Text(
                               notification.message,
+                              textDirection: TextDirection.ltr,
                               style: TextStyle(
                                 fontSize: 13.sp,
                                 color: Colors.grey.shade600,

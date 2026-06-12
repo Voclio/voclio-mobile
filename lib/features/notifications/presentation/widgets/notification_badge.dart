@@ -6,8 +6,19 @@ import '../cubit/notifications_cubit.dart';
 import '../screens/notifications_screen.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
-class NotificationBadge extends StatelessWidget {
+class NotificationBadge extends StatefulWidget {
   const NotificationBadge({super.key});
+
+  @override
+  State<NotificationBadge> createState() => _NotificationBadgeState();
+}
+
+class _NotificationBadgeState extends State<NotificationBadge> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<NotificationsCubit>().loadNotifications();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -49,7 +49,11 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   @override
   Future<int> getUnreadCount() async {
     final response = await apiClient.get(ApiEndpoints.unreadCount);
-    return (response.data['data']['count'] ?? 0) as int;
+    final data = response.data['data'];
+    if (data is Map) {
+      return (data['unread_count'] ?? data['count'] ?? 0) as int;
+    }
+    return 0;
   }
 
   @override

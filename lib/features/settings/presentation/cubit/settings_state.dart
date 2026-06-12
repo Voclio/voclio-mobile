@@ -3,7 +3,6 @@ part of 'settings_cubit.dart';
 class SettingsState {
   final bool isLoading;
   final String? error;
-  final String theme;
   final String language;
   final String timezone;
   final bool pushEnabled;
@@ -16,7 +15,6 @@ class SettingsState {
   SettingsState({
     required this.isLoading,
     this.error,
-    required this.theme,
     required this.language,
     required this.timezone,
     required this.pushEnabled,
@@ -29,7 +27,6 @@ class SettingsState {
 
   factory SettingsState.initial() => SettingsState(
     isLoading: false,
-    theme: 'light',
     language: 'en',
     timezone: 'UTC',
     pushEnabled: true,
@@ -43,7 +40,6 @@ class SettingsState {
   SettingsState copyWith({
     bool? isLoading,
     String? error,
-    String? theme,
     String? language,
     String? timezone,
     bool? pushEnabled,
@@ -56,7 +52,6 @@ class SettingsState {
     return SettingsState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
-      theme: theme ?? this.theme,
       language: language ?? this.language,
       timezone: timezone ?? this.timezone,
       pushEnabled: pushEnabled ?? this.pushEnabled,

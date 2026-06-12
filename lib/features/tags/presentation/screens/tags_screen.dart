@@ -170,10 +170,7 @@ class _TagsScreenState extends State<TagsScreen> {
           'Are you sure you want to delete this tag? This action cannot be undone.',
       confirmText: 'Delete',
       cancelText: 'Cancel',
-      onConfirm: () {
-        context.read<TagsCubit>().deleteTag(id);
-        Navigator.pop(context);
-      },
+      onConfirm: () => context.read<TagsCubit>().deleteTag(id),
     );
   }
 }

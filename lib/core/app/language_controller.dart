@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Language controller for managing app language in Voclio app
 /// Uses singleton pattern to ensure single instance across the app
-/// Supports Arabic and English languages with persistence
+/// English-only app language with persistence.
 class LanguageController {
   LanguageController._();
 
@@ -20,32 +20,19 @@ class LanguageController {
   /// Should be called during app startup
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString(_languageKey) ?? 'en';
-    currentLocale.value = Locale(languageCode);
+  if (prefs.getString(_languageKey) != 'en') {
+      await prefs.setString(_languageKey, 'en');
+    }
+    currentLocale.value = const Locale('en');
   }
 
   /// Change app language to specific locale
   /// Saves the preference to SharedPreferences
-  /// [locale] - the target locale (en or ar)
   Future<void> changeLanguage(Locale locale) async {
-    currentLocale.value = locale;
+    currentLocale.value = const Locale('en');
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_languageKey, locale.languageCode);
+    await prefs.setString(_languageKey, 'en');
   }
 
-  /// Toggle between Arabic and English languages
-  /// Saves the new preference to SharedPreferences
-  Future<void> toggleLanguage() async {
-    final newLocale =
-        currentLocale.value.languageCode == 'en'
-            ? const Locale('ar')
-            : const Locale('en');
-    await changeLanguage(newLocale);
-  }
-
-  /// Check if current language is Arabic
-  bool get isArabic => currentLocale.value.languageCode == 'ar';
-
-  /// Check if current language is English
-  bool get isEnglish => currentLocale.value.languageCode == 'en';
+  bool get isEnglish => true;
 }

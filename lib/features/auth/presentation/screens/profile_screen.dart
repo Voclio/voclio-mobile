@@ -39,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       confirmText: 'Logout',
       cancelText: 'Cancel',
       onConfirm: () {
-        Navigator.of(context).pop();
         context.read<AuthBloc>().add(const LogoutEvent());
         context.goRoute(AppRouter.login);
       },

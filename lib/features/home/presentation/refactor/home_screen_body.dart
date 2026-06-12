@@ -49,7 +49,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
     super.initState();
 
     final authState = context.read<AuthBloc>().state;
-    if (authState is! AuthSuccess && authState is! AuthInitial) {
+    if (authState is AuthSuccess || authState is ProfileUpdateError) {
       context.read<AuthBloc>().add(const GetProfileEvent());
     }
 

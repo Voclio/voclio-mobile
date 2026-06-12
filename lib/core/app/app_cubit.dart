@@ -18,32 +18,18 @@ class AppCubit extends Cubit<AppState> {
 
   /// Load saved language preference
   Future<void> _loadLanguage() async {
-    final languageCode = _prefs.getString(_languageKey) ?? 'en';
-    emit(AppLanguageChanged(Locale(languageCode)));
+    if (_prefs.getString(_languageKey) != 'en') {
+      await _prefs.setString(_languageKey, 'en');
+    }
+    emit(const AppLanguageChanged(Locale('en')));
   }
 
-  /// Change app language to specific locale
-  /// Emits state to trigger screen rebuild
   Future<void> changeLanguage(Locale locale) async {
-    await _prefs.setString(_languageKey, locale.languageCode);
-    emit(AppLanguageChanged(locale));
+    await _prefs.setString(_languageKey, 'en');
+    emit(const AppLanguageChanged(Locale('en')));
   }
 
-  /// Toggle between Arabic and English languages
-  Future<void> toggleLanguage() async {
-    final newLocale =
-        state.locale.languageCode == 'en'
-            ? const Locale('ar')
-            : const Locale('en');
-    await changeLanguage(newLocale);
-  }
+  Locale get currentLocale => const Locale('en');
 
-  /// Get current locale
-  Locale get currentLocale => state.locale;
-
-  /// Check if current language is Arabic
-  bool get isArabic => state.locale.languageCode == 'ar';
-
-  /// Check if current language is English
-  bool get isEnglish => state.locale.languageCode == 'en';
+  bool get isEnglish => true;
 }

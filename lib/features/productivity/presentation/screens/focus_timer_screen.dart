@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../../../core/di/injection_container.dart';
@@ -108,74 +109,30 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
   }
 
   void _showCompletionDialog() {
-    showDialog(
+    VoclioDialog.showSuccess(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(AppIcons.celebration, size: 64.sp, color: Colors.amber),
-                SizedBox(height: 16.h),
-                Text(
-                  '🎉 Great Job!',
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'You completed a $selectedDuration minute focus session!',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Awesome!'),
-              ),
-            ],
-          ),
+      title: 'Great Job!',
+      message:
+          'You completed a $selectedDuration minute focus session! Keep up the great work.',
+      buttonText: 'Awesome!',
     );
   }
 
   void stopTimer() {
     HapticFeedback.lightImpact();
-    showDialog(
+    VoclioDialog.showConfirm(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            title: const Text('Stop Session?'),
-            content: const Text(
-              'Are you sure you want to end this focus session early?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Continue'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  timer?.cancel();
-                  setState(() {
-                    isRunning = false;
-                    remainingSeconds = 0;
-                  });
-                },
-                child: const Text('Stop', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
+      title: 'Stop Session?',
+      message: 'Are you sure you want to end this focus session early?',
+      confirmText: 'Stop',
+      cancelText: 'Continue',
+      onConfirm: () {
+        timer?.cancel();
+        setState(() {
+          isRunning = false;
+          remainingSeconds = 0;
+        });
+      },
     );
   }
 

@@ -83,10 +83,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             message:
                 'Your password has been reset successfully. You can now login with your new password.',
             buttonText: 'Go to Login',
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.goRoute(AppRouter.login);
-            },
+            onPressed: () => context.goRoute(AppRouter.login),
           );
         } else if (state is AuthError) {
           Navigator.of(context).pop(); // Dismiss loading

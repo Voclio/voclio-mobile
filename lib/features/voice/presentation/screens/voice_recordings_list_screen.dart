@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
 import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
@@ -137,34 +138,18 @@ class VoiceRecordingsListScreen extends StatelessWidget {
                             icon: AppIcons.delete_outline,
                             color: HomeSystemTokens.coral,
                             onTap: () {
-                              showDialog(
+                              VoclioDialog.showConfirm(
                                 context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Delete Recording?'),
-                                  content: const Text(
-                                    'This action cannot be undone.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(ctx);
-                                        context.read<VoiceBloc>().add(
-                                              DeleteVoiceRecording(
-                                                recording.id,
-                                              ),
-                                            );
-                                      },
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                title: 'Delete Recording?',
+                                message:
+                                    'This action cannot be undone. Are you sure you want to delete this recording?',
+                                confirmText: 'Delete',
+                                cancelText: 'Cancel',
+                                onConfirm: () {
+                                  context.read<VoiceBloc>().add(
+                                        DeleteVoiceRecording(recording.id),
+                                      );
+                                },
                               );
                             },
                           ),

@@ -149,88 +149,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeroCard(DashboardOverview overview, double progress) {
-    final percent = overview.overallProgress.clamp(0, 100);
+    final percent = overview.overallProgress.clamp(0, 100).toInt();
+    final total = overview.totalTasks;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(HomeSystemTokens.radiusLg.r),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            HomeSystemTokens.purple.withValues(alpha: 0.12),
-            HomeSystemTokens.blue.withValues(alpha: 0.06),
-          ],
-        ),
-        boxShadow: HomeSystemTokens.cardShadow(opacity: 0.04),
-      ),
+    return HomeSectionCard(
+      padding: EdgeInsets.all(18.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Overall completion',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: HomeSystemTokens.inkSoft,
-                      ),
-                    ),
-                    SizedBox(height: 6.h),
-                    Text(
-                      '${percent.toStringAsFixed(0)}%',
-                      style: TextStyle(
-                        fontSize: 36.sp,
-                        fontWeight: FontWeight.w800,
-                        color: HomeSystemTokens.ink,
-                        height: 1,
-                        letterSpacing: -1,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Overall completion',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                    color: HomeSystemTokens.ink,
+                  ),
                 ),
               ),
-              SizedBox(
-                width: 72.r,
-                height: 72.r,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 6,
-                      backgroundColor:
-                          HomeSystemTokens.purple.withValues(alpha: 0.12),
-                      color: HomeSystemTokens.purple,
-                    ),
-                    Text(
-                      '${percent.toStringAsFixed(0)}%',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w800,
-                        color: HomeSystemTokens.purple,
-                      ),
-                    ),
-                  ],
+              Text(
+                '$percent%',
+                style: TextStyle(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w800,
+                  color: HomeSystemTokens.purple,
+                  height: 1,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 14.h),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
+            borderRadius: BorderRadius.circular(100.r),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 6.h,
-              backgroundColor: Colors.white.withValues(alpha: 0.55),
+              minHeight: 10.h,
+              backgroundColor: HomeSystemTokens.purple.withValues(alpha: 0.1),
               color: HomeSystemTokens.purple,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            total > 0
+                ? '${overview.completedTasks} of $total tasks completed'
+                : 'No tasks yet',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: HomeSystemTokens.inkMuted,
+              fontWeight: FontWeight.w500,
             ),
           ),
           SizedBox(height: 16.h),
@@ -241,13 +209,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 'Done',
                 HomeSystemTokens.green,
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 10.w),
               _heroChip(
                 '${overview.pendingTasks}',
                 'Pending',
                 HomeSystemTokens.orange,
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 10.w),
               _heroChip(
                 '${overview.overdueTasks}',
                 'Overdue',
@@ -263,9 +231,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _heroChip(String value, String label, Color color) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(vertical: 12.h),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.72),
+          color: HomeSystemTokens.canvas,
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Column(
@@ -276,9 +244,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w800,
                 color: color,
+                height: 1,
               ),
             ),
-            SizedBox(height: 2.h),
+            SizedBox(height: 4.h),
             Text(
               label,
               style: TextStyle(
@@ -315,12 +284,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         label: 'Best streak',
         value: '${productivity.longestStreak}d',
         color: HomeSystemTokens.purple,
-      ),
-      _ActivityItem(
-        icon: AppIcons.check_circle_outline_rounded,
-        label: 'Completion',
-        value: '${overview.overallProgress.toStringAsFixed(0)}%',
-        color: HomeSystemTokens.green,
       ),
     ];
 

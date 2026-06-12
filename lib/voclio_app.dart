@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:voclio_app/core/app/connectivily_control.dart';
-import 'package:voclio_app/core/app/theme_controller.dart';
 import 'package:voclio_app/core/app/app_cubit.dart';
 import 'package:voclio_app/core/language/app_localizations_setup.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
@@ -28,60 +27,53 @@ class VoclioApp extends StatelessWidget {
       child: ValueListenableBuilder<bool>(
         valueListenable: ConnectivityControler.instance.isConected,
         builder: (context, isConnected, _) {
-          return ValueListenableBuilder<bool>(
-            valueListenable: ThemeController.instance.isDarkMode,
-            builder: (context, isDarkMode, _) {
-              return BlocBuilder<AppCubit, AppState>(
-                buildWhen:
-                    (previous, current) => previous.locale != current.locale,
-                builder: (context, appState) {
-                  return ScreenUtilInit(
-                    designSize: const Size(375, 812),
-                    minTextAdapt: true,
-                    splitScreenMode: true,
-                    builder: (context, child) {
-                      return MultiBlocProvider(
-                        providers: [
-                          BlocProvider<AuthBloc>(
-                            create: (context) => getIt<AuthBloc>(),
-                          ),
-                          BlocProvider<NotificationsCubit>(
-                            create: (context) => getIt<NotificationsCubit>(),
-                          ),
-                          BlocProvider<CalendarCubit>(
-                            create: (context) => getIt<CalendarCubit>(),
-                          ),
-                          BlocProvider<DashboardCubit>(
-                            create: (context) => getIt<DashboardCubit>(),
-                          ),
-                          BlocProvider<AiSuggestionsCubit>(
-                            create: (context) => getIt<AiSuggestionsCubit>(),
-                          ),
-                          BlocProvider<WidgetConfigCubit>(
-                            create:
-                                (context) => getIt<WidgetConfigCubit>()..init(),
-                          ),
-                        ],
-                        child: MaterialApp.router(
-                          debugShowCheckedModeBanner: false,
-                          theme: themeLight(),
-                          locale: appState.locale,
-                          supportedLocales:
-                              AppLocalizationsSetup.supportedLocales,
-                          localizationsDelegates:
-                              AppLocalizationsSetup.localizationsDelegates,
-                          localeResolutionCallback:
-                              AppLocalizationsSetup.localeResolutionCallback,
-                          routerConfig: AppRouter.router,
-                          builder: (context, child) {
-                            if (!isConnected) {
-                              return const NoNetworkScreen();
-                            }
-                            return child!;
-                          },
-                        ),
-                      );
-                    },
+          return BlocBuilder<AppCubit, AppState>(
+            buildWhen: (previous, current) => previous.locale != current.locale,
+            builder: (context, appState) {
+              return ScreenUtilInit(
+                designSize: const Size(375, 812),
+                minTextAdapt: true,
+                splitScreenMode: true,
+                builder: (context, child) {
+                  return MultiBlocProvider(
+                    providers: [
+                      BlocProvider<AuthBloc>(
+                        create: (context) => getIt<AuthBloc>(),
+                      ),
+                      BlocProvider<NotificationsCubit>(
+                        create: (context) => getIt<NotificationsCubit>(),
+                      ),
+                      BlocProvider<CalendarCubit>(
+                        create: (context) => getIt<CalendarCubit>(),
+                      ),
+                      BlocProvider<DashboardCubit>(
+                        create: (context) => getIt<DashboardCubit>(),
+                      ),
+                      BlocProvider<AiSuggestionsCubit>(
+                        create: (context) => getIt<AiSuggestionsCubit>(),
+                      ),
+                      BlocProvider<WidgetConfigCubit>(
+                        create: (context) => getIt<WidgetConfigCubit>()..init(),
+                      ),
+                    ],
+                    child: MaterialApp.router(
+                      debugShowCheckedModeBanner: false,
+                      theme: themeLight(),
+                      themeMode: ThemeMode.light,
+                      locale: appState.locale,
+                      supportedLocales: AppLocalizationsSetup.supportedLocales,
+                      localizationsDelegates:
+                          AppLocalizationsSetup.localizationsDelegates,
+                      localeResolutionCallback:
+                          AppLocalizationsSetup.localeResolutionCallback,
+                      routerConfig: AppRouter.router,
+                      builder: (context, child) {
+                        if (!isConnected) {
+                          return const NoNetworkScreen();
+                        }
+                        return child!;
+                      },
+                    ),
                   );
                 },
               );

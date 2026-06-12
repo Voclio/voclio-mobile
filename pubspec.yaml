@@ -82,6 +82,7 @@ dependencies:
   http_parser: ^4.1.2
   intl_phone_field: ^3.2.0
   uicons: ^1.0.1
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
@@ -150,18 +151,14 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/12.png"
+  image_path: "assets/images/logo_launcher.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/12.png"
+  adaptive_icon_foreground: "assets/images/logo_launcher.png"
 
 flutter_native_splash:
   color: "#FFFFFF"
-  image: "assets/images/12.png"
-  icon_background_color: "#FFFFFF"
   android: true
   ios: true
   web: false
   android_12:
     color: "#FFFFFF"
-    image: "assets/images/12.png"
-    icon_background_color: "#FFFFFF"

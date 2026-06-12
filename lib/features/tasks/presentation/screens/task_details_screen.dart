@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
+import 'package:voclio_app/core/enums/enums.dart';
+import 'package:voclio_app/core/layout/main_layout.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/features/calendar/presentation/screens/monthly_calendar_screen.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
+import 'package:voclio_app/features/tasks/presentation/widgets/add_task_buttom_sheet.dart';
 import '../bloc/tasks_cubit.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
@@ -14,6 +22,15 @@ class TaskDetailScreen extends StatelessWidget {
 
   const TaskDetailScreen({super.key, required this.task});
 
+  TaskEntity _resolveTask(TasksState state, TaskEntity fallback) {
+    for (final candidate in [...state.tasks, ...state.allTasks]) {
+      if (candidate.id == fallback.id) {
+        return candidate;
+      }
+    }
+    return fallback;
+  }
+
   @override
   Widget build(BuildContext context) {
     // We wrap in BlocBuilder to ensure UI updates if Subtasks change
@@ -21,10 +38,7 @@ class TaskDetailScreen extends StatelessWidget {
       builder: (context, state) {
         // Find the specific task in the state to get the latest updates (e.g. subtask checks)
         // Fallback to the passed 'task' if not found (edge case)
-        final currentTask = state.tasks.firstWhere(
-          (t) => t.id == task.id,
-          orElse: () => task,
-        );
+        final currentTask = _resolveTask(state, task);
 
         final theme = Theme.of(context);
         final isCompleted = currentTask.isDone;
@@ -48,7 +62,7 @@ class TaskDetailScreen extends StatelessWidget {
               HomeIconButton(
                 icon: AppIcons.share_outlined,
                 color: HomeSystemTokens.inkSoft,
-                onTap: () {},
+                onTap: () => _shareTask(context, currentTask),
               ),
               SizedBox(width: 4.w),
               Padding(
@@ -56,7 +70,7 @@ class TaskDetailScreen extends StatelessWidget {
                 child: HomeIconButton(
                   icon: AppIcons.more_horiz_rounded,
                   color: HomeSystemTokens.inkSoft,
-                  onTap: () {},
+                  onTap: () => _showTaskOptions(context, currentTask),
                 ),
               ),
             ],
@@ -382,7 +396,7 @@ class TaskDetailScreen extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () => _openTaskInCalendar(context, task),
               icon: Icon(AppIcons.push_pin_outlined, size: 16.sp),
               label: const Text("Pin to Calendar"),
               style: OutlinedButton.styleFrom(
@@ -778,9 +792,11 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           width: double.infinity,
           height: 54.h,
           child: ElevatedButton.icon(
-            onPressed: () {
-              context.read<TasksCubit>().toggleTaskStatus(task);
-              Navigator.pop(context);
+            onPressed: () async {
+              await context.read<TasksCubit>().toggleTaskStatus(task);
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             icon: Icon(
               isCompleted ? AppIcons.refresh_rounded : AppIcons.check_circle_outline_rounded,
@@ -814,9 +830,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           width: double.infinity,
           height: 54.h,
           child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Implement edit functionality
-            },
+            onPressed: () => _openEditTask(context, task),
             icon: Icon(AppIcons.edit_outlined, size: 20.sp),
             label: Text(
               "Edit Task",
@@ -844,9 +858,7 @@ class ActionButtonsTaskDetails extends StatelessWidget {
           width: double.infinity,
           height: 54.h,
           child: ElevatedButton.icon(
-            onPressed: () {
-              _showDeleteConfirmation(context);
-            },
+            onPressed: () => _showDeleteTaskConfirmation(context, task),
             icon: Icon(AppIcons.delete_outline_rounded, size: 20.sp),
             label: Text(
               "Delete Task",
@@ -869,56 +881,176 @@ class ActionButtonsTaskDetails extends StatelessWidget {
     );
   }
   
-  void _showDeleteConfirmation(BuildContext context) {
-    final theme = Theme.of(context);
-    final cubit = context.read<TasksCubit>();
-    
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
+}
+
+void _openTaskInCalendar(BuildContext context, TaskEntity task) {
+  MonthlyCalendarScreen.jumpTo(task.date);
+
+  if (MainLayout.goToTab(2, calendarDate: task.date)) {
+    Navigator.pop(context);
+    return;
+  }
+
+  context.go(AppRouter.home);
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    MainLayout.goToTab(2, calendarDate: task.date);
+  });
+}
+
+void _showDeleteTaskConfirmation(BuildContext context, TaskEntity task) {
+  final cubit = context.read<TasksCubit>();
+
+  VoclioDialog.showConfirm(
+    context: context,
+    title: 'Delete Task?',
+    message:
+        'This action cannot be undone. Are you sure you want to delete "${task.title}"?',
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    onConfirm: () {
+      Navigator.pop(context);
+      cubit.deleteTask(task.id);
+    },
+  );
+}
+
+String _priorityLabel(TaskPriority priority) {
+  return switch (priority) {
+    TaskPriority.high => 'High',
+    TaskPriority.medium => 'Medium',
+    TaskPriority.low => 'Low',
+    TaskPriority.none => 'None',
+  };
+}
+
+Future<void> _shareTask(BuildContext context, TaskEntity task) async {
+  final dateFormat = DateFormat('MMM d, yyyy • h:mm a');
+  final buffer = StringBuffer()
+    ..writeln(task.title)
+    ..writeln('Due: ${dateFormat.format(task.date)}')
+    ..writeln('Priority: ${_priorityLabel(task.priority)}')
+    ..writeln('Status: ${task.isDone ? 'Completed' : 'Pending'}');
+
+  if (task.description != null && task.description!.trim().isNotEmpty) {
+    buffer.writeln('\n${task.description!.trim()}');
+  }
+
+  buffer.writeln('\nShared from Voclio');
+
+  await Share.share(buffer.toString().trim());
+}
+
+void _openEditTask(BuildContext context, TaskEntity task) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => BlocProvider.value(
+      value: context.read<TasksCubit>(),
+      child: AddTaskBottomSheet(taskToEdit: task),
+    ),
+  );
+}
+
+void _showTaskOptions(BuildContext context, TaskEntity task) {
+  final theme = Theme.of(context);
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) {
+      return Container(
+        margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h + MediaQuery.paddingOf(sheetContext).bottom),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(20.r),
         ),
-        title: Row(
-          children: [
-            Icon(
-              AppIcons.warning_amber_rounded,
-              color: Colors.red.shade400,
-              size: 28.sp,
-            ),
-            SizedBox(width: 12.w),
-            const Text('Delete Task?'),
-          ],
-        ),
-        content: Text(
-          'This action cannot be undone. Are you sure you want to delete "${task.title}"?',
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: theme.colorScheme.secondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              Navigator.pop(context);
-              cubit.deleteTask(task.id);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 12.h),
+              Container(
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
               ),
-            ),
-            child: const Text('Delete'),
+              _TaskOptionTile(
+                icon: AppIcons.edit_outlined,
+                label: 'Edit Task',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _openEditTask(context, task);
+                },
+              ),
+              _TaskOptionTile(
+                icon: task.isDone
+                    ? AppIcons.refresh_rounded
+                    : AppIcons.check_circle_outline_rounded,
+                label: task.isDone ? 'Mark as Incomplete' : 'Mark as Complete',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  context.read<TasksCubit>().toggleTaskStatus(task);
+                },
+              ),
+              _TaskOptionTile(
+                icon: AppIcons.calendar_month_outlined,
+                label: 'Open in Calendar',
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _openTaskInCalendar(context, task);
+                },
+              ),
+              _TaskOptionTile(
+                icon: AppIcons.delete_outline_rounded,
+                label: 'Delete Task',
+                color: HomeSystemTokens.coral,
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _showDeleteTaskConfirmation(context, task);
+                },
+              ),
+              SizedBox(height: 8.h),
+            ],
           ),
-        ],
+        ),
+      );
+    },
+  );
+}
+
+class _TaskOptionTile extends StatelessWidget {
+  const _TaskOptionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemColor = color ?? HomeSystemTokens.ink;
+
+    return ListTile(
+      leading: Icon(icon, color: itemColor),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: itemColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 15.sp,
+        ),
       ),
+      onTap: onTap,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:voclio_app/features/settings/presentation/widgets/timezone_picker_sheet.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
 import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
@@ -26,23 +27,20 @@ class SettingsScreen extends StatelessWidget {
                 backgroundColor: HomeSystemTokens.coral,
               ),
             );
+            context.read<SettingsCubit>().clearError();
           }
         },
         child: BlocBuilder<SettingsCubit, SettingsState>(
           builder: (context, state) {
+            final busy = state.isLoading;
+
             return HomeSecondaryScaffold(
               title: 'Settings',
               subtitle: 'Customize your experience',
               icon: AppIcons.settings_rounded,
               accent: HomeSystemTokens.purple,
               showBack: false,
-              body: state.isLoading && state.theme.isEmpty
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: HomeSystemTokens.purple,
-                      ),
-                    )
-                  : ListView(
+              body: ListView(
                       padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
                       children: [
                         HomeSettingsGroup(
@@ -57,7 +55,9 @@ class SettingsScreen extends StatelessWidget {
                                   subtitle:
                                       '$count widget${count == 1 ? '' : 's'} enabled',
                                   iconColor: HomeSystemTokens.purple,
-                                  onTap: () => _openHomeWidgetsSettings(context),
+                                  onTap: busy
+                                      ? null
+                                      : () => _openHomeWidgetsSettings(context),
                                   showDivider: false,
                                 );
                               },
@@ -68,9 +68,7 @@ class SettingsScreen extends StatelessWidget {
                         HomeSettingsGroup(
                           title: 'Appearance',
                           children: [
-                            _buildThemeTile(context, state.theme),
-                            _buildLanguageTile(context, state.language),
-                            _buildTimezoneTile(context, state.timezone),
+                            _buildTimezoneTile(context, state.timezone, busy),
                           ],
                         ),
                         SizedBox(height: 24.h),
@@ -79,42 +77,40 @@ class SettingsScreen extends StatelessWidget {
                           children: [
                             _buildSwitchTile(
                               context,
-                              'Push Notifications',
-                              'Receive alerts on your device',
+                              'In-app Notifications',
+                              'Alerts inside Voclio',
                               AppIcons.notifications_active_outlined,
                               HomeSystemTokens.blue,
                               state.pushEnabled,
-                              (val) => context
-                                  .read<SettingsCubit>()
-                                  .updateNotificationPreference(
-                                    pushEnabled: val,
-                                  ),
+                              busy
+                                  ? null
+                                  : (val) => context
+                                      .read<SettingsCubit>()
+                                      .updateNotificationPreference(
+                                        pushEnabled: val,
+                                      ),
                             ),
                             _buildSwitchTile(
                               context,
                               'Email Notifications',
-                              'Get updates in your inbox',
+                              'Master switch for email updates',
                               AppIcons.email_outlined,
                               HomeSystemTokens.green,
                               state.emailEnabled,
-                              (val) => context
-                                  .read<SettingsCubit>()
-                                  .updateNotificationPreference(
-                                    emailEnabled: val,
-                                  ),
+                              busy
+                                  ? null
+                                  : (val) => context
+                                      .read<SettingsCubit>()
+                                      .updateNotificationPreference(
+                                        emailEnabled: val,
+                                      ),
                             ),
-                            _buildSwitchTile(
+                            _buildDisabledTile(
                               context,
                               'WhatsApp Notifications',
-                              'Updates via WhatsApp',
+                              'Coming soon',
                               AppIcons.message_outlined,
                               HomeSystemTokens.orange,
-                              state.whatsappEnabled,
-                              (val) => context
-                                  .read<SettingsCubit>()
-                                  .updateNotificationPreference(
-                                    whatsappEnabled: val,
-                                  ),
                               showDivider: false,
                             ),
                           ],
@@ -126,28 +122,24 @@ class SettingsScreen extends StatelessWidget {
                             _buildSwitchTile(
                               context,
                               'Reminders via Email',
-                              'Never miss a goal session',
+                              'Email when a reminder is due',
                               AppIcons.alarm_rounded,
                               HomeSystemTokens.orange,
                               state.emailForReminders,
-                              (val) => context
-                                  .read<SettingsCubit>()
-                                  .updateNotificationPreference(
-                                    emailForReminders: val,
-                                  ),
+                              busy || !state.emailEnabled
+                                  ? null
+                                  : (val) => context
+                                      .read<SettingsCubit>()
+                                      .updateNotificationPreference(
+                                        emailForReminders: val,
+                                      ),
                             ),
-                            _buildSwitchTile(
+                            _buildDisabledTile(
                               context,
                               'Tasks via Email',
-                              'Daily task summaries',
+                              'Coming soon',
                               AppIcons.task_alt_rounded,
                               HomeSystemTokens.purple,
-                              state.emailForTasks,
-                              (val) => context
-                                  .read<SettingsCubit>()
-                                  .updateNotificationPreference(
-                                    emailForTasks: val,
-                                  ),
                               showDivider: false,
                             ),
                           ],
@@ -177,56 +169,11 @@ class SettingsScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildThemeTile(BuildContext context, String currentTheme) {
-    return HomeMenuTile(
-      icon: AppIcons.palette_outlined,
-      title: 'Theme Mode',
-      iconColor: HomeSystemTokens.purple,
-      trailing: DropdownButton<String>(
-        value: currentTheme,
-        underline: const SizedBox(),
-        style: TextStyle(
-          fontSize: 14.sp,
-          color: HomeSystemTokens.inkSoft,
-          fontWeight: FontWeight.w500,
-        ),
-        items: const [
-          DropdownMenuItem(value: 'light', child: Text('Light')),
-          DropdownMenuItem(value: 'dark', child: Text('Dark')),
-          DropdownMenuItem(value: 'auto', child: Text('System')),
-        ],
-        onChanged: (val) {
-          if (val != null) context.read<SettingsCubit>().updateTheme(val);
-        },
-      ),
-    );
-  }
-
-  Widget _buildLanguageTile(BuildContext context, String currentLang) {
-    return HomeMenuTile(
-      icon: AppIcons.language_outlined,
-      title: 'Language',
-      iconColor: HomeSystemTokens.green,
-      trailing: DropdownButton<String>(
-        value: currentLang,
-        underline: const SizedBox(),
-        style: TextStyle(
-          fontSize: 14.sp,
-          color: HomeSystemTokens.inkSoft,
-          fontWeight: FontWeight.w500,
-        ),
-        items: const [
-          DropdownMenuItem(value: 'en', child: Text('English')),
-          DropdownMenuItem(value: 'ar', child: Text('العربية')),
-        ],
-        onChanged: (val) {
-          if (val != null) context.read<SettingsCubit>().updateLanguage(val);
-        },
-      ),
-    );
-  }
-
-  Widget _buildTimezoneTile(BuildContext context, String currentTz) {
+  Widget _buildTimezoneTile(
+    BuildContext context,
+    String currentTz,
+    bool busy,
+  ) {
     return HomeMenuTile(
       icon: AppIcons.public_outlined,
       title: 'Timezone',
@@ -234,11 +181,15 @@ class SettingsScreen extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            currentTz,
-            style: TextStyle(
-              color: HomeSystemTokens.inkMuted,
-              fontSize: 13.sp,
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 150.w),
+            child: Text(
+              currentTz.replaceAll('_', ' '),
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: HomeSystemTokens.inkMuted,
+                fontSize: 13.sp,
+              ),
             ),
           ),
           SizedBox(width: 4.w),
@@ -249,9 +200,14 @@ class SettingsScreen extends StatelessWidget {
           ),
         ],
       ),
-      onTap: () {
-        // Implement TZ picker
-      },
+      onTap: busy
+          ? null
+          : () async {
+              final selected = await TimezonePickerSheet.show(context, currentTz);
+              if (selected != null && context.mounted) {
+                context.read<SettingsCubit>().updateTimezone(selected);
+              }
+            },
       showDivider: false,
     );
   }
@@ -263,7 +219,7 @@ class SettingsScreen extends StatelessWidget {
     IconData icon,
     Color iconColor,
     bool value,
-    ValueChanged<bool> onChanged, {
+    ValueChanged<bool>? onChanged, {
     bool showDivider = true,
   }) {
     return HomeMenuTile(
@@ -276,6 +232,41 @@ class SettingsScreen extends StatelessWidget {
         value: value,
         activeTrackColor: HomeSystemTokens.purple,
         onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildDisabledTile(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    Color iconColor, {
+    bool showDivider = true,
+  }) {
+    return Opacity(
+      opacity: 0.55,
+      child: HomeMenuTile(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        iconColor: iconColor,
+        showDivider: showDivider,
+        trailing: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+          decoration: BoxDecoration(
+            color: HomeSystemTokens.canvas,
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Text(
+            'Soon',
+            style: TextStyle(
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w600,
+              color: HomeSystemTokens.inkMuted,
+            ),
+          ),
+        ),
       ),
     );
   }
