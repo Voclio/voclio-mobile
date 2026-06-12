@@ -1,13 +1,12 @@
 package com.example.voclio_app
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
-import android.content.SharedPreferences
-import android.widget.RemoteViews
-import android.app.PendingIntent
 import android.content.Intent
 import android.view.View
+import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import org.json.JSONArray
 import org.json.JSONObject
@@ -24,17 +23,7 @@ class VoclioWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    override fun onEnabled(context: Context) {
-        // Called when the first widget is created
-    }
-
-    override fun onDisabled(context: Context) {
-        // Called when the last widget is removed
-    }
-
     companion object {
-        private const val PREFS_NAME = "HomeWidgetPreferences"
-        
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -43,69 +32,34 @@ class VoclioWidgetProvider : AppWidgetProvider() {
             val widgetData = HomeWidgetPlugin.getData(context)
             val views = RemoteViews(context.packageName, R.layout.voclio_widget)
 
-            // Get tasks data from SharedPreferences
+            val monthLabel = widgetData.getString("month_label", "")
+            val dayLabel = widgetData.getString("widget_title", "Today")
+            val weekJson = widgetData.getString("week_days", "[]")
             val tasksJson = widgetData.getString("tasks", "[]")
-            val title = widgetData.getString("widget_title", "Today's Tasks")
-            
-            views.setTextViewText(R.id.widget_title, title)
+            val notesJson = widgetData.getString("notes", "[]")
 
-            try {
-                val tasks = JSONArray(tasksJson)
-                val taskCount = tasks.length()
-                
-                views.setTextViewText(R.id.widget_count, taskCount.toString())
-                
-                // Show/hide task items based on data
-                if (taskCount == 0) {
-                    views.setViewVisibility(R.id.empty_state, View.VISIBLE)
-                    views.setViewVisibility(R.id.task_item_1, View.GONE)
-                    views.setViewVisibility(R.id.task_item_2, View.GONE)
-                    views.setViewVisibility(R.id.task_item_3, View.GONE)
-                } else {
-                    views.setViewVisibility(R.id.empty_state, View.GONE)
-                    
-                    // Task 1
-                    if (taskCount >= 1) {
-                        val task1 = tasks.getJSONObject(0)
-                        views.setViewVisibility(R.id.task_item_1, View.VISIBLE)
-                        views.setTextViewText(R.id.task_1_title, task1.getString("title"))
-                        views.setTextViewText(R.id.task_1_time, task1.optString("time", ""))
-                    } else {
-                        views.setViewVisibility(R.id.task_item_1, View.GONE)
-                    }
-                    
-                    // Task 2
-                    if (taskCount >= 2) {
-                        val task2 = tasks.getJSONObject(1)
-                        views.setViewVisibility(R.id.task_item_2, View.VISIBLE)
-                        views.setTextViewText(R.id.task_2_title, task2.getString("title"))
-                        views.setTextViewText(R.id.task_2_time, task2.optString("time", ""))
-                    } else {
-                        views.setViewVisibility(R.id.task_item_2, View.GONE)
-                    }
-                    
-                    // Task 3
-                    if (taskCount >= 3) {
-                        val task3 = tasks.getJSONObject(2)
-                        views.setViewVisibility(R.id.task_item_3, View.VISIBLE)
-                        views.setTextViewText(R.id.task_3_title, task3.getString("title"))
-                        views.setTextViewText(R.id.task_3_time, task3.optString("time", ""))
-                    } else {
-                        views.setViewVisibility(R.id.task_item_3, View.GONE)
-                    }
-                }
-            } catch (e: Exception) {
-                // Show empty state on error
-                views.setViewVisibility(R.id.empty_state, View.VISIBLE)
-                views.setViewVisibility(R.id.task_item_1, View.GONE)
-                views.setViewVisibility(R.id.task_item_2, View.GONE)
-                views.setViewVisibility(R.id.task_item_3, View.GONE)
-                views.setTextViewText(R.id.widget_count, "0")
+            views.setTextViewText(R.id.widget_month, monthLabel)
+            views.setTextViewText(R.id.widget_title, dayLabel)
+
+            bindWeekStrip(views, weekJson)
+            bindListSection(
+                views,
+                JSONArray(tasksJson),
+                R.id.task_item_1_title,
+                R.id.task_item_2_title,
+                R.id.tasks_empty
+            )
+            bindListSection(
+                views,
+                JSONArray(notesJson),
+                R.id.note_item_1_title,
+                R.id.note_item_2_title,
+                R.id.notes_empty
+            )
+
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
-
-            // Set up click to open app
-            val intent = Intent(context, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             val pendingIntent = PendingIntent.getActivity(
                 context,
                 0,
@@ -115,6 +69,123 @@ class VoclioWidgetProvider : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun bindWeekStrip(views: RemoteViews, weekJson: String) {
+            try {
+                val days = JSONArray(weekJson)
+                for (index in 0 until 7) {
+                    val dowId = dayId("dow", index)
+                    val numId = dayId("num", index)
+                    val taskDotId = dayId("task_dot", index)
+                    val noteDotId = dayId("note_dot", index)
+
+                    if (index >= days.length()) {
+                        views.setViewVisibility(taskDotId, View.GONE)
+                        views.setViewVisibility(noteDotId, View.GONE)
+                        continue
+                    }
+
+                    val day = days.getJSONObject(index)
+                    views.setTextViewText(dowId, day.optString("dow", ""))
+                    views.setTextViewText(numId, day.optInt("day", 0).toString())
+
+                    val isToday = day.optBoolean("today", false)
+                    views.setInt(
+                        numId,
+                        "setBackgroundResource",
+                        if (isToday) R.drawable.widget_day_today else R.drawable.widget_day_default
+                    )
+
+                    val hasTasks = day.optInt("tasks", 0) > 0
+                    val hasNotes = day.optInt("notes", 0) > 0
+                    views.setViewVisibility(
+                        taskDotId,
+                        if (hasTasks) View.VISIBLE else View.GONE
+                    )
+                    views.setViewVisibility(
+                        noteDotId,
+                        if (hasNotes) View.VISIBLE else View.GONE
+                    )
+                }
+            } catch (_: Exception) {
+                // Keep default week layout on parse errors.
+            }
+        }
+
+        private fun bindListSection(
+            views: RemoteViews,
+            items: JSONArray,
+            firstId: Int,
+            secondId: Int,
+            emptyId: Int
+        ) {
+            try {
+                if (items.length() == 0) {
+                    views.setViewVisibility(firstId, View.GONE)
+                    views.setViewVisibility(secondId, View.GONE)
+                    views.setViewVisibility(emptyId, View.VISIBLE)
+                    return
+                }
+
+                views.setViewVisibility(emptyId, View.GONE)
+                views.setViewVisibility(firstId, View.VISIBLE)
+                val first = items.getJSONObject(0)
+                views.setTextViewText(firstId, first.optString("title", ""))
+
+                if (items.length() >= 2) {
+                    views.setViewVisibility(secondId, View.VISIBLE)
+                    val second = items.getJSONObject(1)
+                    views.setTextViewText(secondId, second.optString("title", ""))
+                } else {
+                    views.setViewVisibility(secondId, View.GONE)
+                }
+            } catch (_: Exception) {
+                views.setViewVisibility(firstId, View.GONE)
+                views.setViewVisibility(secondId, View.GONE)
+                views.setViewVisibility(emptyId, View.VISIBLE)
+            }
+        }
+
+        private fun dayId(suffix: String, index: Int): Int {
+            return when (suffix) {
+                "dow" -> when (index) {
+                    0 -> R.id.day_0_dow
+                    1 -> R.id.day_1_dow
+                    2 -> R.id.day_2_dow
+                    3 -> R.id.day_3_dow
+                    4 -> R.id.day_4_dow
+                    5 -> R.id.day_5_dow
+                    else -> R.id.day_6_dow
+                }
+                "num" -> when (index) {
+                    0 -> R.id.day_0_num
+                    1 -> R.id.day_1_num
+                    2 -> R.id.day_2_num
+                    3 -> R.id.day_3_num
+                    4 -> R.id.day_4_num
+                    5 -> R.id.day_5_num
+                    else -> R.id.day_6_num
+                }
+                "task_dot" -> when (index) {
+                    0 -> R.id.day_0_task_dot
+                    1 -> R.id.day_1_task_dot
+                    2 -> R.id.day_2_task_dot
+                    3 -> R.id.day_3_task_dot
+                    4 -> R.id.day_4_task_dot
+                    5 -> R.id.day_5_task_dot
+                    else -> R.id.day_6_task_dot
+                }
+                else -> when (index) {
+                    0 -> R.id.day_0_note_dot
+                    1 -> R.id.day_1_note_dot
+                    2 -> R.id.day_2_note_dot
+                    3 -> R.id.day_3_note_dot
+                    4 -> R.id.day_4_note_dot
+                    5 -> R.id.day_5_note_dot
+                    else -> R.id.day_6_note_dot
+                }
+            }
         }
     }
 }

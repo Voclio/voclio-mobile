@@ -73,6 +73,7 @@ class CalendarTaskModel extends CalendarTaskEntity {
   const CalendarTaskModel({
     required super.id,
     required super.title,
+    super.description,
     required super.priority,
     required super.status,
     required super.dueDate,
@@ -82,6 +83,7 @@ class CalendarTaskModel extends CalendarTaskEntity {
     return CalendarTaskModel(
       id: json['task_id'],
       title: json['title'],
+      description: json['description']?.toString(),
       priority: json['priority'],
       status: json['status'],
       dueDate: DateTime.parse(json['due_date']),

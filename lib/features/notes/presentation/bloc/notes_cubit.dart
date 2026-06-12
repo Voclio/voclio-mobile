@@ -7,6 +7,7 @@ import 'package:voclio_app/features/notes/domain/usecases/get_note_use_case.dart
 import 'package:voclio_app/features/notes/domain/usecases/update_note_use_case.dart';
 import 'package:voclio_app/core/domain/usecases/get_tags_use_case.dart';
 import 'package:voclio_app/features/notes/presentation/bloc/note_state.dart';
+import 'package:voclio_app/features/widget_config/data/services/home_screen_widget_service.dart';
 
 // --- CUBIT ---
 class NotesCubit extends Cubit<NotesState> {
@@ -53,8 +54,10 @@ class NotesCubit extends Cubit<NotesState> {
           errorMessage: failure.message,
         ),
       ),
-      (noteList) =>
-          emit(state.copyWith(status: NotesStatus.success, notes: noteList)),
+      (noteList) {
+        emit(state.copyWith(status: NotesStatus.success, notes: noteList));
+        HomeScreenWidgetService.syncNotes(noteList);
+      },
     );
   }
 
@@ -77,8 +80,10 @@ class NotesCubit extends Cubit<NotesState> {
           errorMessage: failure.message,
         ),
       ),
-      (notes) =>
-          emit(state.copyWith(status: NotesStatus.success, notes: notes)),
+      (notes) {
+        emit(state.copyWith(status: NotesStatus.success, notes: notes));
+        HomeScreenWidgetService.syncNotes(notes);
+      },
     );
   }
 

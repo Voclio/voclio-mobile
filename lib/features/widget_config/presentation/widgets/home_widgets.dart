@@ -20,6 +20,18 @@ import '../../domain/entities/widget_preference.dart';
 import '../bloc/widget_config_cubit.dart';
 import '../bloc/widget_config_state.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
+import 'package:voclio_app/core/di/injection_container.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
+import 'package:voclio_app/features/reminders/domain/entities/reminder_entity.dart';
+import 'package:voclio_app/features/reminders/presentation/cubit/reminders_cubit.dart';
+import 'package:go_router/go_router.dart';
+
+bool _isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+DateTime _dateOnly(DateTime date) =>
+    DateTime(date.year, date.month, date.day);
 
 DayEventsEntity? _eventsForDate(DateTime date, CalendarMonthEntity? monthData) {
   if (monthData == null) return null;
@@ -113,7 +125,9 @@ class HomeWidgetsContainer extends StatelessWidget {
       case WidgetType.notes:
         return RecentNotesWidget(onViewAll: () => onTabChange?.call(3));
       case WidgetType.reminders:
-        return RemindersWidget(onViewAll: () => onTabChange?.call(1));
+        return RemindersWidget(
+          onViewAll: () => context.push(AppRouter.reminders),
+        );
       case WidgetType.productivity:
         return const ProductivityWidget();
       case WidgetType.quickActions:
@@ -293,17 +307,29 @@ class RecentNotesWidget extends StatelessWidget {
               ? _loadingBody()
               : notes.isEmpty
                   ? _emptyRow('No notes yet')
-                  : Padding(
-                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                      child: Column(
-                        children:
-                            notes.map((n) => _NoteItem(note: n)).toList(),
-                      ),
+                  : _WidgetHorizontalSlider(
+                      height: 118,
+                      children: notes.map((n) => _NoteItem(note: n)).toList(),
                     ),
         );
       },
     );
   }
+}
+
+List<ReminderEntity> _visibleHomeReminders(List<ReminderEntity> reminders) {
+  final now = DateTime.now();
+  final today = _dateOnly(now);
+
+  return reminders
+      .where((r) => r.isActive)
+      .where(
+        (r) =>
+            r.remindAt.isAfter(now) ||
+            _isSameDay(_dateOnly(r.remindAt), today),
+      )
+      .toList()
+    ..sort((a, b) => a.remindAt.compareTo(b.remindAt));
 }
 
 class RemindersWidget extends StatelessWidget {
@@ -313,31 +339,43 @@ class RemindersWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<DashboardCubit, DashboardState>(
-      builder: (context, state) {
-        final reminders = state is DashboardStatsLoaded
-            ? state.stats.upcomingReminders
-            : <dashboard.DashboardReminderEntity>[];
+    return BlocProvider(
+      create: (_) => getIt<RemindersCubit>()..loadReminders(),
+      child: BlocBuilder<RemindersCubit, RemindersState>(
+        builder: (context, state) {
+          final reminders = state is RemindersLoaded
+              ? _visibleHomeReminders(state.reminders).take(5).toList()
+              : <ReminderEntity>[];
 
-        return _BaseWidgetCard(
-          title: 'Reminders',
-          icon: AppIcons.notifications_active_rounded,
-          onViewAll: onViewAll,
-          accent: HomeSystemTokens.orange,
-          child: state is DashboardLoading
-              ? _loadingBody()
-              : reminders.isEmpty
-                  ? _emptyRow('No active reminders')
-                  : Padding(
-                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                      child: Column(
-                        children: reminders
-                            .map((r) => _ReminderItem(reminder: r))
-                            .toList(),
-                      ),
-                    ),
-        );
-      },
+          return _BaseWidgetCard(
+            title: 'Reminders',
+            icon: AppIcons.notifications_active_rounded,
+            onViewAll:
+                onViewAll ?? () => context.push(AppRouter.reminders),
+            accent: HomeSystemTokens.orange,
+            child: state is RemindersLoading
+                ? _loadingBody()
+                : state is RemindersError
+                    ? _emptyRow('Could not load reminders')
+                    : reminders.isEmpty
+                        ? _emptyRow('No active reminders')
+                        : Padding(
+                            padding:
+                                EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                            child: Column(
+                              children: reminders
+                                  .map(
+                                    (r) => _ReminderItem(
+                                      title: r.title,
+                                      remindAt: r.remindAt,
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+          );
+        },
+      ),
     );
   }
 }
@@ -487,121 +525,241 @@ class QuickActionsWidget extends StatelessWidget {
   }
 }
 
-class CalendarWidget extends StatelessWidget {
+class CalendarWidget extends StatefulWidget {
   final VoidCallback? onViewAll;
 
   const CalendarWidget({super.key, this.onViewAll});
 
   @override
+  State<CalendarWidget> createState() => _CalendarWidgetState();
+}
+
+class _CalendarWidgetState extends State<CalendarWidget> {
+  late DateTime _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDate = _dateOnly(DateTime.now());
+  }
+
+  void _selectDate(BuildContext context, DateTime date, int year, int month) {
+    final normalized = _dateOnly(date);
+    setState(() => _selectedDate = normalized);
+
+    final cubit = context.read<CalendarCubit>();
+    final state = cubit.state;
+    if (state is CalendarLoaded) {
+      final loaded = state.monthData;
+      if (loaded.year != year || loaded.month != month) {
+        cubit.loadMonth(year, month);
+      }
+    } else {
+      cubit.loadMonth(year, month);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CalendarCubit, CalendarState>(
-      builder: (context, state) {
-        final now = DateTime.now();
-        final monthData =
-            state is CalendarLoaded ? state.monthData : null;
-        final todayEvents = _eventsForDate(now, monthData);
+    return BlocProvider<TasksCubit>.value(
+      value: GetIt.I<TasksCubit>(),
+      child: BlocBuilder<CalendarCubit, CalendarState>(
+        builder: (context, state) {
+          final today = _dateOnly(DateTime.now());
+          final monthData =
+              state is CalendarLoaded ? state.monthData : null;
+          final selectedEvents = _eventsForDate(_selectedDate, monthData);
+          final allTasks = GetIt.I<TasksCubit>().state.allTasks;
 
-        return _BaseWidgetCard(
-          title: 'Calendar',
-          icon: AppIcons.calendar_month_rounded,
-          onViewAll: onViewAll,
-          accent: HomeSystemTokens.purple,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 12.h),
-                child: Row(
-                  children: List.generate(7, (index) {
-                    final date = now.add(Duration(days: index));
-                    final isToday = index == 0;
-                    final hasEvents =
-                        (_eventsForDate(date, monthData)?.totalCount ?? 0) > 0;
-
-                    return Expanded(
-                      child: Container(
-                        margin: EdgeInsets.symmetric(horizontal: 2.w),
-                        padding: EdgeInsets.symmetric(vertical: 10.h),
-                        decoration: BoxDecoration(
-                          color: isToday
-                              ? HomeSystemTokens.purple
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10.r),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              DateFormat('E').format(date).substring(0, 1),
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: isToday
-                                    ? Colors.white70
-                                    : HomeSystemTokens.inkMuted,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '${date.day}',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                color: isToday
-                                    ? Colors.white
-                                    : HomeSystemTokens.ink,
-                              ),
-                            ),
-                            if (hasEvents)
-                              Container(
-                                margin: EdgeInsets.only(top: 4.h),
-                                width: 4.w,
-                                height: 4.w,
-                                decoration: BoxDecoration(
-                                  color: isToday
-                                      ? Colors.white
-                                      : HomeSystemTokens.purple,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-              if (state is CalendarLoading)
-                _loadingBody()
-              else if (todayEvents == null || todayEvents.totalCount == 0)
-                _emptyRow('No events today')
-              else
+          return _BaseWidgetCard(
+            title: 'Calendar',
+            icon: AppIcons.calendar_month_rounded,
+            onViewAll: widget.onViewAll,
+            accent: HomeSystemTokens.purple,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-                  child: Column(
-                    children: [
-                      ...todayEvents.tasks.take(2).map(
-                            (t) => _CalendarEventRow(
-                              title: t.title,
-                              time: DateFormat('h:mm a').format(t.dueDate),
+                  padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 8.h),
+                  child: Row(
+                    children: List.generate(7, (index) {
+                      final date = today.add(Duration(days: index));
+                      final isSelected = _isSameDay(date, _selectedDate);
+                      final isToday = _isSameDay(date, today);
+                      final hasEvents =
+                          (_eventsForDate(date, monthData)?.totalCount ?? 0) >
+                              0;
+
+                      return Expanded(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _selectDate(
+                            context,
+                            date,
+                            date.year,
+                            date.month,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 2.w),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  curve: Curves.easeOut,
+                                  width: double.infinity,
+                                  padding: EdgeInsets.symmetric(vertical: 5.h),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? HomeSystemTokens.purple
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        DateFormat('E')
+                                            .format(date)
+                                            .substring(0, 1),
+                                        style: TextStyle(
+                                          fontSize: 9.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : HomeSystemTokens.inkMuted,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        '${date.day}',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w700,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : HomeSystemTokens.ink,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 3.h),
+                                SizedBox(
+                                  height: 5.h,
+                                  child: hasEvents
+                                      ? Container(
+                                          width: 4.w,
+                                          height: 4.w,
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? HomeSystemTokens.purple
+                                                : isToday
+                                                    ? HomeSystemTokens.purple
+                                                        .withValues(alpha: 0.5)
+                                                    : HomeSystemTokens.purple,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ],
                             ),
                           ),
-                      ...todayEvents.reminders.take(2).map(
-                            (r) => _CalendarEventRow(
-                              title: r.title,
-                              time: DateFormat('h:mm a').format(r.reminderTime),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                if (state is CalendarLoading)
+                  _loadingBody()
+                else if (selectedEvents == null ||
+                    selectedEvents.totalCount == 0)
+                  _emptyRow(
+                    _isSameDay(_selectedDate, today)
+                        ? 'No events today'
+                        : 'No events on this day',
+                  )
+                else
+                  _WidgetHorizontalSlider(
+                    height: 140,
+                    children: [
+                      ...selectedEvents.tasks.take(5).map(
+                            (task) => _CalendarTaskCard(
+                              task,
+                              description: _taskDescription(allTasks, task),
                             ),
+                          ),
+                      ...selectedEvents.reminders.take(3).map(
+                            _CalendarReminderCard.new,
                           ),
                     ],
                   ),
-                ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
+String? _taskDescription(
+  List<task_entities.TaskEntity> tasks,
+  CalendarTaskEntity calendarTask,
+) {
+  for (final task in tasks) {
+    if (task.id == calendarTask.id.toString()) {
+      final description = task.description?.trim();
+      if (description != null && description.isNotEmpty) {
+        return description;
+      }
+      return null;
+    }
+  }
+  final fromCalendar = calendarTask.description?.trim();
+  if (fromCalendar != null && fromCalendar.isNotEmpty) {
+    return fromCalendar;
+  }
+  return null;
+}
+
 // --- Shared item widgets ---
+
+class _WidgetHorizontalSlider extends StatelessWidget {
+  final List<Widget> children;
+  final double height;
+
+  const _WidgetHorizontalSlider({
+    required this.children,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final itemWidth = MediaQuery.sizeOf(context).width * 0.74;
+
+    return SizedBox(
+      height: height.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+        physics: const BouncingScrollPhysics(),
+        itemCount: children.length,
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
+        itemBuilder: (_, index) => SizedBox(
+          width: itemWidth,
+          child: children[index],
+        ),
+      ),
+    );
+  }
+}
 
 Widget _emptyRow(String message) {
   return Padding(
@@ -636,6 +794,8 @@ class _TaskItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final description = task.description?.trim();
+
     return Container(
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
@@ -644,26 +804,72 @@ class _TaskItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 8.w,
-            height: 8.w,
+            margin: EdgeInsets.only(top: 2.h),
+            padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              color: _priorityColor(task.priority.toString())
+                  .withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              AppIcons.task_alt_rounded,
+              size: 16.sp,
               color: _priorityColor(task.priority.toString()),
             ),
           ),
           SizedBox(width: 10.w),
           Expanded(
-            child: Text(
-              task.title,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w500,
-                color: HomeSystemTokens.ink,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: HomeSystemTokens.ink,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (description != null && description.isNotEmpty) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: HomeSystemTokens.inkSoft,
+                      height: 1.35,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                SizedBox(height: 6.h),
+                Wrap(
+                  spacing: 6.w,
+                  runSpacing: 4.h,
+                  children: [
+                    _MetaChip(
+                      label: _formatPriority(task.priority.toString()),
+                      color: _priorityColor(task.priority.toString()),
+                    ),
+                    _MetaChip(
+                      label: DateFormat('h:mm a').format(task.date),
+                      color: HomeSystemTokens.inkMuted,
+                    ),
+                    if (task.totalSubtasks > 0)
+                      _MetaChip(
+                        label:
+                            '${task.completedSubtasks}/${task.totalSubtasks} subtasks',
+                        color: HomeSystemTokens.blue,
+                      ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -687,7 +893,22 @@ class _DashboardTaskItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            margin: EdgeInsets.only(top: 2.h),
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: _priorityColor(task.priority).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              AppIcons.task_alt_rounded,
+              size: 16.sp,
+              color: _priorityColor(task.priority),
+            ),
+          ),
+          SizedBox(width: 10.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,23 +917,33 @@ class _DashboardTaskItem extends StatelessWidget {
                   task.title,
                   style: TextStyle(
                     fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w700,
                     color: HomeSystemTokens.ink,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (task.dueDate != null)
-                  Padding(
-                    padding: EdgeInsets.only(top: 4.h),
-                    child: Text(
-                      DateFormat('EEE, MMM d • h:mm a').format(task.dueDate!),
-                      style: TextStyle(
-                        fontSize: 11.sp,
+                SizedBox(height: 6.h),
+                Wrap(
+                  spacing: 6.w,
+                  runSpacing: 4.h,
+                  children: [
+                    _MetaChip(
+                      label: _formatPriority(task.priority),
+                      color: _priorityColor(task.priority),
+                    ),
+                    _MetaChip(
+                      label: _formatStatus(task.status),
+                      color: HomeSystemTokens.inkSoft,
+                    ),
+                    if (task.dueDate != null)
+                      _MetaChip(
+                        label: DateFormat('EEE, MMM d • h:mm a')
+                            .format(task.dueDate!),
                         color: HomeSystemTokens.inkMuted,
                       ),
-                    ),
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -729,38 +960,64 @@ class _NoteItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final preview = _cleanPreview(note.preview);
+
     return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
+      height: double.infinity,
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: HomeSystemTokens.canvas,
         borderRadius: BorderRadius.circular(12.r),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(AppIcons.description_outlined,
-              color: HomeSystemTokens.blue, size: 18.sp),
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: HomeSystemTokens.blue.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              AppIcons.description_outlined,
+              color: HomeSystemTokens.blue,
+              size: 16.sp,
+            ),
+          ),
           SizedBox(width: 10.w),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  note.title,
+                  note.title.isNotEmpty ? note.title : 'Untitled note',
                   style: TextStyle(
                     fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: HomeSystemTokens.ink,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  _formatTimeAgo(note.createdAt),
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: HomeSystemTokens.inkMuted,
+                if (preview.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    preview,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: HomeSystemTokens.inkSoft,
+                      height: 1.25,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ],
+                SizedBox(height: 4.h),
+                _MetaChip(
+                  label: _formatTimeAgo(note.createdAt),
+                  color: HomeSystemTokens.inkMuted,
                 ),
               ],
             ),
@@ -772,9 +1029,10 @@ class _NoteItem extends StatelessWidget {
 }
 
 class _ReminderItem extends StatelessWidget {
-  final dashboard.DashboardReminderEntity reminder;
+  final String title;
+  final DateTime remindAt;
 
-  const _ReminderItem({required this.reminder});
+  const _ReminderItem({required this.title, required this.remindAt});
 
   @override
   Widget build(BuildContext context) {
@@ -795,7 +1053,7 @@ class _ReminderItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  reminder.title,
+                  title,
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
@@ -805,7 +1063,7 @@ class _ReminderItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  DateFormat('MMM d • h:mm a').format(reminder.remindAt),
+                  DateFormat('MMM d • h:mm a').format(remindAt),
                   style: TextStyle(
                     fontSize: 11.sp,
                     color: HomeSystemTokens.inkMuted,
@@ -820,34 +1078,222 @@ class _ReminderItem extends StatelessWidget {
   }
 }
 
-class _CalendarEventRow extends StatelessWidget {
-  final String title;
-  final String time;
+class _CalendarTaskCard extends StatelessWidget {
+  final CalendarTaskEntity task;
+  final String? description;
 
-  const _CalendarEventRow({required this.title, required this.time});
+  const _CalendarTaskCard(this.task, {this.description});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+    return Container(
+      height: double.infinity,
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: HomeSystemTokens.canvas,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(AppIcons.event_rounded,
-              size: 16.sp, color: HomeSystemTokens.purple),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(fontSize: 13.sp, color: HomeSystemTokens.ink),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: _priorityColor(task.priority).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              AppIcons.task_alt_rounded,
+              size: 16.sp,
+              color: _priorityColor(task.priority),
             ),
           ),
-          Text(
-            time,
-            style: TextStyle(fontSize: 11.sp, color: HomeSystemTokens.inkMuted),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Task',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w700,
+                        color: HomeSystemTokens.purple,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      DateFormat('h:mm a').format(task.dueDate),
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: HomeSystemTokens.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  task.title.isNotEmpty ? task.title : 'Untitled task',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: HomeSystemTokens.ink,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (description != null && description!.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    description!,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: HomeSystemTokens.inkSoft,
+                      height: 1.25,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                SizedBox(height: 4.h),
+                Row(
+                  children: [
+                    Flexible(
+                      child: _MetaChip(
+                        label: _formatPriority(task.priority),
+                        color: _priorityColor(task.priority),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Flexible(
+                      child: _MetaChip(
+                        label: _formatStatus(task.status),
+                        color: HomeSystemTokens.inkSoft,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CalendarReminderCard extends StatelessWidget {
+  final CalendarReminderEntity reminder;
+
+  const _CalendarReminderCard(this.reminder);
+
+  @override
+  Widget build(BuildContext context) {
+    final title = reminder.title.trim().isEmpty ||
+            reminder.title.toLowerCase() == 'task'
+        ? 'Scheduled reminder'
+        : reminder.title;
+
+    return Container(
+      height: double.infinity,
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: HomeSystemTokens.canvas,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: HomeSystemTokens.orange.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(
+              AppIcons.alarm_rounded,
+              size: 16.sp,
+              color: HomeSystemTokens.orange,
+            ),
+          ),
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Reminder',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w700,
+                        color: HomeSystemTokens.orange,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      DateFormat('h:mm a').format(reminder.reminderTime),
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        color: HomeSystemTokens.inkMuted,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                    color: HomeSystemTokens.ink,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _MetaChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
@@ -979,4 +1425,32 @@ String _formatTimeAgo(DateTime date) {
   if (diff.inHours > 0) return '${diff.inHours}h ago';
   if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
   return 'Just now';
+}
+
+String _formatPriority(String priority) {
+  final value = priority.toLowerCase();
+  if (value.contains('high')) return 'High priority';
+  if (value.contains('medium')) return 'Medium priority';
+  if (value.contains('low')) return 'Low priority';
+  return 'No priority';
+}
+
+String _formatStatus(String status) {
+  final value = status.toLowerCase().replaceAll('_', ' ');
+  if (value.contains('complete') || value.contains('done')) {
+    return 'Completed';
+  }
+  if (value.contains('progress')) return 'In progress';
+  if (value.contains('todo') || value.contains('pending')) return 'To do';
+  if (value.isEmpty) return 'Pending';
+  return value[0].toUpperCase() + value.substring(1);
+}
+
+String _cleanPreview(String raw) {
+  final collapsed = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (collapsed.endsWith('...')) return collapsed;
+  if (collapsed.length > 120) {
+    return '${collapsed.substring(0, 117)}...';
+  }
+  return collapsed;
 }

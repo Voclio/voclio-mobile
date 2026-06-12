@@ -64,6 +64,7 @@ class DayEventsEntity extends Equatable {
 class CalendarTaskEntity extends Equatable {
   final int id;
   final String title;
+  final String? description;
   final String priority;
   final String status;
   final DateTime dueDate;
@@ -74,6 +75,7 @@ class CalendarTaskEntity extends Equatable {
   const CalendarTaskEntity({
     required this.id,
     required this.title,
+    this.description,
     required this.priority,
     required this.status,
     required this.dueDate,
@@ -82,6 +84,7 @@ class CalendarTaskEntity extends Equatable {
   CalendarTaskEntity copyWith({
     int? id,
     String? title,
+    String? description,
     String? priority,
     String? status,
     DateTime? dueDate,
@@ -89,6 +92,7 @@ class CalendarTaskEntity extends Equatable {
     return CalendarTaskEntity(
       id: id ?? this.id,
       title: title ?? this.title,
+      description: description ?? this.description,
       priority: priority ?? this.priority,
       status: status ?? this.status,
       dueDate: dueDate ?? this.dueDate,
@@ -96,7 +100,7 @@ class CalendarTaskEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, priority, status, dueDate];
+  List<Object?> get props => [id, title, description, priority, status, dueDate];
 }
 
 class CalendarReminderEntity extends Equatable {

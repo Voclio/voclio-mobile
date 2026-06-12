@@ -80,7 +80,7 @@ class TasksCubit extends Cubit<TasksState> {
             allTasks: taskList,
           ),
         );
-        HomeScreenWidgetService.updateTodayTasks(taskList);
+        HomeScreenWidgetService.syncTasks(taskList);
       },
     );
   }
@@ -139,7 +139,7 @@ class TasksCubit extends Cubit<TasksState> {
           ),
         );
         // Update home screen widget with today's tasks
-        HomeScreenWidgetService.updateTodayTasks(tasks);
+        HomeScreenWidgetService.syncTasks(tasks);
       },
     );
   }

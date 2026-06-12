@@ -12,6 +12,7 @@ import 'package:voclio_app/features/dashboard/domain/entities/dashboard_stats_en
     as dashboard;
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/productivity/presentation/widgets/ai_suggestions_widget.dart';
+import 'package:voclio_app/features/notes/presentation/bloc/notes_cubit.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart'
@@ -22,6 +23,8 @@ import 'package:voclio_app/features/widget_config/domain/entities/widget_prefere
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
 import 'package:voclio_app/features/widget_config/presentation/widgets/home_widgets.dart';
+import 'package:go_router/go_router.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
 class HomeScreenBody extends StatefulWidget {
@@ -68,6 +71,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
       Future.wait([
         context.read<DashboardCubit>().loadDashboardStats(),
         GetIt.I<TasksCubit>().init(),
+        GetIt.I<NotesCubit>().init(),
         context.read<CalendarCubit>().loadMonth(now.year, now.month),
         context.read<AiSuggestionsCubit>().loadAiSuggestions(),
       ]),
@@ -79,6 +83,7 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
     await Future.wait([
       context.read<DashboardCubit>().refresh(),
       GetIt.I<TasksCubit>().init(),
+      GetIt.I<NotesCubit>().init(),
       context.read<CalendarCubit>().loadMonth(now.year, now.month),
       context.read<AiSuggestionsCubit>().loadAiSuggestions(),
     ]);
@@ -198,7 +203,9 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
       case WidgetType.reminders:
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: RemindersWidget(onViewAll: () {}),
+          child: RemindersWidget(
+            onViewAll: () => context.push(AppRouter.reminders),
+          ),
         );
       case WidgetType.quickActions:
         return Padding(
