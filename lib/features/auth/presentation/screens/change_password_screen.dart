@@ -499,7 +499,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen>
                     duration: 1000,
                     child: BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) {
-                        final isLoading = state is AuthLoading;
+                        final isLoading =
+                            state is AuthLoading &&
+                            state.action == AuthLoadingAction.changePassword;
                         return Container(
                           width: double.infinity,
                           height: 56.h,

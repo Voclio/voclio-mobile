@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_cubit.dart';
 import '../../domain/usecases/get_voice_recordings_usecase.dart';
 import '../../domain/usecases/upload_voice_usecase.dart';
@@ -146,34 +147,23 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
       event.id,
       transcription: event.transcription,
     );
-    result.fold((failure) => emit(VoiceError(failure.message)), (_) {
-      final destination = _destinationForTaskCreation(event.transcription);
-      final message = destination == VoiceSuccessDestination.calendar
-          ? 'Added to your calendar'
-          : 'Tasks created';
-      emit(VoiceOperationSuccess(message, destination: destination));
+    result.fold((failure) => emit(VoiceError(failure.message)), (dueDate) {
+      final focusDate = dueDate ?? DateTime.now();
+      GetIt.I<CalendarCubit>().loadMonth(
+        focusDate.year,
+        focusDate.month,
+        force: true,
+      );
       GetIt.I<TasksCubit>().getTasks();
+      emit(
+        VoiceOperationSuccess(
+          'Task added to your calendar',
+          destination: VoiceSuccessDestination.calendar,
+          calendarFocusDate: focusDate,
+        ),
+      );
       add(LoadVoiceRecordings());
     });
-  }
-
-  VoiceSuccessDestination _destinationForTaskCreation(String? transcription) {
-    final text = transcription?.toLowerCase() ?? '';
-    const calendarHints = [
-      'calendar',
-      'add to calendar',
-      'schedule',
-      'appointment',
-      'meeting',
-      'تقويم',
-      'كاليندر',
-      'موعد',
-      'اجتماع',
-    ];
-    if (calendarHints.any(text.contains)) {
-      return VoiceSuccessDestination.calendar;
-    }
-    return VoiceSuccessDestination.tasks;
   }
 
   Future<void> _onUpdateTranscription(

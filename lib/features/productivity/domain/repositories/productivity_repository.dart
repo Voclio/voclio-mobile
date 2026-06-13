@@ -15,5 +15,7 @@ abstract class ProductivityRepository {
   Future<Either<Failure, StreakEntity>> getStreak();
   Future<Either<Failure, List<AchievementEntity>>> getAchievements();
   Future<Either<Failure, Map<String, dynamic>>> getProductivitySummary();
-  Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions();
+  Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions({
+    String language = 'en',
+  });
 }

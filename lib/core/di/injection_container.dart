@@ -17,6 +17,7 @@ import 'package:voclio_app/features/tasks/data/repositories/tasks_repository_imp
 import 'package:voclio_app/features/tasks/domain/repositories/task_repository.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/create_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/create_subtask_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/get_subtasks_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_subtask_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/delete_task_use_case.dart';
 import '../../features/auth/domain/usecases/check_auth_status_usecase.dart';
@@ -262,6 +263,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(() => GetTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => CreateTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => CreateSubtaskUseCase(getIt()));
+  getIt.registerLazySingleton(() => GetSubtasksUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateSubtaskUseCase(getIt()));
   getIt.registerLazySingleton(() => UpdateTaskUseCase(getIt()));
   getIt.registerLazySingleton(() => DeleteTaskUseCase(getIt()));
@@ -284,6 +286,7 @@ Future<void> setupDependencies() async {
       updateTaskUseCase: getIt(),
       completeTaskUseCase: getIt(),
       createSubtaskUseCase: getIt(),
+      getSubtasksUseCase: getIt(),
       updateSubtaskUseCase: getIt(),
       getAllTasksUseCase: getIt(),
       getTaskUseCase: getIt(),
@@ -560,9 +563,10 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton(
     () => GetCalendarMonthUseCase(repository: getIt<CalendarRepository>()),
   );
-  getIt.registerFactory<CalendarCubit>(
+  getIt.registerLazySingleton<CalendarCubit>(
     () => CalendarCubit(
       getCalendarMonthUseCase: getIt<GetCalendarMonthUseCase>(),
+      calendarDataSource: getIt<CalendarRemoteDataSource>(),
     ),
   );
 

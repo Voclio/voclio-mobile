@@ -107,13 +107,15 @@ class CalendarReminderEntity extends Equatable {
   final int id;
   final String title;
   final DateTime reminderTime;
+  final int? taskId;
 
   const CalendarReminderEntity({
     required this.id,
     required this.title,
     required this.reminderTime,
+    this.taskId,
   });
 
   @override
-  List<Object?> get props => [id, title, reminderTime];
+  List<Object?> get props => [id, title, reminderTime, taskId];
 }

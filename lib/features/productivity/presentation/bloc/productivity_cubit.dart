@@ -82,7 +82,7 @@ class ProductivityCubit extends Cubit<ProductivityState> {
 
     result.fold(
       (failure) => emit(ProductivityError('Failed to end focus session')),
-      (_) => emit(ProductivityInitial()),
+      (_) => loadProductivityData(),
     );
   }
 }

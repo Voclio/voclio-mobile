@@ -7,7 +7,7 @@ class CreateTasksFromVoiceUseCase {
 
   CreateTasksFromVoiceUseCase(this.repository);
 
-  Future<Either<Failure, void>> call(
+  Future<Either<Failure, DateTime?>> call(
     String id, {
     String? transcription,
   }) async {

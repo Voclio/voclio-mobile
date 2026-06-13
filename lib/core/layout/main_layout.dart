@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import '../../features/home/presentation/refactor/home_screen_body.dart';
 import '../../features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:get_it/get_it.dart';
+import '../../features/calendar/presentation/bloc/calendar_cubit.dart';
 import '../../features/calendar/presentation/screens/monthly_calendar_screen.dart';
 import '../../features/notes/presentation/screens/notes_screen.dart';
 import '../../features/voice/presentation/screens/voice_recording_screen.dart';
@@ -18,6 +20,13 @@ class MainLayout extends StatefulWidget {
   static bool goToTab(int index, {DateTime? calendarDate}) {
     if (calendarDate != null) {
       MonthlyCalendarScreen.jumpTo(calendarDate);
+      try {
+        GetIt.I<CalendarCubit>().loadMonth(
+          calendarDate.year,
+          calendarDate.month,
+          force: true,
+        );
+      } catch (_) {}
     }
     final state = mainLayoutKey.currentState;
     if (state == null) return false;

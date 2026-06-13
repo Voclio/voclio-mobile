@@ -58,7 +58,7 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
     try {
       final response = await apiClient.post(
         ApiEndpoints.subtasks(taskId),
-        data: {'title': title, 'order': order},
+        data: {'title': title},
       );
       final data = ApiResponse.unwrapMap(response.data);
       final subtask = data['subtask'] ?? data;
@@ -76,12 +76,14 @@ class TaskExtensionsDataSourceImpl implements TaskExtensionsDataSource {
     bool completed,
   ) async {
     try {
+      if (completed) {
+        await apiClient.put(ApiEndpoints.completeTask(subtaskId));
+        return;
+      }
+
       await apiClient.put(
         ApiEndpoints.subtaskById(taskId, subtaskId),
-        data: {
-          'title': title,
-          'status': completed ? 'completed' : 'pending',
-        },
+        data: {'status': 'todo'},
       );
     } catch (e) {
       throw Exception('Failed to update subtask: $e');

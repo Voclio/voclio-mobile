@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../domain/entities/reminder_entity.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
+import '../../domain/entities/reminder_entity.dart';
 
 class ReminderCard extends StatelessWidget {
   final ReminderEntity reminder;
@@ -20,260 +21,188 @@ class ReminderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isUpcoming = reminder.remindAt.isAfter(DateTime.now());
     final isPast = reminder.remindAt.isBefore(DateTime.now());
-    final primaryColor = Theme.of(context).primaryColor;
+    final accent = !reminder.isActive
+        ? HomeSystemTokens.inkMuted
+        : isPast
+            ? HomeSystemTokens.coral
+            : HomeSystemTokens.orange;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      margin: EdgeInsets.only(bottom: 10.h),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      decoration: HomeSystemTokens.cardDecoration(
+        tint: !reminder.isActive
+            ? HomeSystemTokens.canvas
+            : HomeSystemTokens.card,
+      ).copyWith(
         border: Border.all(
-          color:
-              !reminder.isActive
-                  ? Colors.grey[300]!
-                  : isPast
-                  ? Colors.red[200]!
-                  : primaryColor.withOpacity(0.2),
-          width: 1,
+          color: accent.withValues(alpha: reminder.isActive ? 0.18 : 0.12),
         ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16.r),
-          onTap: () {},
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Row(
+      child: Row(
+        children: [
+          Container(
+            width: 40.r,
+            height: 40.r,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(HomeSystemTokens.radiusSm.r),
+            ),
+            child: Icon(
+              isPast ? AppIcons.notification_important : AppIcons.notifications_active,
+              color: accent,
+              size: 20.sp,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon container
-                Container(
-                  width: 56.w,
-                  height: 56.w,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors:
-                          !reminder.isActive
-                              ? [Colors.grey[400]!, Colors.grey[500]!]
-                              : isPast
-                              ? [Colors.red[300]!, Colors.red[400]!]
-                              : [primaryColor.withOpacity(0.8), primaryColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                Row(
+                  children: [
+                    _TypeChip(
+                      label: _getTypeLabel(reminder.reminderType),
+                      color: _getTypeColor(reminder.reminderType),
                     ),
-                    borderRadius: BorderRadius.circular(14.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (!reminder.isActive
-                                ? Colors.grey
-                                : isPast
-                                ? Colors.red
-                                : primaryColor)
-                            .withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
+                    if (isPast && reminder.isActive) ...[
+                      SizedBox(width: 6.w),
+                      _TypeChip(
+                        label: 'Overdue',
+                        color: HomeSystemTokens.coral,
                       ),
                     ],
-                  ),
-                  child: Icon(
-                    isPast
-                        ? AppIcons.notification_important
-                        : AppIcons.notifications_active,
-                    color: Colors.white,
-                    size: 28.sp,
+                  ],
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  reminder.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                    color: reminder.isActive
+                        ? HomeSystemTokens.ink
+                        : HomeSystemTokens.inkMuted,
+                    decoration:
+                        reminder.isActive ? null : TextDecoration.lineThrough,
                   ),
                 ),
-                SizedBox(width: 16.w),
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 4.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getTypeColor(
-                                reminder.reminderType,
-                              ).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            child: Text(
-                              _getTypeLabel(reminder.reminderType),
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                fontWeight: FontWeight.w600,
-                                color: _getTypeColor(reminder.reminderType),
-                              ),
-                            ),
-                          ),
-                          if (isPast && reminder.isActive) ...[
-                            SizedBox(width: 8.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 4.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red[50],
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Text(
-                                'Overdue',
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        reminder.title,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color:
-                              !reminder.isActive ? Colors.grey : Colors.black87,
-                          decoration:
-                              !reminder.isActive
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                        ),
-                      ),
-                      if (reminder.description != null &&
-                          reminder.description!.isNotEmpty) ...[
-                        SizedBox(height: 4.h),
-                        Text(
-                          reminder.description!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                      SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Icon(
-                            AppIcons.calendar_today,
-                            size: 14.sp,
-                            color: Colors.grey[600],
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            DateFormat('MMM d').format(reminder.remindAt),
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          SizedBox(width: 12.w),
-                          SizedBox(width: 12.w),
-                          Icon(
-                            AppIcons.access_time,
-                            size: 14.sp,
-                            color: Colors.grey[600],
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            DateFormat('h:mm a').format(reminder.remindAt),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                if (reminder.description != null &&
+                    reminder.description!.isNotEmpty) ...[
+                  SizedBox(height: 2.h),
+                  Text(
+                    reminder.description!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: HomeSystemTokens.inkMuted,
+                    ),
                   ),
-                ),
-                // Actions
-                PopupMenuButton<String>(
-                  icon: Icon(AppIcons.more_vert, color: Colors.grey[600]),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'snooze':
-                        onSnooze?.call();
-                        break;
-                      case 'dismiss':
-                        onDismiss?.call();
-                        break;
-                      case 'delete':
-                        onDelete?.call();
-                        break;
-                    }
-                  },
-                  itemBuilder:
-                      (context) => [
-                        if (reminder.isActive) ...[
-                          PopupMenuItem(
-                            value: 'snooze',
-                            child: Row(
-                              children: [
-                                Icon(AppIcons.snooze, color: Colors.orange[700]),
-                                SizedBox(width: 12.w),
-                                const Text('Snooze 15 min'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'dismiss',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  AppIcons.check_circle,
-                                  color: Colors.green[700],
-                                ),
-                                SizedBox(width: 12.w),
-                                const Text('Mark Complete'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(
-                                AppIcons.delete_outline,
-                                color: Colors.red,
-                              ),
-                              SizedBox(width: 12.w),
-                              const Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                ],
+                SizedBox(height: 4.h),
+                Row(
+                  children: [
+                    Icon(
+                      AppIcons.calendar_today,
+                      size: 12.sp,
+                      color: HomeSystemTokens.inkMuted,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      DateFormat('MMM d').format(reminder.remindAt),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: HomeSystemTokens.inkMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(width: 10.w),
+                    Icon(
+                      AppIcons.access_time,
+                      size: 12.sp,
+                      color: HomeSystemTokens.inkMuted,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      DateFormat('h:mm a').format(reminder.remindAt),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: HomeSystemTokens.inkMuted,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ),
+          PopupMenuButton<String>(
+            icon: Icon(
+              AppIcons.more_vert,
+              color: HomeSystemTokens.inkMuted,
+              size: 20.sp,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(HomeSystemTokens.radiusSm.r),
+            ),
+            onSelected: (value) {
+              switch (value) {
+                case 'snooze':
+                  onSnooze?.call();
+                  break;
+                case 'dismiss':
+                  onDismiss?.call();
+                  break;
+                case 'delete':
+                  onDelete?.call();
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              if (reminder.isActive) ...[
+                PopupMenuItem(
+                  value: 'snooze',
+                  child: Row(
+                    children: [
+                      Icon(AppIcons.snooze, color: HomeSystemTokens.orange, size: 20.sp),
+                      SizedBox(width: 10.w),
+                      const Text('Snooze 15 min'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'dismiss',
+                  child: Row(
+                    children: [
+                      Icon(AppIcons.check_circle, color: HomeSystemTokens.green, size: 20.sp),
+                      SizedBox(width: 10.w),
+                      const Text('Mark Complete'),
+                    ],
+                  ),
+                ),
+              ],
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(AppIcons.delete_outline, color: HomeSystemTokens.coral, size: 20.sp),
+                    SizedBox(width: 10.w),
+                    Text(
+                      'Delete',
+                      style: TextStyle(color: HomeSystemTokens.coral),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -294,13 +223,39 @@ class ReminderCard extends StatelessWidget {
   Color _getTypeColor(String type) {
     switch (type) {
       case 'one_time':
-        return Colors.blue;
+        return HomeSystemTokens.blue;
       case 'daily':
-        return Colors.purple;
+        return HomeSystemTokens.purple;
       case 'weekly':
-        return Colors.teal;
+        return HomeSystemTokens.green;
       default:
-        return Colors.grey;
+        return HomeSystemTokens.inkMuted;
     }
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _TypeChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
   }
 }

@@ -48,8 +48,11 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     await _prefs.setString('auth_user', jsonEncode(userModel.toJson()));
 
     // Save Tokens to Secure Storage
-    await _storage.write(key: 'access_token', value: response.token);
-    await _storage.write(key: 'refresh_token', value: response.refreshToken);
+    await _storage.write(key: 'access_token', value: response.token.trim());
+    await _storage.write(
+      key: 'refresh_token',
+      value: response.refreshToken.trim(),
+    );
 
     // Save token expiration time
     await _storage.write(

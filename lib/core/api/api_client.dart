@@ -4,6 +4,7 @@ import 'api_endpoints.dart';
 import 'interceptors/arabic_to_english_interceptor.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/error_interceptor.dart';
+import 'interceptors/timezone_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
 
 class ApiClient {
@@ -30,6 +31,7 @@ class ApiClient {
 
   void _initializeInterceptors() {
     _dio.interceptors.addAll([
+      TimezoneInterceptor(),
       AuthInterceptor(_storage, _dio),
       ErrorInterceptor(),
       ArabicToEnglishInterceptor(),

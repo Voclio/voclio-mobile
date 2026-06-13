@@ -73,7 +73,7 @@ class TaskRepositoryImpl implements TaskRepository {
   @override
   Future<Either<Failure, List<TaskEntity>>> getTasks() async {
     try {
-      final remoteTasks = await remoteDataSource.getTasks();
+      final remoteTasks = await remoteDataSource.getMainTasks();
       final taskEntities =
           remoteTasks
               .map(

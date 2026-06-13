@@ -1,25 +1,26 @@
 package com.example.voclio_app
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
 import android.content.Context
-import android.content.Intent
+import android.content.SharedPreferences
 import android.view.View
 import android.widget.RemoteViews
-import es.antonborri.home_widget.HomeWidgetPlugin
+import es.antonborri.home_widget.HomeWidgetLaunchIntent
+import es.antonborri.home_widget.HomeWidgetProvider
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Calendar
 
-class VoclioWidgetProvider : AppWidgetProvider() {
+class VoclioWidgetProvider : HomeWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray
+        appWidgetIds: IntArray,
+        widgetData: SharedPreferences
     ) {
         for (appWidgetId in appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId)
+            updateAppWidget(context, appWidgetManager, appWidgetId, widgetData)
         }
     }
 
@@ -27,18 +28,25 @@ class VoclioWidgetProvider : AppWidgetProvider() {
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
-            appWidgetId: Int
+            appWidgetId: Int,
+            widgetData: SharedPreferences
         ) {
-            val widgetData = HomeWidgetPlugin.getData(context)
             val views = RemoteViews(context.packageName, R.layout.voclio_widget)
 
-            val monthLabel = widgetData.getString("month_label", "")
-            val dayLabel = widgetData.getString("widget_title", "Today")
-            val weekJson = widgetData.getString("week_days", "[]")
-            val tasksJson = widgetData.getString("tasks", "[]")
-            val notesJson = widgetData.getString("notes", "[]")
+            val monthLabel = widgetData.getString("month_label", "") ?: ""
+            val dayLabel = widgetData.getString("widget_title", "Today") ?: "Today"
+            var weekJson = widgetData.getString("week_days", "[]") ?: "[]"
+            val tasksJson = widgetData.getString("tasks", "[]") ?: "[]"
+            val notesJson = widgetData.getString("notes", "[]") ?: "[]"
 
-            views.setTextViewText(R.id.widget_month, monthLabel)
+            if (weekJson == "[]" || weekJson.isBlank()) {
+                weekJson = placeholderWeekJson()
+            }
+
+            val effectiveMonth =
+                if (monthLabel.isBlank()) placeholderMonthLabel() else monthLabel
+
+            views.setTextViewText(R.id.widget_month, effectiveMonth)
             views.setTextViewText(R.id.widget_title, dayLabel)
 
             bindWeekStrip(views, weekJson)
@@ -57,18 +65,45 @@ class VoclioWidgetProvider : AppWidgetProvider() {
                 R.id.notes_empty
             )
 
-            val intent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            }
-            val pendingIntent = PendingIntent.getActivity(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            val pendingIntent =
+                HomeWidgetLaunchIntent.getActivity(context, MainActivity::class.java)
             views.setOnClickPendingIntent(R.id.widget_container, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
+        }
+
+        private fun placeholderMonthLabel(): String {
+            val cal = Calendar.getInstance()
+            val month = cal.getDisplayName(Calendar.MONTH, Calendar.LONG, java.util.Locale.getDefault())
+            return "$month ${cal.get(Calendar.YEAR)}"
+        }
+
+        private fun placeholderWeekJson(): String {
+            val cal = Calendar.getInstance()
+            cal.firstDayOfWeek = Calendar.MONDAY
+            val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
+            val daysFromMonday = (dayOfWeek + 5) % 7
+            cal.add(Calendar.DAY_OF_MONTH, -daysFromMonday)
+
+            val days = JSONArray()
+            val dowLabels = arrayOf("M", "T", "W", "T", "F", "S", "S")
+            val today = Calendar.getInstance()
+
+            for (index in 0 until 7) {
+                val day = JSONObject()
+                day.put("dow", dowLabels[index])
+                day.put("day", cal.get(Calendar.DAY_OF_MONTH))
+                day.put(
+                    "today",
+                    cal.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                        cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+                )
+                day.put("tasks", 0)
+                day.put("notes", 0)
+                days.put(day)
+                cal.add(Calendar.DAY_OF_MONTH, 1)
+            }
+            return days.toString()
         }
 
         private fun bindWeekStrip(views: RemoteViews, weekJson: String) {
@@ -95,6 +130,10 @@ class VoclioWidgetProvider : AppWidgetProvider() {
                         numId,
                         "setBackgroundResource",
                         if (isToday) R.drawable.widget_day_today else R.drawable.widget_day_default
+                    )
+                    views.setTextColor(
+                        numId,
+                        if (isToday) 0xFFFFFFFF.toInt() else 0xFF111827.toInt()
                     )
 
                     val hasTasks = day.optInt("tasks", 0) > 0

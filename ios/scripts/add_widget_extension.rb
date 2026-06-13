@@ -64,7 +64,7 @@ extension_target.build_configurations.each do |config|
   config.build_settings.merge!(
     'CODE_SIGN_ENTITLEMENTS' => entitlements,
     'INFOPLIST_FILE' => 'VoclioWidget/Info.plist',
-    'IPHONEOS_DEPLOYMENT_TARGET' => '14.0',
+    'IPHONEOS_DEPLOYMENT_TARGET' => '15.0',
     'LD_RUNPATH_SEARCH_PATHS' => [
       '$(inherited)',
       '@executable_path/Frameworks',

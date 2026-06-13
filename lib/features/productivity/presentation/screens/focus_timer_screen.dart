@@ -10,6 +10,8 @@ import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../../../core/di/injection_container.dart';
 import '../bloc/productivity_cubit.dart';
 import '../bloc/productivity_state.dart';
+import '../constants/focus_ambient_sounds.dart';
+import '../services/focus_ambient_player.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
 class FocusTimerScreen extends StatelessWidget {
@@ -33,6 +35,10 @@ class _FocusTimerContent extends StatefulWidget {
 
 class _FocusTimerContentState extends State<_FocusTimerContent>
     with SingleTickerProviderStateMixin {
+  static const _presets = [15, 25, 45, 60];
+  static const _minDuration = 5;
+  static const _maxDuration = 90;
+
   int selectedDuration = 25;
   String? selectedSound;
   int soundVolume = 50;
@@ -42,19 +48,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
   String? currentSessionId;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-
-  final List<Map<String, dynamic>> ambientSounds = [
-    {'value': null, 'label': 'None', 'icon': AppIcons.volume_off},
-    {'value': 'rain', 'label': 'Rain', 'icon': AppIcons.water_drop},
-    {'value': 'ocean', 'label': 'Ocean', 'icon': AppIcons.waves},
-    {'value': 'forest', 'label': 'Forest', 'icon': AppIcons.forest},
-    {'value': 'cafe', 'label': 'Cafe', 'icon': AppIcons.coffee},
-    {
-      'value': 'fire',
-      'label': 'Fireplace',
-      'icon': AppIcons.local_fire_department,
-    },
-  ];
+  final FocusAmbientPlayer _ambientPlayer = FocusAmbientPlayer();
 
   @override
   void initState() {
@@ -63,7 +57,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.04).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -72,10 +66,36 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
   void dispose() {
     timer?.cancel();
     _pulseController.dispose();
+    unawaited(_ambientPlayer.dispose());
     super.dispose();
   }
 
-  void startTimer() {
+  void _adjustDuration(int delta) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      selectedDuration = (selectedDuration + delta).clamp(
+        _minDuration,
+        _maxDuration,
+      );
+    });
+  }
+
+  Future<void> _onSoundSelected(String? soundId) async {
+    HapticFeedback.selectionClick();
+    setState(() => selectedSound = soundId);
+
+    if (!isRunning) {
+      await _ambientPlayer.play(soundId, soundVolume);
+    }
+  }
+
+  Future<void> _onVolumeChanged(double value) async {
+    final volume = value.round();
+    setState(() => soundVolume = volume);
+    await _ambientPlayer.setVolume(volume);
+  }
+
+  Future<void> startTimer() async {
     HapticFeedback.mediumImpact();
     context.read<ProductivityCubit>().startFocusSession(
       selectedDuration,
@@ -88,7 +108,10 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
       remainingSeconds = selectedDuration * 60;
     });
 
+    await _ambientPlayer.play(selectedSound, soundVolume);
+
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
       setState(() {
         if (remainingSeconds > 0) {
           remainingSeconds--;
@@ -96,6 +119,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
           timer?.cancel();
           isRunning = false;
           HapticFeedback.heavyImpact();
+          unawaited(_ambientPlayer.stop());
           _showCompletionDialog();
           if (currentSessionId != null) {
             context.read<ProductivityCubit>().endFocusSession(
@@ -126,8 +150,10 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
       message: 'Are you sure you want to end this focus session early?',
       confirmText: 'Stop',
       cancelText: 'Continue',
-      onConfirm: () {
+      onConfirm: () async {
         timer?.cancel();
+        await _ambientPlayer.stop();
+        if (!mounted) return;
         setState(() {
           isRunning = false;
           remainingSeconds = 0;
@@ -150,8 +176,7 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.primaryColor;
+    final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
       backgroundColor: HomeSystemTokens.canvas,
@@ -175,45 +200,30 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
             }
           },
           child: SafeArea(
-            child: SingleChildScrollView(
+            child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
                 children: [
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 4.h),
                   HomeScreenHeader(
                     title: 'Focus Timer',
                     subtitle: 'Stay in the zone',
                     icon: AppIcons.timer_rounded,
                     accent: HomeSystemTokens.purple,
+                    compact: true,
                     actions: [
                       HomeIconButton(
                         icon: AppIcons.history_rounded,
                         color: HomeSystemTokens.inkSoft,
-                        onTap: () {
-                          // TODO: Show focus history
-                        },
+                        onTap: () {},
                       ),
                     ],
                   ),
-                  SizedBox(height: 24.h),
-                  _buildTimerCircle(primaryColor),
-                  SizedBox(height: 32.h),
-                  if (!isRunning) ...[
-                    HomeSectionCard(
-                      child: _buildDurationSelector(primaryColor),
-                    ),
-                    SizedBox(height: 16.h),
-                    HomeSectionCard(
-                      child: _buildSoundSelector(primaryColor),
-                    ),
-                    SizedBox(height: 24.h),
-                    _buildStartButton(primaryColor),
-                  ] else ...[
-                    _buildRunningIndicator(primaryColor),
-                    SizedBox(height: 32.h),
-                    _buildStopButton(),
-                  ],
-                  SizedBox(height: 40.h),
+                  Expanded(
+                    child: isRunning
+                        ? _buildRunningLayout(primaryColor)
+                        : _buildSetupLayout(primaryColor),
+                  ),
                 ],
               ),
             ),
@@ -223,62 +233,101 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
     );
   }
 
-  Widget _buildTimerCircle(Color primaryColor) {
+  Widget _buildSetupLayout(Color primaryColor) {
+    return Column(
+      children: [
+        Expanded(
+          flex: 5,
+          child: Center(child: _buildTimerCircle(primaryColor, compact: true)),
+        ),
+        Expanded(
+          flex: 4,
+          child: HomeSectionCard(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            child: _buildDurationControls(primaryColor),
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Expanded(
+          flex: 5,
+          child: HomeSectionCard(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+            child: _buildSoundControls(primaryColor),
+          ),
+        ),
+        SizedBox(height: 12.h),
+        _buildStartButton(primaryColor),
+        SizedBox(height: 8.h),
+      ],
+    );
+  }
+
+  Widget _buildRunningLayout(Color primaryColor) {
+    return Column(
+      children: [
+        Expanded(
+          child: Center(child: _buildTimerCircle(primaryColor, compact: false)),
+        ),
+        _buildRunningIndicator(primaryColor),
+        SizedBox(height: 16.h),
+        _buildStopButton(),
+        SizedBox(height: 16.h),
+      ],
+    );
+  }
+
+  Widget _buildTimerCircle(Color primaryColor, {required bool compact}) {
+    final outer = compact ? 210.w : 250.w;
+    final inner = compact ? 170.w : 200.w;
+    final ring = compact ? 190.w : 230.w;
+    final fontSize = compact ? 44.sp : 52.sp;
+
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
         return Transform.scale(
           scale: isRunning ? _pulseAnimation.value : 1.0,
-          child: Container(
-            width: 280.w,
-            height: 280.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors:
-                    isRunning
-                        ? [
-                          primaryColor.withOpacity(0.1),
-                          primaryColor.withOpacity(0.05),
-                        ]
-                        : [
-                          Colors.grey.withOpacity(0.1),
-                          Colors.grey.withOpacity(0.05),
-                        ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color:
-                      isRunning
-                          ? primaryColor.withOpacity(0.3)
-                          : Colors.black.withOpacity(0.1),
-                  blurRadius: 30,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
+          child: SizedBox(
+            width: outer,
+            height: outer,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Progress Ring
+                Container(
+                  width: outer,
+                  height: outer,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isRunning
+                          ? [
+                              primaryColor.withValues(alpha: 0.12),
+                              primaryColor.withValues(alpha: 0.04),
+                            ]
+                          : [
+                              Colors.grey.withValues(alpha: 0.1),
+                              Colors.grey.withValues(alpha: 0.04),
+                            ],
+                    ),
+                  ),
+                ),
                 if (isRunning)
                   SizedBox(
-                    width: 260.w,
-                    height: 260.w,
+                    width: ring,
+                    height: ring,
                     child: CustomPaint(
                       painter: _CircularProgressPainter(
                         progress: progress,
                         color: primaryColor,
-                        strokeWidth: 8.w,
+                        strokeWidth: 7.w,
                       ),
                     ),
                   ),
-                // Inner Circle
                 Container(
-                  width: 220.w,
-                  height: 220.w,
+                  width: inner,
+                  height: inner,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: HomeSystemTokens.card,
@@ -292,27 +341,27 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
                             ? formatTime(remainingSeconds)
                             : formatTime(selectedDuration * 60),
                         style: TextStyle(
-                          fontSize: 52.sp,
+                          fontSize: fontSize,
                           fontWeight: FontWeight.w300,
                           color: isRunning ? primaryColor : Colors.grey[700],
                           letterSpacing: 2,
                         ),
                       ),
                       if (isRunning) ...[
-                        SizedBox(height: 8.h),
+                        SizedBox(height: 6.h),
                         Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 4.h,
+                            horizontal: 10.w,
+                            vertical: 3.h,
                           ),
                           decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
+                            color: primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20.r),
                           ),
                           child: Text(
                             'FOCUSING',
                             style: TextStyle(
-                              fontSize: 12.sp,
+                              fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
                               color: primaryColor,
                               letterSpacing: 2,
@@ -331,136 +380,222 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
     );
   }
 
-  Widget _buildDurationSelector(Color primaryColor) {
+  Widget _buildDurationControls(Color primaryColor) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'Duration',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 17.sp,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w700,
             color: HomeSystemTokens.ink,
           ),
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 10.h),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children:
-              [15, 25, 45, 60].map((duration) {
-                final isSelected = selectedDuration == duration;
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => selectedDuration = duration);
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 72.w,
-                    height: 72.w,
-                    decoration: BoxDecoration(
-                      color: isSelected ? primaryColor : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(18.r),
-                      border: Border.all(
-                        color: isSelected ? primaryColor : Colors.grey[300]!,
-                        width: 2,
-                      ),
-                      boxShadow:
-                          isSelected
-                              ? [
-                                BoxShadow(
-                                  color: primaryColor.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                              : null,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$duration',
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.grey[700],
-                          ),
-                        ),
-                        Text(
-                          'min',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color:
-                                isSelected ? Colors.white70 : Colors.grey[500],
-                          ),
-                        ),
-                      ],
+          children: [
+            _roundControlButton(
+              icon: Icons.remove_rounded,
+              onTap: () => _adjustDuration(-5),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Text(
+                    '$selectedDuration',
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                      height: 1,
                     ),
                   ),
-                );
-              }).toList(),
+                  Text(
+                    'minutes',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: HomeSystemTokens.inkMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _roundControlButton(
+              icon: AppIcons.add_rounded,
+              onTap: () => _adjustDuration(5),
+            ),
+          ],
+        ),
+        SizedBox(height: 8.h),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 4.h,
+            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8.r),
+            overlayShape: RoundSliderOverlayShape(overlayRadius: 14.r),
+          ),
+          child: Slider(
+            value: selectedDuration.toDouble(),
+            min: _minDuration.toDouble(),
+            max: _maxDuration.toDouble(),
+            divisions: (_maxDuration - _minDuration) ~/ 5,
+            activeColor: primaryColor,
+            inactiveColor: primaryColor.withValues(alpha: 0.15),
+            onChanged: (value) {
+              setState(() => selectedDuration = value.round());
+            },
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: _presets.map((preset) {
+            final isSelected = selectedDuration == preset;
+            return GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => selectedDuration = preset);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
+                decoration: BoxDecoration(
+                  color: isSelected ? primaryColor : HomeSystemTokens.canvas,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(
+                    color: isSelected
+                        ? primaryColor
+                        : HomeSystemTokens.inkMuted.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Text(
+                  '${preset}m',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? Colors.white : HomeSystemTokens.inkSoft,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildSoundSelector(Color primaryColor) {
+  Widget _roundControlButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44.r,
+        height: 44.r,
+        decoration: BoxDecoration(
+          color: HomeSystemTokens.canvas,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: HomeSystemTokens.inkMuted.withValues(alpha: 0.15),
+          ),
+        ),
+        child: Icon(icon, size: 22.sp, color: HomeSystemTokens.ink),
+      ),
+    );
+  }
+
+  Widget _buildSoundControls(Color primaryColor) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'Ambient Sound',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 17.sp,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w700,
             color: HomeSystemTokens.ink,
           ),
         ),
-        SizedBox(height: 16.h),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 12.w),
-          decoration: BoxDecoration(
-            color: HomeSystemTokens.canvas,
-            borderRadius: BorderRadius.circular(HomeSystemTokens.radiusMd),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String?>(
-              value: selectedSound,
-              isExpanded: true,
-              icon: Icon(AppIcons.keyboard_arrow_down, color: primaryColor),
-              hint: Row(
-                children: [
-                  Icon(AppIcons.volume_off, size: 20.sp, color: Colors.grey[600]),
-                  SizedBox(width: 12.w),
-                  Text('None', style: TextStyle(fontSize: 16.sp)),
-                ],
-              ),
-              items:
-                  ambientSounds.map((sound) {
-                    return DropdownMenuItem<String?>(
-                      value: sound['value'],
-                      child: Row(
-                        children: [
-                          Icon(
-                            sound['icon'] as IconData,
-                            size: 20.sp,
-                            color: primaryColor,
-                          ),
-                          SizedBox(width: 12.w),
-                          Text(
-                            sound['label'] as String,
-                            style: TextStyle(fontSize: 16.sp),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                HapticFeedback.selectionClick();
-                setState(() => selectedSound = value);
-              },
+        SizedBox(height: 8.h),
+        Expanded(
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 8.h,
+              crossAxisSpacing: 8.w,
+              childAspectRatio: 0.92,
             ),
+            itemCount: FocusAmbientSounds.all.length,
+            itemBuilder: (context, index) {
+              final sound = FocusAmbientSounds.all[index];
+              final isSelected = selectedSound == sound.id;
+              return GestureDetector(
+                onTap: () => _onSoundSelected(sound.id),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: EdgeInsets.symmetric(vertical: 6.h),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? primaryColor.withValues(alpha: 0.1)
+                        : HomeSystemTokens.canvas,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: isSelected
+                          ? primaryColor
+                          : HomeSystemTokens.inkMuted.withValues(alpha: 0.12),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        sound.icon,
+                        size: 18.sp,
+                        color: isSelected ? primaryColor : HomeSystemTokens.inkSoft,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        sound.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? primaryColor : HomeSystemTokens.inkMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
+        if (selectedSound != null) ...[
+          SizedBox(height: 4.h),
+          Row(
+            children: [
+              Icon(Icons.volume_down_rounded, size: 16.sp, color: HomeSystemTokens.inkMuted),
+              Expanded(
+                child: Slider(
+                  value: soundVolume.toDouble(),
+                  min: 0,
+                  max: 100,
+                  divisions: 20,
+                  activeColor: primaryColor,
+                  inactiveColor: primaryColor.withValues(alpha: 0.15),
+                  onChanged: _onVolumeChanged,
+                ),
+              ),
+              Icon(Icons.volume_up_rounded, size: 16.sp, color: HomeSystemTokens.inkMuted),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -470,29 +605,29 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
       onTap: startTimer,
       child: Container(
         width: double.infinity,
-        height: 60.h,
+        height: 54.h,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [primaryColor, primaryColor.withOpacity(0.8)],
+            colors: [primaryColor, primaryColor.withValues(alpha: 0.82)],
           ),
-          borderRadius: BorderRadius.circular(30.r),
+          borderRadius: BorderRadius.circular(28.r),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(0.4),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: primaryColor.withValues(alpha: 0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(AppIcons.play_arrow_rounded, color: Colors.white, size: 28.sp),
+            Icon(AppIcons.play_arrow_rounded, color: Colors.white, size: 26.sp),
             SizedBox(width: 8.w),
             Text(
               'Start Focus Session',
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 17.sp,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
@@ -504,39 +639,37 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
   }
 
   Widget _buildRunningIndicator(Color primaryColor) {
+    final soundLabel = FocusAmbientSounds.labelFor(selectedSound);
+
     return Column(
       children: [
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(30.r),
+            color: primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(24.r),
           ),
           child: Row(
             children: [
               Container(
-                width: 10.w,
-                height: 10.w,
-                decoration: BoxDecoration(
+                width: 8.w,
+                height: 8.w,
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.green,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.5),
-                      blurRadius: 8,
-                    ),
-                  ],
                 ),
               ),
               SizedBox(width: 10.w),
               Expanded(
                 child: Text(
-                  'Stay focused! You\'re doing great.',
+                  soundLabel != null
+                      ? 'Stay focused · $soundLabel playing'
+                      : 'Stay focused! You\'re doing great.',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 14.sp,
+                    fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
                     color: primaryColor,
                   ),
@@ -545,20 +678,6 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
             ],
           ),
         ),
-        if (selectedSound != null) ...[
-          SizedBox(height: 16.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(AppIcons.music_note, size: 18.sp, color: Colors.grey[600]),
-              SizedBox(width: 8.w),
-              Text(
-                'Playing: ${selectedSound!.substring(0, 1).toUpperCase()}${selectedSound!.substring(1)}',
-                style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-              ),
-            ],
-          ),
-        ],
       ],
     );
   }
@@ -567,22 +686,22 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
     return GestureDetector(
       onTap: stopTimer,
       child: Container(
-        width: 160.w,
-        height: 56.h,
+        width: 150.w,
+        height: 50.h,
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(30.r),
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(26.r),
           border: Border.all(color: Colors.red, width: 2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(AppIcons.stop_rounded, color: Colors.red, size: 24.sp),
+            Icon(AppIcons.stop_rounded, color: Colors.red, size: 22.sp),
             SizedBox(width: 8.w),
             Text(
               'Stop',
               style: TextStyle(
-                fontSize: 18.sp,
+                fontSize: 17.sp,
                 fontWeight: FontWeight.w600,
                 color: Colors.red,
               ),
@@ -594,7 +713,6 @@ class _FocusTimerContentState extends State<_FocusTimerContent>
   }
 }
 
-// Custom Painter for circular progress
 class _CircularProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
@@ -611,22 +729,18 @@ class _CircularProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
 
-    // Background circle
-    final bgPaint =
-        Paint()
-          ..color = color.withOpacity(0.1)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth;
+    final bgPaint = Paint()
+      ..color = color.withValues(alpha: 0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
 
     canvas.drawCircle(center, radius, bgPaint);
 
-    // Progress arc
-    final progressPaint =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round;
+    final progressPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),

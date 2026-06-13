@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get_it/get_it.dart';
 import 'package:voclio_app/core/domain/entities/tag_entity.dart';
+import 'package:voclio_app/core/utils/date_time_utils.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 
@@ -427,7 +428,7 @@ class _TasksDashboardViewState extends State<_TasksDashboardView> {
     final tomorrow = today.add(const Duration(days: 1));
 
     return tasks.where((t) {
-      final tDate = DateTime(t.date.year, t.date.month, t.date.day);
+      final tDate = DateTimeUtils.dateOnly(t.date);
       if (type == 0) {
         // Today section: include current day AND everything in the past (overdue)
         return tDate.isAtSameMomentAs(today) || tDate.isBefore(today);

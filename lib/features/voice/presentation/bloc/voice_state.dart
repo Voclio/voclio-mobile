@@ -56,14 +56,16 @@ enum VoiceSuccessDestination { tasks, notes, calendar }
 class VoiceOperationSuccess extends VoiceState {
   final String message;
   final VoiceSuccessDestination? destination;
+  final DateTime? calendarFocusDate;
 
   const VoiceOperationSuccess(
     this.message, {
     this.destination,
+    this.calendarFocusDate,
   });
 
   @override
-  List<Object?> get props => [message, destination];
+  List<Object?> get props => [message, destination, calendarFocusDate];
 }
 
 class VoiceError extends VoiceState {

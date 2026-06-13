@@ -66,16 +66,16 @@ class VoiceRepositoryImpl implements VoiceRepository {
   }
 
   @override
-  Future<Either<Failure, void>> createTasksFromVoice(
+  Future<Either<Failure, DateTime?>> createTasksFromVoice(
     String id, {
     String? transcription,
   }) async {
     try {
-      await remoteDataSource.createTasksFromVoice(
+      final dueDate = await remoteDataSource.createTasksFromVoice(
         id,
         transcription: transcription,
       );
-      return const Right(null);
+      return Right(dueDate);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

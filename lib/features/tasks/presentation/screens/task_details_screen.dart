@@ -9,6 +9,7 @@ import 'package:voclio_app/core/enums/enums.dart';
 import 'package:voclio_app/core/layout/main_layout.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/features/calendar/presentation/screens/monthly_calendar_screen.dart';
+import 'package:voclio_app/core/utils/date_time_utils.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
@@ -17,10 +18,27 @@ import 'package:voclio_app/features/tasks/presentation/widgets/add_task_buttom_s
 import '../bloc/tasks_cubit.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
-class TaskDetailScreen extends StatelessWidget {
+class TaskDetailScreen extends StatefulWidget {
   final TaskEntity task;
 
   const TaskDetailScreen({super.key, required this.task});
+
+  @override
+  State<TaskDetailScreen> createState() => _TaskDetailScreenState();
+}
+
+class _TaskDetailScreenState extends State<TaskDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<TasksCubit>().loadSubtasks(
+        widget.task.id,
+        fallbackTask: widget.task,
+      );
+    });
+  }
 
   TaskEntity _resolveTask(TasksState state, TaskEntity fallback) {
     for (final candidate in [...state.tasks, ...state.allTasks]) {
@@ -33,16 +51,29 @@ class TaskDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // We wrap in BlocBuilder to ensure UI updates if Subtasks change
-    return BlocBuilder<TasksCubit, TasksState>(
-      builder: (context, state) {
-        // Find the specific task in the state to get the latest updates (e.g. subtask checks)
-        // Fallback to the passed 'task' if not found (edge case)
-        final currentTask = _resolveTask(state, task);
+    return BlocListener<TasksCubit, TasksState>(
+      listenWhen: (previous, current) =>
+          previous.errorMessage != current.errorMessage &&
+          current.status == TasksStatus.failure,
+      listener: (context, state) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.errorMessage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: BlocBuilder<TasksCubit, TasksState>(
+        builder: (context, state) {
+          final currentTask = _resolveTask(state, widget.task);
 
         final theme = Theme.of(context);
         final isCompleted = currentTask.isDone;
-        final isOverdue = !isCompleted && currentTask.date.isBefore(DateTime.now());
+        final isOverdue = DateTimeUtils.isOverdue(
+          currentTask.date,
+          isCompleted: isCompleted,
+        );
 
         return Scaffold(
           backgroundColor: HomeSystemTokens.canvas,
@@ -126,6 +157,7 @@ class TaskDetailScreen extends StatelessWidget {
           ),
         );
       },
+      ),
     );
   }
 
@@ -317,8 +349,9 @@ class TaskDetailScreen extends StatelessWidget {
 
   Widget _buildDateSection(BuildContext context, TaskEntity task, bool isOverdue) {
     final theme = Theme.of(context);
+    final localDue = DateTimeUtils.toLocal(task.date);
     final dateFormat = DateFormat('MMM d, yyyy');
-    final timeFormat = DateFormat('h:mm a');
+    final timeFormat = DateFormat.jm();
 
     return _buildContainer(
       context,
@@ -354,7 +387,7 @@ class TaskDetailScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      dateFormat.format(task.date),
+                      dateFormat.format(localDue),
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isOverdue ? Colors.red : null,
@@ -381,7 +414,7 @@ class TaskDetailScreen extends StatelessWidget {
                     ),
                     SizedBox(width: 6.w),
                     Text(
-                      timeFormat.format(task.date),
+                      timeFormat.format(localDue),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 13.sp,
@@ -398,7 +431,7 @@ class TaskDetailScreen extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () => _openTaskInCalendar(context, task),
               icon: Icon(AppIcons.push_pin_outlined, size: 16.sp),
-              label: const Text("Pin to Calendar"),
+              label: const Text("View in Calendar"),
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 side: BorderSide(
@@ -888,6 +921,14 @@ void _openTaskInCalendar(BuildContext context, TaskEntity task) {
 
   if (MainLayout.goToTab(2, calendarDate: task.date)) {
     Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Showing ${DateFormat('MMM d').format(task.date)} in Calendar',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
     return;
   }
 

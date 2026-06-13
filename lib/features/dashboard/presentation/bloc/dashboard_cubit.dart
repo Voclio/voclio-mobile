@@ -38,6 +38,6 @@ class DashboardCubit extends Cubit<DashboardState> {
   }
 
   Future<void> refresh() async {
-    await loadDashboardStats();
+    await loadDashboardStats(force: true);
   }
 }

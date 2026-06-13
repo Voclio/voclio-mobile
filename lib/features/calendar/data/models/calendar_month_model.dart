@@ -1,4 +1,5 @@
 import '../../domain/entities/calendar_month_entity.dart';
+import '../../../../core/utils/date_time_utils.dart';
 
 class CalendarMonthModel extends CalendarMonthEntity {
   const CalendarMonthModel({
@@ -86,7 +87,7 @@ class CalendarTaskModel extends CalendarTaskEntity {
       description: json['description']?.toString(),
       priority: json['priority'],
       status: json['status'],
-      dueDate: DateTime.parse(json['due_date']),
+      dueDate: DateTimeUtils.parseApi(json['due_date']),
     );
   }
 }
@@ -96,6 +97,7 @@ class CalendarReminderModel extends CalendarReminderEntity {
     required super.id,
     required super.title,
     required super.reminderTime,
+    super.taskId,
   });
 
   factory CalendarReminderModel.fromJson(Map<String, dynamic> json) {
@@ -105,6 +107,7 @@ class CalendarReminderModel extends CalendarReminderEntity {
       reminderTime: DateTime.parse(
         json['reminder_time'] ?? DateTime.now().toIso8601String(),
       ),
+      taskId: json['task_id'] as int?,
     );
   }
 }

@@ -72,10 +72,13 @@ class ProductivityRepositoryImpl implements ProductivityRepository {
   }
 
   @override
-  @override
-  Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions() async {
+  Future<Either<Failure, AiSuggestionEntity>> getAiSuggestions({
+    String language = 'en',
+  }) async {
     try {
-      final suggestions = await remoteDataSource.getAiSuggestions();
+      final suggestions = await remoteDataSource.getAiSuggestions(
+        language: language,
+      );
       return Right(suggestions);
     } catch (e) {
       return Left(ServerFailure());

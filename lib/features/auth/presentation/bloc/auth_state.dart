@@ -9,7 +9,26 @@ abstract class AuthState extends Equatable {
 
 class AuthInitial extends AuthState {}
 
-class AuthLoading extends AuthState {}
+enum AuthLoadingAction {
+  login,
+  register,
+  google,
+  facebook,
+  forgotPassword,
+  logout,
+  updateProfile,
+  getProfile,
+  changePassword,
+}
+
+class AuthLoading extends AuthState {
+  final AuthLoadingAction action;
+
+  const AuthLoading([this.action = AuthLoadingAction.login]);
+
+  @override
+  List<Object?> get props => [action];
+}
 
 class AuthSuccess extends AuthState {
   final AuthResponse response;

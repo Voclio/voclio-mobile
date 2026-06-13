@@ -12,6 +12,7 @@ import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/core/layout/main_layout.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
+import 'package:voclio_app/features/calendar/presentation/screens/monthly_calendar_screen.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../bloc/voice_bloc.dart';
@@ -80,11 +81,29 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
     super.dispose();
   }
 
-  _RecordingPhase _phase(bool isLoading) {
-    if (isLoading) return _RecordingPhase.processing;
+  _RecordingPhase _phase(VoiceState state) {
+    if (state is VoiceLoading && _isProcessingLoading(state)) {
+      return _RecordingPhase.processing;
+    }
     if (isRecording) return _RecordingPhase.recording;
     if (transcription.isNotEmpty) return _RecordingPhase.done;
     return _RecordingPhase.idle;
+  }
+
+  bool _isProcessingLoading(VoiceState state) {
+    if (state is! VoiceLoading) return false;
+    final message = state.message.toLowerCase();
+    return message.contains('upload') ||
+        message.contains('transcrib') ||
+        message.contains('processing');
+  }
+
+  _VoiceSaveAction? _pendingSaveAction(VoiceState state) {
+    if (state is! VoiceLoading) return null;
+    final message = state.message.toLowerCase();
+    if (message.contains('creating note')) return _VoiceSaveAction.note;
+    if (message.contains('creating task')) return _VoiceSaveAction.task;
+    return null;
   }
 
   void _startDurationTimer() {
@@ -224,13 +243,17 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
               VoiceSuccessDestination.calendar => 2,
               VoiceSuccessDestination.notes => 3,
             };
-            if (state.destination == VoiceSuccessDestination.tasks ||
-                state.destination == VoiceSuccessDestination.calendar) {
-              final now = DateTime.now();
-              context.read<CalendarCubit>().loadMonth(now.year, now.month);
+            final focusDate = state.calendarFocusDate ?? DateTime.now();
+            if (state.destination == VoiceSuccessDestination.calendar) {
+              MonthlyCalendarScreen.jumpTo(focusDate);
+              context.read<CalendarCubit>().loadMonth(
+                focusDate.year,
+                focusDate.month,
+                force: true,
+              );
             }
             Navigator.of(context).pop();
-            MainLayout.goToTab(tabIndex);
+            MainLayout.goToTab(tabIndex, calendarDate: focusDate);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
@@ -265,28 +288,30 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
         ],
         body: BlocBuilder<VoiceBloc, VoiceState>(
           builder: (context, state) {
-            final isLoading = state is VoiceLoading;
-            final phase = _phase(isLoading);
+            final isProcessing =
+                state is VoiceLoading && _isProcessingLoading(state);
+            final pendingSave = _pendingSaveAction(state);
+            final phase = _phase(state);
 
             return Column(
               children: [
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
+                    padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 12.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildStudioCard(phase, isLoading),
+                        _buildStudioCard(phase, isProcessing),
                         if (transcription.isNotEmpty) ...[
-                          SizedBox(height: 20.h),
-                          _buildTranscriptionCard(),
+                          SizedBox(height: 16.h),
+                          _buildTranscriptionCard(pendingSave),
                         ],
                       ],
                     ),
                   ),
                 ),
-                _buildBottomControls(phase, isLoading),
+                _buildBottomControls(phase, isProcessing),
               ],
             );
           },
@@ -295,7 +320,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
     );
   }
 
-  Widget _buildStudioCard(_RecordingPhase phase, bool isLoading) {
+  Widget _buildStudioCard(_RecordingPhase phase, bool isProcessing) {
     final accent = phase == _RecordingPhase.recording
         ? HomeSystemTokens.coral
         : HomeSystemTokens.purple;
@@ -328,9 +353,13 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
               ),
             ),
           ],
-          SizedBox(height: phase == _RecordingPhase.idle ? 24.h : 16.h),
+          SizedBox(height: phase == _RecordingPhase.idle ? 20.h : 12.h),
           SizedBox(
-            height: phase == _RecordingPhase.idle ? 140.h : 180.h,
+            height: phase == _RecordingPhase.idle
+                ? 120.h
+                : phase == _RecordingPhase.done
+                    ? 100.h
+                    : 150.h,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -341,8 +370,8 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                     builder: (_, __) {
                       final ring = _ringController!.value;
                       return Container(
-                        width: 160.r + (ring * 24),
-                        height: 160.r + (ring * 24),
+                        width: 140.r + (ring * 20),
+                        height: 140.r + (ring * 20),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
@@ -354,34 +383,53 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                     },
                   ),
                 _buildVisualizer(phase, accent),
-                if (isLoading)
-                  SizedBox(
-                    width: 36.r,
-                    height: 36.r,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: accent,
-                    ),
-                  ),
               ],
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 20.h),
-            child: Text(
-              _bannerMessage(phase),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: phase == _RecordingPhase.idle
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-                color: phase == _RecordingPhase.idle
-                    ? HomeSystemTokens.ink
-                    : HomeSystemTokens.inkMuted,
-                height: 1.5,
-              ),
-            ),
+            padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 16.h),
+            child: isProcessing
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 18.r,
+                        height: 18.r,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: accent,
+                        ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Flexible(
+                        child: Text(
+                          _bannerMessage(phase),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: HomeSystemTokens.inkMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    _bannerMessage(phase),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: phase == _RecordingPhase.idle
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: phase == _RecordingPhase.idle
+                          ? HomeSystemTokens.ink
+                          : HomeSystemTokens.inkMuted,
+                      height: 1.5,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -391,7 +439,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
   String _bannerMessage(_RecordingPhase phase) {
     return switch (phase) {
       _RecordingPhase.idle =>
-        'Speak naturally — turn your voice into tasks & notes in seconds.',
+        'Speak in Arabic or English — we\'ll show natural English text.',
       _RecordingPhase.recording =>
         'We\'re listening… tap stop when you\'re done.',
       _RecordingPhase.processing =>
@@ -439,7 +487,11 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
     );
   }
 
-  Widget _buildTranscriptionCard() {
+  Widget _buildTranscriptionCard(_VoiceSaveAction? pendingSave) {
+    final isSavingTask = pendingSave == _VoiceSaveAction.task;
+    final isSavingNote = pendingSave == _VoiceSaveAction.note;
+    final isBusy = pendingSave != null;
+
     return HomeSectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,7 +525,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                       ),
                     ),
                     Text(
-                      'Edit before saving',
+                      'Shown in English — edit before saving',
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: HomeSystemTokens.inkMuted,
@@ -511,19 +563,19 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
             children: [
               Expanded(
                 child: _ActionChip(
-                  label: 'Make Task',
+                  label: isSavingTask ? 'Saving…' : 'Make Task',
                   icon: AppIcons.check_circle_outline_rounded,
                   color: HomeSystemTokens.purple,
-                  onTap: _createTask,
+                  onTap: isBusy ? null : _createTask,
                 ),
               ),
               SizedBox(width: 10.w),
               Expanded(
                 child: _ActionChip(
-                  label: 'Make Note',
+                  label: isSavingNote ? 'Saving…' : 'Make Note',
                   icon: AppIcons.sticky_note_2_outlined,
                   color: HomeSystemTokens.green,
-                  onTap: _createNote,
+                  onTap: isBusy ? null : _createNote,
                 ),
               ),
             ],
@@ -536,15 +588,21 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
         .slideY(begin: 0.08, end: 0, curve: Curves.easeOutCubic);
   }
 
-  Widget _buildBottomControls(_RecordingPhase phase, bool isLoading) {
+  Widget _buildBottomControls(_RecordingPhase phase, bool isProcessing) {
     final isRecording = phase == _RecordingPhase.recording;
+    final isCompact = phase == _RecordingPhase.done;
     final accent =
         isRecording ? HomeSystemTokens.coral : HomeSystemTokens.purple;
 
     return Container(
       width: double.infinity,
-      constraints: BoxConstraints(minHeight: 220.h),
-      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 16.h),
+      constraints: BoxConstraints(minHeight: isCompact ? 118.h : 190.h),
+      padding: EdgeInsets.fromLTRB(
+        24.w,
+        isCompact ? 12.h : 24.h,
+        24.w,
+        isCompact ? 8.h : 12.h,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
@@ -562,7 +620,7 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
           mainAxisSize: MainAxisSize.min,
           children: [
             GestureDetector(
-              onTap: isLoading ? null : _toggleRecording,
+              onTap: isProcessing ? null : _toggleRecording,
               child: AnimatedBuilder(
                 animation: _pulseController ?? const AlwaysStoppedAnimation(0),
                 builder: (_, child) {
@@ -572,8 +630,8 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                   return Transform.scale(scale: scale, child: child);
                 },
                 child: Container(
-                  width: 108.r,
-                  height: 108.r,
+                  width: isCompact ? 72.r : 96.r,
+                  height: isCompact ? 72.r : 96.r,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
@@ -583,15 +641,15 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: accent.withValues(alpha: 0.4),
-                        blurRadius: 28,
-                        offset: const Offset(0, 10),
+                        color: accent.withValues(alpha: isCompact ? 0.25 : 0.4),
+                        blurRadius: isCompact ? 16 : 24,
+                        offset: Offset(0, isCompact ? 6 : 10),
                       ),
                     ],
                   ),
-                  child: isLoading
+                  child: isProcessing
                       ? Padding(
-                          padding: EdgeInsets.all(32.r),
+                          padding: EdgeInsets.all(isCompact ? 20.r : 28.r),
                           child: const CircularProgressIndicator(
                             color: Colors.white,
                             strokeWidth: 2.5,
@@ -602,20 +660,22 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
                               ? AppIcons.stop_rounded
                               : AppIcons.mic_rounded,
                           color: Colors.white,
-                          size: 48.sp,
+                          size: isCompact ? 32.sp : 40.sp,
                         ),
                 ),
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: isCompact ? 8.h : 12.h),
             Text(
-              isLoading
+              isProcessing
                   ? 'Processing…'
                   : isRecording
                       ? 'Tap to stop'
-                      : 'Tap to record',
+                      : isCompact
+                          ? 'Record again'
+                          : 'Tap to record',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: isCompact ? 13.sp : 15.sp,
                 fontWeight: FontWeight.w600,
                 color: HomeSystemTokens.ink,
               ),
@@ -627,11 +687,13 @@ class _VoiceRecordingContentState extends State<_VoiceRecordingContent>
   }
 }
 
+enum _VoiceSaveAction { task, note }
+
 class _ActionChip extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _ActionChip({
     required this.label,
@@ -648,22 +710,25 @@ class _ActionChip extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(HomeSystemTokens.radiusMd.r),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 13.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: color, size: 18.sp),
-              SizedBox(width: 6.w),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+        child: Opacity(
+          opacity: onTap == null ? 0.55 : 1,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 13.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 18.sp),
+                SizedBox(width: 6.w),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

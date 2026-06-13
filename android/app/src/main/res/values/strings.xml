@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="widget_label">Voclio</string>
     <string name="widget_description">Voclio calendar with tasks and notes</string>
+    <string name="default_web_client_id">297833675857-l20bvp3gepaeqgcaibm1vc0voni5f8od.apps.googleusercontent.com</string>
 </resources>

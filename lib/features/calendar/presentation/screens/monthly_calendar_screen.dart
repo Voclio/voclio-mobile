@@ -16,6 +16,7 @@ import '../../../../core/enums/enums.dart';
 import '../../domain/entities/calendar_month_entity.dart';
 import '../../domain/entities/google_calendar_entity.dart';
 import '../../../../core/common/dialogs/voclio_dialog.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
 import '../../../../core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
@@ -86,7 +87,11 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       _focusedDay = target;
       _selectedDay = target;
     });
-    context.read<CalendarCubit>().loadMonth(target.year, target.month);
+    context.read<CalendarCubit>().loadMonth(
+      target.year,
+      target.month,
+      force: true,
+    );
     MonthlyCalendarScreen.pendingJumpDate.value = null;
   }
 
@@ -156,18 +161,34 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
   Future<void> _connectGoogleCalendar(BuildContext context) async {
     final cubit = context.read<CalendarCubit>();
-    final urlEntity = await cubit.getGoogleConnectUrl();
+    try {
+      final urlEntity = await cubit.getGoogleConnectUrl();
 
-    if (urlEntity != null && urlEntity.authUrl.isNotEmpty) {
-      final uri = Uri.parse(urlEntity.authUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
+      if (urlEntity.authUrl.isNotEmpty) {
+        final uri = Uri.parse(urlEntity.authUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Could not open Google sign-in')),
           );
         }
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not start Google Calendar connection'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Calendar connect failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -184,39 +205,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
     if (confirmed == true && context.mounted) {
       await context.read<CalendarCubit>().disconnectGoogleCalendar();
-    }
-  }
-
-  Future<void> _connectWebex(BuildContext context) async {
-    final cubit = context.read<CalendarCubit>();
-    final urlEntity = await cubit.getWebexConnectUrl();
-
-    if (urlEntity != null && urlEntity.authUrl.isNotEmpty) {
-      final uri = Uri.parse(urlEntity.authUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open Webex sign-in')),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _disconnectWebex(BuildContext context) async {
-    final confirmed = await VoclioDialog.showConfirm(
-      context: context,
-      title: 'Disconnect Webex?',
-      message:
-          'This will remove the Webex sync. Your Webex meetings will no longer appear in the calendar.',
-      confirmText: 'Disconnect',
-      cancelText: 'Cancel',
-    );
-
-    if (confirmed == true && context.mounted) {
-      await context.read<CalendarCubit>().disconnectWebex();
     }
   }
 
@@ -329,93 +317,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     );
   }
 
-  void _showWebexMenu(BuildContext context, ThemeData theme, bool isDark) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder:
-          (ctx) => Padding(
-            padding: EdgeInsets.all(20.r),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(10.r),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        AppIcons.video_call,
-                        color: Colors.blue,
-                        size: 24.sp,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Webex Connected',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Your meetings are syncing',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: theme.colorScheme.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20.h),
-                // Refresh meetings
-                ListTile(
-                  leading: Icon(
-                    AppIcons.refresh,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text('Refresh Meetings'),
-                  onTap: () {
-                    context.read<CalendarCubit>().loadMonth(
-                      _focusedDay.year,
-                      _focusedDay.month,
-                    );
-                    Navigator.pop(ctx);
-                  },
-                ),
-                // Disconnect
-                ListTile(
-                  leading: Icon(AppIcons.link_off, color: Colors.red),
-                  title: const Text(
-                    'Disconnect Webex',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _disconnectWebex(context);
-                  },
-                ),
-                SizedBox(height: 10.h),
-              ],
-            ),
-          ),
-    );
-  }
-
   Widget _buildCalendarDayCell(
     DateTime day,
     CalendarMonthEntity monthData,
@@ -462,12 +363,26 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     final now = DateTime.now();
     switch (_selectedFilter) {
       case 'pending':
-        return tasks.where((t) => !t.isCompleted).toList();
+        return tasks
+            .where(
+              (t) =>
+                  !t.isCompleted &&
+                  !DateTimeUtils.isOverdue(
+                    t.dueDate,
+                    isCompleted: false,
+                  ),
+            )
+            .toList();
       case 'completed':
         return tasks.where((t) => t.isCompleted).toList();
       case 'overdue':
         return tasks
-            .where((t) => !t.isCompleted && t.dueDate.isBefore(now))
+            .where(
+              (t) => DateTimeUtils.isOverdue(
+                t.dueDate,
+                isCompleted: t.isCompleted,
+              ),
+            )
             .toList();
       default:
         return tasks;
@@ -539,51 +454,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                     }
                   },
                   tooltip: isConnected ? 'Google Calendar' : 'Connect Google',
-                ),
-              );
-            },
-          ),
-          // Webex toggle
-          BlocBuilder<CalendarCubit, CalendarState>(
-            buildWhen:
-                (prev, curr) =>
-                    curr is WebexConnected ||
-                    curr is WebexDisconnected ||
-                    curr is CalendarLoaded,
-            builder: (context, state) {
-              bool isConnected = false;
-              if (state is CalendarLoaded) {
-                isConnected = state.webexStatus?.isConnected ?? false;
-              } else if (state is WebexConnected) {
-                isConnected = true;
-              }
-
-              return Container(
-                margin: EdgeInsets.only(right: 4.w),
-                decoration: BoxDecoration(
-                  color:
-                      isConnected
-                          ? Colors.blue.withOpacity(0.15)
-                          : isDark
-                          ? Colors.white10
-                          : Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    isConnected ? AppIcons.video_call : AppIcons.video_call_outlined,
-                    color:
-                        isConnected ? Colors.blue : theme.colorScheme.secondary,
-                    size: 18.sp,
-                  ),
-                  onPressed: () {
-                    if (isConnected) {
-                      _showWebexMenu(context, theme, isDark);
-                    } else {
-                      _connectWebex(context);
-                    }
-                  },
-                  tooltip: isConnected ? 'Webex Connected' : 'Connect Webex',
                 ),
               );
             },
@@ -910,11 +780,9 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       isDark,
                     ),
 
-                  // Calendar integrations banner (if not all connected)
-                  if ((state.googleStatus == null ||
-                          !state.googleStatus!.isConnected) ||
-                      (state.webexStatus == null ||
-                          !state.webexStatus!.isConnected))
+                  // Calendar integrations banner (if Google not connected)
+                  if (state.googleStatus == null ||
+                      !state.googleStatus!.isConnected)
                     _buildCalendarIntegrationsBanner(
                       context,
                       theme,
@@ -990,7 +858,13 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
   Widget _buildFilterChips(List<CalendarTaskEntity> tasks) {
     final now = DateTime.now();
-    final pendingCount = tasks.where((t) => !t.isCompleted).length;
+    final pendingCount = tasks
+        .where(
+          (t) =>
+              !t.isCompleted &&
+              !DateTimeUtils.isOverdue(t.dueDate, isCompleted: false),
+        )
+        .length;
     final completedCount = tasks.where((t) => t.isCompleted).length;
 
     return SizedBox(
@@ -1017,11 +891,21 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             selected: _selectedFilter == 'completed',
             onTap: () => setState(() => _selectedFilter = 'completed'),
           ),
-          if (tasks.any((t) => !t.isCompleted && t.dueDate.isBefore(now)))
+          if (tasks.any(
+            (t) => DateTimeUtils.isOverdue(
+              t.dueDate,
+              isCompleted: t.isCompleted,
+            ),
+          ))
             HomeCountedFilterPill(
               label: 'Overdue',
               count: tasks
-                  .where((t) => !t.isCompleted && t.dueDate.isBefore(now))
+                  .where(
+              (t) => DateTimeUtils.isOverdue(
+                t.dueDate,
+                isCompleted: t.isCompleted,
+              ),
+            )
                   .length,
               selected: _selectedFilter == 'overdue',
               onTap: () => setState(() => _selectedFilter = 'overdue'),
@@ -1038,7 +922,10 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     BuildContext context,
   ) {
     final now = DateTime.now();
-    final isOverdue = !task.isCompleted && task.dueDate.isBefore(now);
+    final isOverdue = DateTimeUtils.isOverdue(
+      task.dueDate,
+      isCompleted: task.isCompleted,
+    );
     final priorityColor = _getPriorityColor(task.priority);
 
     return GestureDetector(
@@ -1153,7 +1040,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        'Due: ${DateFormat('hh:mm a').format(task.dueDate)}',
+                        'Due: ${DateTimeUtils.formatCalendarDue(task.dueDate)}',
                         style: TextStyle(
                           fontSize: 12.sp,
                           color:
@@ -1640,7 +1527,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     CalendarLoaded state,
   ) {
     final isGoogleConnected = state.googleStatus?.isConnected ?? false;
-    final isWebexConnected = state.webexStatus?.isConnected ?? false;
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -1662,38 +1548,16 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             ),
           ),
           SizedBox(height: 12.h),
-          Row(
-            children: [
-              // Google Calendar
-              Expanded(
-                child: _buildIntegrationCard(
-                  context: context,
-                  theme: theme,
-                  isDark: isDark,
-                  title: 'Google',
-                  icon: AppIcons.calendar_month_rounded,
-                  color: Colors.green,
-                  isConnected: isGoogleConnected,
-                  onConnect: () => _connectGoogleCalendar(context),
-                  onTap: () => _showGoogleCalendarMenu(context, theme, isDark),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              // Webex
-              Expanded(
-                child: _buildIntegrationCard(
-                  context: context,
-                  theme: theme,
-                  isDark: isDark,
-                  title: 'Webex',
-                  icon: AppIcons.video_call_rounded,
-                  color: Colors.blue,
-                  isConnected: isWebexConnected,
-                  onConnect: () => _connectWebex(context),
-                  onTap: () => _showWebexMenu(context, theme, isDark),
-                ),
-              ),
-            ],
+          _buildIntegrationCard(
+            context: context,
+            theme: theme,
+            isDark: isDark,
+            title: 'Google Calendar',
+            icon: AppIcons.calendar_month_rounded,
+            color: Colors.green,
+            isConnected: isGoogleConnected,
+            onConnect: () => _connectGoogleCalendar(context),
+            onTap: () => _showGoogleCalendarMenu(context, theme, isDark),
           ),
         ],
       ),

@@ -16,26 +16,16 @@ class CalendarLoading extends CalendarState {}
 class CalendarLoaded extends CalendarState {
   final CalendarMonthEntity monthData;
   final GoogleCalendarStatusEntity? googleStatus;
-  final WebexStatusEntity? webexStatus;
   final List<GoogleCalendarEventEntity> todayMeetings;
-  final List<WebexMeetingEntity> todayWebexMeetings;
 
   const CalendarLoaded({
     required this.monthData,
     this.googleStatus,
-    this.webexStatus,
     this.todayMeetings = const [],
-    this.todayWebexMeetings = const [],
   });
 
   @override
-  List<Object?> get props => [
-    monthData,
-    googleStatus,
-    webexStatus,
-    todayMeetings,
-    todayWebexMeetings,
-  ];
+  List<Object?> get props => [monthData, googleStatus, todayMeetings];
 }
 
 class CalendarError extends CalendarState {
@@ -69,17 +59,3 @@ class GoogleOAuthUrlLoaded extends CalendarState {
   @override
   List<Object?> get props => [oauthUrl];
 }
-
-// Webex specific states
-class WebexConnecting extends CalendarState {}
-
-class WebexConnected extends CalendarState {
-  final String message;
-
-  const WebexConnected({required this.message});
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class WebexDisconnected extends CalendarState {}

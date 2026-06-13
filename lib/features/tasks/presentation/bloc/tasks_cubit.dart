@@ -3,6 +3,7 @@ import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/create_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/delete_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/create_subtask_use_case.dart';
+import 'package:voclio_app/features/tasks/domain/usecases/get_subtasks_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/update_subtask_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/complete_task_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_all_tasks_use_case.dart';
@@ -11,6 +12,8 @@ import 'package:voclio_app/features/tasks/domain/usecases/update_task_use_case.d
 import 'package:voclio_app/features/tasks/domain/usecases/get_tasks_by_category_use_case.dart';
 import 'package:voclio_app/features/tasks/domain/usecases/get_categories_use_case.dart';
 import 'package:voclio_app/core/domain/usecases/get_tags_use_case.dart';
+import 'package:voclio_app/core/di/injection_container.dart';
+import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
 import 'package:voclio_app/features/tasks/presentation/bloc/tasks_state.dart';
 import 'package:voclio_app/features/widget_config/data/services/home_screen_widget_service.dart';
 
@@ -22,6 +25,7 @@ class TasksCubit extends Cubit<TasksState> {
   final DeleteTaskUseCase deletaTaskUseCase;
   final CompleteTaskUseCase completeTaskUseCase;
   final CreateSubtaskUseCase createSubtaskUseCase;
+  final GetSubtasksUseCase getSubtasksUseCase;
   final UpdateSubtaskUseCase updateSubtaskUseCase;
   final GetTasksByCategoryUseCase getTasksByCategoryUseCase;
   final GetCategoriesUseCase getCategoriesUseCase;
@@ -32,6 +36,7 @@ class TasksCubit extends Cubit<TasksState> {
     required this.updateTaskUseCase,
     required this.completeTaskUseCase,
     required this.createSubtaskUseCase,
+    required this.getSubtasksUseCase,
     required this.updateSubtaskUseCase,
     required this.getAllTasksUseCase,
     required this.getTaskUseCase,
@@ -40,6 +45,12 @@ class TasksCubit extends Cubit<TasksState> {
     required this.getCategoriesUseCase,
     required this.getTagsUseCase,
   }) : super(const TasksState());
+
+  void _refreshCalendarForDate(DateTime date) {
+    try {
+      getIt<CalendarCubit>().loadMonth(date.year, date.month, force: true);
+    } catch (_) {}
+  }
 
   Future<void> init({bool force = false}) async {
     if (!force &&
@@ -277,6 +288,7 @@ class TasksCubit extends Cubit<TasksState> {
 
           updatedList[index] = mergedTask;
           emit(state.copyWith(tasks: updatedList, status: TasksStatus.success));
+          _refreshCalendarForDate(mergedTask.date);
         } else {
           // Fallback if not found
           getTasks();
@@ -314,30 +326,88 @@ class TasksCubit extends Cubit<TasksState> {
           final updatedList = List<TaskEntity>.from(state.tasks);
           updatedList[index] = successTask;
           emit(state.copyWith(tasks: updatedList));
+          _refreshCalendarForDate(successTask.date);
         }
       },
     );
   }
 
+  Future<void> loadSubtasks(String taskId, {TaskEntity? fallbackTask}) async {
+    final result = await getSubtasksUseCase(taskId);
+
+    result.fold((_) {}, (subtaskEntities) {
+      if (isClosed) return;
+
+      final subtasks =
+          subtaskEntities
+              .map(
+                (subtask) => SubTask(
+                  id: subtask.id,
+                  title: subtask.title,
+                  isDone: subtask.completed,
+                ),
+              )
+              .toList();
+
+      final tasks = _mergeSubtasksIntoTaskList(state.tasks, taskId, subtasks);
+      final allTasks = _mergeSubtasksIntoTaskList(
+        state.allTasks,
+        taskId,
+        subtasks,
+      );
+
+      if (_containsTask(tasks, taskId) || _containsTask(allTasks, taskId)) {
+        emit(state.copyWith(tasks: tasks, allTasks: allTasks));
+        return;
+      }
+
+      if (fallbackTask != null) {
+        final enrichedTask = fallbackTask.copyWith(subtasks: subtasks);
+        emit(
+          state.copyWith(
+            allTasks: [...state.allTasks, enrichedTask],
+          ),
+        );
+      }
+    });
+  }
+
+  bool _containsTask(List<TaskEntity> source, String taskId) {
+    return source.any((task) => task.id == taskId);
+  }
+
+  List<TaskEntity> _mergeSubtasksIntoTaskList(
+    List<TaskEntity> source,
+    String taskId,
+    List<SubTask> subtasks,
+  ) {
+    final index = source.indexWhere((task) => task.id == taskId);
+    if (index == -1) return source;
+
+    final updated = List<TaskEntity>.from(source);
+    updated[index] = source[index].copyWith(subtasks: subtasks);
+    return updated;
+  }
+
   Future<void> addSubtask(String taskId, String title) async {
-    // 1. Find the task
-    final int taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
-    if (taskIndex == -1) return;
+    final task = _findTask(taskId);
+    if (task == null) return;
 
-    final task = state.tasks[taskIndex];
     final tempId = 'temp-${DateTime.now().millisecondsSinceEpoch}';
-
-    // 2. Optimistic UI update with temporary subtask
     final tempSubtask = SubTask(id: tempId, title: title, isDone: false);
-    final updatedTask = task.copyWith(
-      subtasks: [...task.subtasks, tempSubtask],
+    final optimisticSubtasks = [...task.subtasks, tempSubtask];
+
+    emit(
+      state.copyWith(
+        tasks: _mergeSubtasksIntoTaskList(state.tasks, taskId, optimisticSubtasks),
+        allTasks: _mergeSubtasksIntoTaskList(
+          state.allTasks,
+          taskId,
+          optimisticSubtasks,
+        ),
+      ),
     );
 
-    final updatedTasks = List<TaskEntity>.from(state.tasks);
-    updatedTasks[taskIndex] = updatedTask;
-    emit(state.copyWith(tasks: updatedTasks));
-
-    // 3. Call API
     final result = await createSubtaskUseCase(
       taskId,
       title,
@@ -346,51 +416,68 @@ class TasksCubit extends Cubit<TasksState> {
 
     result.fold(
       (failure) {
-        // Revert by removing the temp subtask
-        final revertedTask = task.copyWith(
-          subtasks: task.subtasks.where((s) => s.id != tempId).toList(),
-        );
-        final revertedTasks = List<TaskEntity>.from(state.tasks);
-        final idx = revertedTasks.indexWhere((t) => t.id == taskId);
-        if (idx != -1) revertedTasks[idx] = revertedTask;
-
         emit(
           state.copyWith(
             status: TasksStatus.failure,
             errorMessage: failure.message,
-            tasks: revertedTasks,
+            tasks: _mergeSubtasksIntoTaskList(
+              state.tasks,
+              taskId,
+              task.subtasks,
+            ),
+            allTasks: _mergeSubtasksIntoTaskList(
+              state.allTasks,
+              taskId,
+              task.subtasks,
+            ),
           ),
         );
       },
       (subtaskEntity) {
-        // Replace temp subtask with real one from server
-        final currentTasks = List<TaskEntity>.from(state.tasks);
-        final idx = currentTasks.indexWhere((t) => t.id == taskId);
-        if (idx != -1) {
-          final currentTask = currentTasks[idx];
-          final newSubtasks =
-              currentTask.subtasks.map((s) {
-                if (s.id == tempId) {
-                  return SubTask(
-                    id: subtaskEntity.id,
-                    title: subtaskEntity.title,
-                    isDone: subtaskEntity.completed,
-                  );
-                }
-                return s;
-              }).toList();
-          currentTasks[idx] = currentTask.copyWith(subtasks: newSubtasks);
-          emit(
-            state.copyWith(tasks: currentTasks, status: TasksStatus.success),
-          );
-        }
+        final currentTask = _findTask(taskId);
+        if (currentTask == null) return;
+
+        final newSubtasks =
+            currentTask.subtasks.map((s) {
+              if (s.id == tempId) {
+                return SubTask(
+                  id: subtaskEntity.id,
+                  title: subtaskEntity.title,
+                  isDone: subtaskEntity.completed,
+                );
+              }
+              return s;
+            }).toList();
+
+        emit(
+          state.copyWith(
+            status: TasksStatus.success,
+            tasks: _mergeSubtasksIntoTaskList(state.tasks, taskId, newSubtasks),
+            allTasks: _mergeSubtasksIntoTaskList(
+              state.allTasks,
+              taskId,
+              newSubtasks,
+            ),
+          ),
+        );
+        _refreshCalendarForDate(task.date);
       },
     );
   }
 
+  TaskEntity? _findTask(String taskId) {
+    for (final task in [...state.tasks, ...state.allTasks]) {
+      if (task.id == taskId) return task;
+    }
+    return null;
+  }
+
   Future<void> toggleSubtask(String taskId, SubTask subtask) async {
-    // 1. Optimistic UI update
     final int taskIndex = state.tasks.indexWhere((t) => t.id == taskId);
+    final previousSubtasks =
+        taskIndex != -1 ? state.tasks[taskIndex].subtasks : const <SubTask>[];
+
+    // 1. Optimistic UI update
     if (taskIndex != -1) {
       final task = state.tasks[taskIndex];
       final updatedSubtasks =
@@ -401,9 +488,17 @@ class TasksCubit extends Cubit<TasksState> {
             return s;
           }).toList();
 
-      final updatedTasks = List<TaskEntity>.from(state.tasks);
-      updatedTasks[taskIndex] = task.copyWith(subtasks: updatedSubtasks);
-      emit(state.copyWith(tasks: updatedTasks));
+      final updatedTasks = _mergeSubtasksIntoTaskList(
+        state.tasks,
+        taskId,
+        updatedSubtasks,
+      );
+      final updatedAllTasks = _mergeSubtasksIntoTaskList(
+        state.allTasks,
+        taskId,
+        updatedSubtasks,
+      );
+      emit(state.copyWith(tasks: updatedTasks, allTasks: updatedAllTasks));
     }
 
     // 2. Call API
@@ -419,13 +514,29 @@ class TasksCubit extends Cubit<TasksState> {
         state.copyWith(
           status: TasksStatus.failure,
           errorMessage: failure.message,
+          tasks: _mergeSubtasksIntoTaskList(
+            state.tasks,
+            taskId,
+            previousSubtasks,
+          ),
+          allTasks: _mergeSubtasksIntoTaskList(
+            state.allTasks,
+            taskId,
+            previousSubtasks,
+          ),
         ),
       );
-      getTasks(); // Revert on error
-    }, (_) => null);
+    }, (_) {
+      final parentTask = _findTask(taskId);
+      if (parentTask != null) {
+        _refreshCalendarForDate(parentTask.date);
+      }
+    });
   }
 
   Future<void> deleteTask(String taskId) async {
+    final deletedTask = _findTask(taskId);
+
     // 1. Optimistic Delete
     final updatedList = state.tasks.where((t) => t.id != taskId).toList();
     emit(state.copyWith(tasks: updatedList));
@@ -443,7 +554,11 @@ class TasksCubit extends Cubit<TasksState> {
         );
         getTasks(); // Re-fetch on error
       },
-      (_) => null, // Success
+      (_) {
+        if (deletedTask != null) {
+          _refreshCalendarForDate(deletedTask.date);
+        }
+      },
     );
   }
 
@@ -464,7 +579,7 @@ class TasksCubit extends Cubit<TasksState> {
         ),
       );
       getTasks();
-    }, (_) => null);
+    }, (_) => _refreshCalendarForDate(task.date));
   }
 
   void _replaceTaskInState(TaskEntity updatedTask) {

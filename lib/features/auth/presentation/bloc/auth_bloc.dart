@@ -105,7 +105,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.login));
     final result = await _loginUseCase(event.request);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
@@ -118,7 +118,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       'Registering user: ${event.request.email} with OTP: ${event.request.otp}',
       name: 'AuthBloc',
     );
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.register));
     final result = await _registerUseCase(event.request);
 
     result.fold(
@@ -190,7 +190,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ForgotPasswordEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.forgotPassword));
     final result = await _forgotPasswordUseCase(event.email);
     result.fold(
       (failure) => emit(AuthError(failure.message)),
@@ -217,7 +217,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // Save current state in case update fails
     final previousState = state;
 
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.updateProfile));
     final result = await _updateProfileUseCase(event.name, event.phoneNumber);
     result.fold((failure) {
       // If we had a valid auth state before, restore it and show error
@@ -232,7 +232,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.logout));
     final result = await _logoutUseCase();
     result.fold(
       (failure) => emit(AuthError(failure.message)),
@@ -244,10 +244,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     GoogleSignInEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.google));
     final result = await _googleSignInUseCase();
     result.fold(
-      (failure) => emit(AuthError(failure.message)),
+      (failure) {
+        final message = failure.message.toLowerCase();
+        if (message.contains('cancel')) {
+          emit(AuthInitial());
+          return;
+        }
+        emit(AuthError(failure.message));
+      },
       (response) => emit(AuthSuccess(response)),
     );
   }
@@ -256,7 +263,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     FacebookSignInEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.facebook));
     final result = await _facebookSignInUseCase();
     result.fold(
       (failure) => emit(AuthError(failure.message)),
@@ -270,7 +277,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     // Store previous state to restore after password change
     final previousState = state;
-    emit(AuthLoading());
+    emit(const AuthLoading(AuthLoadingAction.changePassword));
     final result = await _changePasswordUseCase(
       event.currentPassword,
       event.newPassword,
@@ -323,7 +330,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final isSilentRefresh = previousState is AuthSuccess;
 
     if (!isSilentRefresh) {
-      emit(AuthLoading());
+      emit(const AuthLoading(AuthLoadingAction.getProfile));
     }
 
     final result = await _getProfileUseCase();

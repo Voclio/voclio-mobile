@@ -17,6 +17,8 @@ import '../widgets/auth_text_field.dart';
 import '../widgets/auth_phone_field.dart';
 import '../widgets/auth_button.dart';
 import '../widgets/auth_link_button.dart';
+import '../widgets/auth_or_divider.dart';
+import '../widgets/google_auth_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../../domain/entities/auth_request.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
@@ -277,13 +279,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                                 BlocBuilder<AuthBloc, AuthState>(
                                   builder: (context, state) {
-                                    final isLoading =
+                                    final isBusy =
                                         state is AuthLoading ||
+                                        state is OTPLoading;
+                                    final isRegisterLoading =
+                                        (state is AuthLoading &&
+                                            state.action ==
+                                                AuthLoadingAction.register) ||
                                         state is OTPLoading;
                                     return AuthButton(
                                       text: context.translate(LangKeys.signUp),
-                                      onPressed: isLoading ? null : _onRegister,
-                                      isLoading: isLoading,
+                                      onPressed: isBusy ? null : _onRegister,
+                                      isLoading: isRegisterLoading,
+                                    );
+                                  },
+                                ),
+
+                                SizedBox(height: isSmall ? 16.h : 20.h),
+
+                                BlocBuilder<AuthBloc, AuthState>(
+                                  builder: (context, state) {
+                                    final isBusy =
+                                        state is AuthLoading ||
+                                        state is OTPLoading;
+                                    final isGoogleLoading =
+                                        state is AuthLoading &&
+                                        state.action ==
+                                            AuthLoadingAction.google;
+                                    return Column(
+                                      children: [
+                                        const AuthOrDivider(),
+                                        SizedBox(height: isSmall ? 14.h : 16.h),
+                                        GoogleAuthButton(
+                                          isLoading: isGoogleLoading,
+                                          onPressed:
+                                              isBusy ? null : _onGoogleSignIn,
+                                        ),
+                                      ],
                                     );
                                   },
                                 ),
@@ -339,5 +371,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       context.read<AuthBloc>().add(RegisterEvent(request));
     }
+  }
+
+  void _onGoogleSignIn() {
+    context.read<AuthBloc>().add(const GoogleSignInEvent());
   }
 }

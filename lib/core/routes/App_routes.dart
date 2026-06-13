@@ -53,8 +53,20 @@ class AppRouter {
   static const String profile = '/profile';
   static const String editProfile = '/edit-profile';
 
+  static String? _redirectDeepLink(GoRouterState state) {
+    final uri = state.uri;
+    if (uri.scheme != 'voclio') return null;
+
+    if (uri.host == 'home' || uri.path == '/home') {
+      return home;
+    }
+
+    return null;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: splash,
+    redirect: (context, state) => _redirectDeepLink(state),
     routes: [
       GoRoute(
         path: splash,

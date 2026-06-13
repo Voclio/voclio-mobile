@@ -35,15 +35,22 @@ class StreakEntity extends Equatable {
   final int currentStreak;
   final int longestStreak;
   final DateTime? lastActivityDate;
+  final int totalPoints;
 
   const StreakEntity({
     required this.currentStreak,
     required this.longestStreak,
     this.lastActivityDate,
+    this.totalPoints = 0,
   });
 
   @override
-  List<Object?> get props => [currentStreak, longestStreak, lastActivityDate];
+  List<Object?> get props => [
+    currentStreak,
+    longestStreak,
+    lastActivityDate,
+    totalPoints,
+  ];
 }
 
 class AchievementEntity extends Equatable {
@@ -53,6 +60,8 @@ class AchievementEntity extends Equatable {
   final String icon;
   final bool isUnlocked;
   final DateTime? unlockedAt;
+  final int progressCurrent;
+  final int progressTarget;
 
   const AchievementEntity({
     required this.id,
@@ -61,7 +70,12 @@ class AchievementEntity extends Equatable {
     required this.icon,
     required this.isUnlocked,
     this.unlockedAt,
+    this.progressCurrent = 0,
+    this.progressTarget = 1,
   });
+
+  double get progress =>
+      progressTarget > 0 ? (progressCurrent / progressTarget).clamp(0.0, 1.0) : 0;
 
   @override
   List<Object?> get props => [
@@ -71,5 +85,7 @@ class AchievementEntity extends Equatable {
     icon,
     isUnlocked,
     unlockedAt,
+    progressCurrent,
+    progressTarget,
   ];
 }

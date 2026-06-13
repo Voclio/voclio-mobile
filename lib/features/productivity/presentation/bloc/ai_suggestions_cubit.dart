@@ -5,21 +5,46 @@ import 'package:voclio_app/features/productivity/presentation/bloc/ai_suggestion
 class AiSuggestionsCubit extends Cubit<AiSuggestionsState> {
   final GetAiSuggestionsUseCase getAiSuggestionsUseCase;
 
+  String? _loadedForUserKey;
+
   AiSuggestionsCubit({required this.getAiSuggestionsUseCase})
     : super(AiSuggestionsInitial());
 
-  Future<void> loadAiSuggestions({bool force = false}) async {
-    if (!force && state is AiSuggestionsLoaded) return;
+  void reset() {
+    _loadedForUserKey = null;
+    emit(AiSuggestionsInitial());
+  }
 
-    emit(AiSuggestionsLoading());
-    final result = await getAiSuggestionsUseCase();
+  Future<void> loadAiSuggestions({
+    bool force = false,
+    String? userKey,
+    String language = 'en',
+  }) async {
+    if (!force &&
+        state is AiSuggestionsLoaded &&
+        userKey != null &&
+        userKey == _loadedForUserKey) {
+      return;
+    }
+
+    final hasExistingInsight = state is AiSuggestionsLoaded;
+    if (!hasExistingInsight) {
+      emit(AiSuggestionsLoading());
+    }
+
+    final result = await getAiSuggestionsUseCase(language: language);
 
     result.fold(
-      (failure) => emit(
-        const AiSuggestionsError(message: 'Failed to load AI suggestions'),
-      ),
-      (suggestionsEntity) =>
-          emit(AiSuggestionsLoaded(suggestions: suggestionsEntity)),
+      (failure) {
+        if (hasExistingInsight) return;
+        emit(
+          const AiSuggestionsError(message: 'Failed to load AI suggestions'),
+        );
+      },
+      (suggestionsEntity) {
+        _loadedForUserKey = userKey;
+        emit(AiSuggestionsLoaded(suggestions: suggestionsEntity));
+      },
     );
   }
 }

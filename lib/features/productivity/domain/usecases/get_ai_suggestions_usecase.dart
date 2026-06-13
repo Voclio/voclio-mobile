@@ -8,7 +8,9 @@ class GetAiSuggestionsUseCase {
 
   GetAiSuggestionsUseCase(this.repository);
 
-  Future<Either<Failure, AiSuggestionEntity>> call() async {
-    return await repository.getAiSuggestions();
+  Future<Either<Failure, AiSuggestionEntity>> call({
+    String language = 'en',
+  }) async {
+    return repository.getAiSuggestions(language: language);
   }
 }

@@ -28,24 +28,31 @@ class AchievementsScreen extends StatelessWidget {
             }
 
             if (state is ProductivityDataLoaded) {
-              final allAchievements = _getMergedAchievements(
-                state.achievements,
-              );
+              final achievements = state.achievements;
+              final unlockedCount =
+                  achievements.where((item) => item.isUnlocked).length;
 
               return RefreshIndicator(
+                color: HomeSystemTokens.orange,
                 onRefresh: () =>
                     context.read<ProductivityCubit>().loadProductivityData(),
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 32.h),
                   children: [
-                    _buildStreakCard(context, state.streak),
-                    SizedBox(height: 8.h),
+                    _buildStreakHero(state.streak),
+                    SizedBox(height: 14.h),
+                    _buildStatsRow(
+                      streak: state.streak,
+                      unlockedCount: unlockedCount,
+                      totalCount: achievements.length,
+                    ),
+                    SizedBox(height: 22.h),
                     HomeSectionTitle(
                       title: 'Goal Milestones',
-                      trailing:
-                          '${state.achievements.where((a) => a.isUnlocked).length}/${allAchievements.length}',
+                      trailing: '$unlockedCount/${achievements.length}',
                     ),
+                    SizedBox(height: 10.h),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -53,11 +60,11 @@ class AchievementsScreen extends StatelessWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: 12.w,
                         mainAxisSpacing: 12.h,
-                        childAspectRatio: 0.74,
+                        childAspectRatio: 0.78,
                       ),
-                      itemCount: allAchievements.length,
+                      itemCount: achievements.length,
                       itemBuilder: (context, index) {
-                        return _buildAchievementCard(allAchievements[index]);
+                        return _buildAchievementCard(achievements[index]);
                       },
                     ),
                   ],
@@ -78,295 +85,444 @@ class AchievementsScreen extends StatelessWidget {
               );
             }
 
-            return const SizedBox();
+            return const SizedBox.shrink();
           },
         ),
       ),
     );
   }
 
-  List<AchievementEntity> _getMergedAchievements(
-    List<AchievementEntity> backendAchievements,
-  ) {
-    final baseMilestones = [
-      const AchievementEntity(
-        id: 'streak_3',
-        title: '3 Day Heat',
-        description: 'Maintain a 3-day focus streak',
-        icon: '🔥',
-        isUnlocked: false,
-      ),
-      const AchievementEntity(
-        id: 'first_focus',
-        title: 'First Focus',
-        description: 'Complete your first focus session',
-        icon: '🎯',
-        isUnlocked: false,
-      ),
-      const AchievementEntity(
-        id: 'early_bird',
-        title: 'Morning Bird',
-        description: 'Start a session before 8:00 AM',
-        icon: '🌅',
-        isUnlocked: false,
-      ),
-      const AchievementEntity(
-        id: 'focus_master',
-        title: 'Focus Master',
-        description: 'Finish a 60-minute focus session',
-        icon: '👑',
-        isUnlocked: false,
-      ),
-      const AchievementEntity(
-        id: 'task_warrior',
-        title: 'Task Warrior',
-        description: 'Complete 10 tasks in one day',
-        icon: '⚔️',
-        isUnlocked: false,
-      ),
-      const AchievementEntity(
-        id: 'night_owl',
-        title: 'Night Owl',
-        description: 'Complete a session after 11:00 PM',
-        icon: '🦉',
-        isUnlocked: false,
-      ),
-    ];
+  Widget _buildStreakHero(StreakEntity streak) {
+    final current = streak.currentStreak;
+    final nextMilestone = current == 0 ? 1 : ((current ~/ 7) + 1) * 7;
+    final progressInWeek = current == 0 ? 0.0 : (current % 7) / 7;
+    final daysToMilestone = nextMilestone - current;
 
-    if (backendAchievements.isEmpty) {
-      return baseMilestones;
-    }
-
-    final Map<String, AchievementEntity> merged = {};
-    for (var m in baseMilestones) {
-      merged[m.id] = m;
-    }
-    for (var b in backendAchievements) {
-      merged[b.id] = b;
-    }
-
-    return merged.values.toList();
-  }
-
-  Widget _buildStreakCard(BuildContext context, StreakEntity streak) {
-    return HomeSectionCard(
-      padding: EdgeInsets.all(24.w),
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [HomeSystemTokens.purple, Color(0xFF6366F1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(HomeSystemTokens.radiusMd),
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF7C3AED), Color(0xFF4F46E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+        borderRadius: BorderRadius.circular(24.r),
+        boxShadow: [
+          BoxShadow(
+            color: HomeSystemTokens.purple.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Current Streak',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 14.sp,
+                        color: Colors.white.withValues(alpha: 0.88),
+                        fontSize: 13.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    SizedBox(height: 6.h),
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          '${streak.currentStreak}',
+                          '$current',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 36.sp,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 44.sp,
+                            fontWeight: FontWeight.w800,
+                            height: 0.95,
                           ),
                         ),
-                        SizedBox(width: 8.w),
-                        Icon(
-                          AppIcons.local_fire_department_rounded,
-                          color: HomeSystemTokens.orange,
-                          size: 32.sp,
+                        SizedBox(width: 6.w),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 6.h),
+                          child: Icon(
+                            AppIcons.local_fire_department_rounded,
+                            color: HomeSystemTokens.orange,
+                            size: 30.sp,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 8.h),
+                          child: Text(
+                            current == 1 ? 'day' : 'days',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Best Streak',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 11.sp,
-                        ),
-                      ),
-                      Text(
-                        '${streak.longestStreak} days',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
-              child: LinearProgressIndicator(
-                value: (streak.currentStreak % 7) / 7,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                minHeight: 8.h,
               ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Best',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                    Text(
+                      '${streak.longestStreak}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22.sp,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    Text(
+                      'days',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 10.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          _buildWeekDots(current),
+          SizedBox(height: 12.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(100.r),
+            child: LinearProgressIndicator(
+              value: progressInWeek,
+              minHeight: 8.h,
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             ),
-            SizedBox(height: 8.h),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            current == 0
+                ? 'Complete a focus session today to start your streak'
+                : daysToMilestone == 0
+                    ? 'You hit a weekly milestone — keep the fire going!'
+                    : '$daysToMilestone day${daysToMilestone == 1 ? '' : 's'} to $nextMilestone-day milestone',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.86),
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeekDots(int currentStreak) {
+    final activeDays = currentStreak % 7 == 0 && currentStreak > 0
+        ? 7
+        : currentStreak % 7;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(7, (index) {
+        final isActive = index < activeDays;
+        return Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 28.r,
+              height: 28.r,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.12),
+                boxShadow: isActive
+                    ? [
+                        BoxShadow(
+                          color: HomeSystemTokens.orange.withValues(alpha: 0.45),
+                          blurRadius: 10,
+                        ),
+                      ]
+                    : null,
+              ),
+              child: isActive
+                  ? Icon(
+                      AppIcons.local_fire_department_rounded,
+                      size: 14.sp,
+                      color: HomeSystemTokens.orange,
+                    )
+                  : null,
+            ),
+            SizedBox(height: 4.h),
             Text(
-              'Keep going! ${7 - (streak.currentStreak % 7)} days to next milestone',
+              ['M', 'T', 'W', 'T', 'F', 'S', 'S'][index],
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 12.sp,
+                color: Colors.white.withValues(alpha: 0.65),
+                fontSize: 9.sp,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildStatsRow({
+    required StreakEntity streak,
+    required int unlockedCount,
+    required int totalCount,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatChip(
+            icon: AppIcons.timer_outlined,
+            label: 'Points',
+            value: '${streak.totalPoints}',
+            color: HomeSystemTokens.purple,
+          ),
         ),
-      ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: _StatChip(
+            icon: AppIcons.emoji_events_outlined,
+            label: 'Unlocked',
+            value: '$unlockedCount/$totalCount',
+            color: HomeSystemTokens.orange,
+          ),
+        ),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: _StatChip(
+            icon: AppIcons.bolt_rounded,
+            label: 'Best',
+            value: '${streak.longestStreak}d',
+            color: HomeSystemTokens.green,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildAchievementCard(AchievementEntity achievement) {
     final isUnlocked = achievement.isUnlocked;
+    final progress = achievement.progress;
 
-    return HomeSectionCard(
-      padding: EdgeInsets.all(12.w),
-      child: Stack(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: EdgeInsets.all(14.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(
+          color: isUnlocked
+              ? HomeSystemTokens.orange.withValues(alpha: 0.35)
+              : HomeSystemTokens.inkMuted.withValues(alpha: 0.1),
+          width: isUnlocked ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isUnlocked
+                ? HomeSystemTokens.orange.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+          Row(
             children: [
               Container(
-                padding: EdgeInsets.all(10.r),
+                width: 46.r,
+                height: 46.r,
                 decoration: BoxDecoration(
+                  gradient: isUnlocked
+                      ? LinearGradient(
+                          colors: [
+                            HomeSystemTokens.orange.withValues(alpha: 0.18),
+                            HomeSystemTokens.purple.withValues(alpha: 0.12),
+                          ],
+                        )
+                      : null,
                   color: isUnlocked
-                      ? HomeSystemTokens.orange.withValues(alpha: 0.1)
-                      : HomeSystemTokens.inkMuted.withValues(alpha: 0.05),
+                      ? null
+                      : HomeSystemTokens.canvas,
                   shape: BoxShape.circle,
                 ),
-                child: ColorFiltered(
-                  colorFilter: isUnlocked
-                      ? const ColorFilter.mode(
-                          Colors.transparent,
-                          BlendMode.multiply,
-                        )
-                      : const ColorFilter.matrix([
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0, 0, 0, 1, 0,
-                        ]),
+                child: Center(
                   child: Text(
                     achievement.icon,
                     style: TextStyle(
-                      fontSize: 32.sp,
+                      fontSize: 24.sp,
                       color: isUnlocked ? null : HomeSystemTokens.inkMuted,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                achievement.title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isUnlocked
-                      ? HomeSystemTokens.ink
-                      : HomeSystemTokens.inkSoft,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              const Spacer(),
+              Icon(
+                isUnlocked
+                    ? AppIcons.check_circle_rounded
+                    : AppIcons.lock_outline_rounded,
+                size: 18.sp,
+                color: isUnlocked
+                    ? HomeSystemTokens.green
+                    : HomeSystemTokens.inkMuted,
               ),
-              SizedBox(height: 4.h),
-              Text(
-                achievement.description,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  color: HomeSystemTokens.inkMuted,
-                  height: 1.2,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (isUnlocked) ...[
-                SizedBox(height: 6.h),
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: HomeSystemTokens.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        AppIcons.stars_rounded,
-                        color: HomeSystemTokens.orange,
-                        size: 12.sp,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'UNLOCKED',
-                        style: TextStyle(
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.bold,
-                          color: HomeSystemTokens.orange,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ),
-          if (!isUnlocked)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: EdgeInsets.all(4.r),
-                decoration: BoxDecoration(
-                  color: HomeSystemTokens.canvas,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  AppIcons.lock_outline_rounded,
-                  size: 14.sp,
-                  color: HomeSystemTokens.inkMuted,
+          SizedBox(height: 12.h),
+          Text(
+            achievement.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontWeight: FontWeight.w800,
+              color: isUnlocked ? HomeSystemTokens.ink : HomeSystemTokens.inkSoft,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            achievement.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11.sp,
+              height: 1.3,
+              color: HomeSystemTokens.inkMuted,
+            ),
+          ),
+          const Spacer(),
+          if (!isUnlocked) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(100.r),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6.h,
+                backgroundColor: HomeSystemTokens.canvas,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  HomeSystemTokens.purple.withValues(alpha: 0.75),
                 ),
               ),
             ),
+            SizedBox(height: 6.h),
+            Text(
+              '${achievement.progressCurrent}/${achievement.progressTarget}',
+              style: TextStyle(
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w700,
+                color: HomeSystemTokens.inkMuted,
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+              decoration: BoxDecoration(
+                color: HomeSystemTokens.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    AppIcons.stars_rounded,
+                    size: 12.sp,
+                    color: HomeSystemTokens.orange,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'UNLOCKED',
+                    style: TextStyle(
+                      fontSize: 9.sp,
+                      fontWeight: FontWeight.w800,
+                      color: HomeSystemTokens.orange,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 18.sp),
+          SizedBox(height: 6.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w800,
+              color: HomeSystemTokens.ink,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.sp,
+              color: HomeSystemTokens.inkMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );

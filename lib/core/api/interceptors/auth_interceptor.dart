@@ -34,22 +34,33 @@ class AuthInterceptor extends Interceptor {
 
   AuthInterceptor(this._storage, this._dio);
 
+  String _requestPath(RequestOptions options) {
+    final path = options.path;
+    final queryIndex = path.indexOf('?');
+    return queryIndex == -1 ? path : path.substring(0, queryIndex);
+  }
+
+  bool _isPublicEndpoint(RequestOptions options) {
+    final path = _requestPath(options);
+    return _publicEndpoints.contains(path) || path == ApiEndpoints.refreshToken;
+  }
+
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
     // Skip auth for public endpoints
-    if (_publicEndpoints.contains(options.path) ||
-        options.path == ApiEndpoints.refreshToken) {
+    if (_isPublicEndpoint(options)) {
       return handler.next(options);
     }
 
     try {
       // Get current token with timeout
-      final token = await _storage
-          .read(key: 'access_token')
-          .timeout(const Duration(seconds: 2), onTimeout: () => null);
+      final token = (await _storage
+              .read(key: 'access_token')
+              .timeout(const Duration(seconds: 2), onTimeout: () => null))
+          ?.trim();
 
       // Check if token exists and is valid
       if (token == null || token.isEmpty) {
@@ -104,7 +115,7 @@ class AuthInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     // Skip 401 handling for public endpoints
-    if (_publicEndpoints.contains(err.requestOptions.path)) {
+    if (_isPublicEndpoint(err.requestOptions)) {
       return handler.next(err);
     }
 
@@ -178,7 +189,8 @@ class AuthInterceptor extends Interceptor {
 
   Future<String?> _performRefresh() async {
     try {
-      final refreshToken = await _storage.read(key: 'refresh_token');
+      final refreshToken =
+          (await _storage.read(key: 'refresh_token'))?.trim();
 
       // Validate refresh token exists
       if (refreshToken == null || refreshToken.isEmpty) {

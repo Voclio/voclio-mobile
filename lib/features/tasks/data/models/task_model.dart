@@ -1,4 +1,5 @@
 import 'package:voclio_app/core/enums/enums.dart';
+import 'package:voclio_app/core/utils/date_time_utils.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 
 class TaskModel extends TaskEntity {
@@ -62,9 +63,9 @@ class TaskModel extends TaskEntity {
       description: json['description'] ?? json['desc'] ?? json['body'],
       date:
           json['due_date'] != null
-              ? DateTime.parse(json['due_date'])
+              ? DateTimeUtils.parseApi(json['due_date'])
               : (json['date'] != null
-                  ? DateTime.parse(json['date'])
+                  ? DateTimeUtils.parseApi(json['date'])
                   : DateTime.now()),
       createdAt:
           json['created_at'] != null
@@ -100,7 +101,7 @@ class TaskModel extends TaskEntity {
       'title': title,
       'status': isDone ? 'completed' : 'todo',
       'priority': priorityValue,
-      'due_date': date.toIso8601String().split('.').first, // Clean ISO format
+      'due_date': DateTimeUtils.toApiIso(date),
     };
 
     if (description != null && description!.isNotEmpty) {
@@ -199,7 +200,7 @@ class SubTaskModel extends SubTask {
 
   factory SubTaskModel.fromJson(Map<String, dynamic> json) {
     return SubTaskModel(
-      id: (json['subtask_id'] ?? json['id'] ?? '').toString(),
+      id: (json['subtask_id'] ?? json['task_id'] ?? json['id'] ?? '').toString(),
       title: (json['title'] ?? '').toString(),
       isDone:
           json['status'] == 'completed' ||

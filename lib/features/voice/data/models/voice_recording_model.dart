@@ -16,6 +16,7 @@ class VoiceRecordingModel extends VoiceRecording {
       title: (json['title'] ?? 'New Recording') as String,
       url: (json['url'] ??
               json['storage_url'] ??
+              json['file_path'] ??
               json['path'] ??
               json['audio_url'] ??
               '') as String,

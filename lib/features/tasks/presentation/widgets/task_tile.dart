@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:voclio_app/core/domain/entities/tag_entity.dart';
+import 'package:voclio_app/core/utils/date_time_utils.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/tasks/domain/entities/task_entity.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
@@ -22,7 +22,7 @@ class TaskTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOverdue = !task.isDone && task.date.isBefore(DateTime.now());
+    final isOverdue = DateTimeUtils.isOverdue(task.date, isCompleted: task.isDone);
     final accent = isOverdue
         ? HomeSystemTokens.coral
         : task.isDone
@@ -186,16 +186,5 @@ class TaskTile extends StatelessWidget {
     }
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final checkDate = DateTime(date.year, date.month, date.day);
-
-    if (checkDate == today) {
-      return 'Today, ${DateFormat.jm().format(date)}';
-    } else if (checkDate == today.add(const Duration(days: 1))) {
-      return 'Tomorrow, ${DateFormat.jm().format(date)}';
-    }
-    return DateFormat('MMM d, h:mm a').format(date);
-  }
+  String _formatDate(DateTime date) => DateTimeUtils.formatTaskDue(date);
 }

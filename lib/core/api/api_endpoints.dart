@@ -37,7 +37,8 @@ class ApiEndpoints {
   static String taskWithSubtasks(String id) => '/tasks/$id/with-subtasks';
   static String completeTask(String id) => '/tasks/$id/complete';
   static String subtasks(String taskId) => '/tasks/$taskId/subtasks';
-  static String subtaskById(String taskId, String subtaskId) => '/tasks/$subtaskId';
+  static String subtaskById(String taskId, String subtaskId) =>
+      taskById(subtaskId);
   static String taskCategoryById(String id) => '/categories/$id';
 
   static const String tasksByDate = '/tasks/by-date';
@@ -65,13 +66,8 @@ class ApiEndpoints {
   static const String transcribe = '/voice/transcribe';
   static const String voiceProcessComplete = '/voice/process-complete';
   static String voiceJobStatus(String jobId) => '/voice/job-status/$jobId';
-  static const String voicePreviewExtraction = '/voice/preview-extraction';
-  static const String voiceCreateFromPreview = '/voice/create-from-preview';
-  static const String voiceUpdateTranscription = '/voice/update-transcription';
 
   static String voiceById(String id) => '/voice/$id';
-  static String createNoteFromVoice(String id) => '/voice/$id/create-note';
-  static String createTasksFromVoice(String id) => '/voice/$id/create-tasks';
   static String deleteVoice(String id) => '/voice/$id';
 
   // ========== Calendar ==========
@@ -90,15 +86,6 @@ class ApiEndpoints {
   static const String googleCalendarEvents = '/calendar/google/events';
   static const String googleCalendarToday = '/calendar/google/today';
   static const String googleCalendarUpcoming = '/calendar/google/upcoming';
-
-  // ========== Webex Calendar ==========
-  static const String webexAuth = '/webex/auth';
-  static const String webexCallback = '/webex/callback';
-  static const String webexStatus = '/webex/status';
-  static const String webexMeetings = '/webex/meetings';
-  static const String webexMeetingsToday = '/webex/meetings/today';
-  static const String webexDisconnect = '/webex/disconnect';
-  static String webexMeetingById(String id) => '/webex/meetings/$id';
 
   // ========== Reminders ==========
   static const String reminders = '/reminders';

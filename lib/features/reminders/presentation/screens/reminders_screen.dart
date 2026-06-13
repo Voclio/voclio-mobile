@@ -144,21 +144,13 @@ class _RemindersViewState extends State<_RemindersView> {
             onTap: _openAddReminder,
           ),
         ],
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openAddReminder,
-          icon: Icon(AppIcons.add),
-          label: const Text('Add Reminder'),
-          backgroundColor: HomeSystemTokens.orange,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 0),
+              padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 0),
               child: SizedBox(
-                height: 32.h,
+                height: 30.h,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
@@ -187,7 +179,7 @@ class _RemindersViewState extends State<_RemindersView> {
                 ),
               ),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
             Expanded(
               child: BlocBuilder<RemindersCubit, RemindersState>(
                 builder: (context, state) {
@@ -212,7 +204,7 @@ class _RemindersViewState extends State<_RemindersView> {
                       onRefresh: () async => _loadReminders(),
                       color: HomeSystemTokens.orange,
                       child: ListView.builder(
-                        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 100.h),
+                        padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 20.h),
                         physics: const BouncingScrollPhysics(
                           parent: AlwaysScrollableScrollPhysics(),
                         ),

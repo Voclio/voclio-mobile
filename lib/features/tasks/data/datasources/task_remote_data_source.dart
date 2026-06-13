@@ -236,7 +236,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
     try {
       final response = await apiClient.post(
         ApiEndpoints.taskSubtasks(taskId),
-        data: {'title': title, 'order': order},
+        data: {'title': title},
       );
       final rawData = response.data;
 
@@ -266,12 +266,14 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
     bool completed,
   ) async {
     try {
+      if (completed) {
+        await apiClient.put(ApiEndpoints.completeTask(subtaskId));
+        return;
+      }
+
       await apiClient.put(
         ApiEndpoints.subtaskById(taskId, subtaskId),
-        data: {
-          'title': title,
-          'status': completed ? 'completed' : 'pending',
-        },
+        data: {'status': 'todo'},
       );
     } catch (e) {
       throw Exception('Failed to update subtask: $e');

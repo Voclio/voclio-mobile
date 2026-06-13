@@ -93,19 +93,19 @@ class _NotificationsBody extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 48.w,
-              height: 48.h,
+              width: 36.w,
+              height: 36.h,
               child: CircularProgressIndicator(
-                strokeWidth: 3,
+                strokeWidth: 2.5,
                 color: HomeSystemTokens.blue,
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 12.h),
             Text(
               'Loading notifications...',
               style: TextStyle(
                 color: HomeSystemTokens.inkMuted,
-                fontSize: 14.sp,
+                fontSize: 13.sp,
               ),
             ),
           ],
@@ -146,7 +146,7 @@ class _NotificationsBody extends StatelessWidget {
         },
         color: HomeSystemTokens.blue,
         child: ListView.builder(
-          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
+          padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 16.h),
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),

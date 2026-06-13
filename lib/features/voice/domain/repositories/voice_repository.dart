@@ -11,7 +11,7 @@ abstract class VoiceRepository {
     String id, {
     String? transcription,
   });
-  Future<Either<Failure, void>> createTasksFromVoice(
+  Future<Either<Failure, DateTime?>> createTasksFromVoice(
     String id, {
     String? transcription,
   });

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
 import 'package:voclio_app/core/api/api_response.dart';
@@ -16,7 +17,7 @@ abstract class ProductivityRemoteDataSource {
   Future<StreakModel> getStreak();
   Future<List<AchievementModel>> getAchievements();
   Future<Map<String, dynamic>> getProductivitySummary();
-  Future<AiSuggestionModel> getAiSuggestions();
+  Future<AiSuggestionModel> getAiSuggestions({String language = 'en'});
 }
 
 class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
@@ -97,8 +98,20 @@ class ProductivityRemoteDataSourceImpl implements ProductivityRemoteDataSource {
   }
 
   @override
-  Future<AiSuggestionModel> getAiSuggestions() async {
-    final response = await apiClient.get(ApiEndpoints.productivitySuggestions);
+  Future<AiSuggestionModel> getAiSuggestions({String language = 'en'}) async {
+    final response = await apiClient.get(
+      ApiEndpoints.productivitySuggestions,
+      queryParameters: {
+        'language': language,
+        'count': 1,
+        'use_ai': 'false',
+        'focus_area': 'general',
+        'tone': 'professional',
+      },
+      options: Options(
+        receiveTimeout: const Duration(seconds: 10),
+      ),
+    );
     return AiSuggestionModel.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 }

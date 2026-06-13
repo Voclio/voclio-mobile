@@ -13,24 +13,37 @@ class AiSuggestionsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AiSuggestionsCubit, AiSuggestionsState>(
       builder: (context, state) {
-        if (state is AiSuggestionsLoading) {
+        if (state is AiSuggestionsLoading || state is AiSuggestionsInitial) {
           return _buildLoadingState();
         }
         if (state is AiSuggestionsLoaded) {
-          final suggestion = state.suggestions.suggestions.isNotEmpty
-              ? state.suggestions.suggestions.first
-              : _defaultMessage;
-          return _buildCard(suggestion);
+          return _buildCard(
+            message: state.suggestions.displayInsight,
+            isPersonalized: true,
+            source: state.suggestions.insightSource,
+          );
         }
-        return _buildCard(_defaultMessage);
+        if (state is AiSuggestionsError) {
+          return _buildCard(
+            message:
+                'Pull to refresh for a personalized insight based on your tasks.',
+            isPersonalized: false,
+          );
+        }
+        return _buildLoadingState();
       },
     );
   }
 
-  static const _defaultMessage =
-      'Set specific times each day to focus on important tasks and improve your completion rate.';
+  Widget _buildCard({
+    required String message,
+    required bool isPersonalized,
+    String source = 'ai',
+  }) {
+    final badgeLabel = isPersonalized
+        ? (source == 'rules' ? 'For you' : 'AI')
+        : 'Tip';
 
-  Widget _buildCard(String message) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
@@ -73,7 +86,7 @@ class AiSuggestionsWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Text(
-                  'New',
+                  badgeLabel,
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.w600,

@@ -24,6 +24,7 @@ import 'package:voclio_app/features/widget_config/presentation/bloc/widget_confi
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
 import 'package:voclio_app/features/widget_config/presentation/widgets/home_widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:voclio_app/core/app/language_controller.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
@@ -66,27 +67,38 @@ class _HomeScreenBodyState extends State<HomeScreenBody> {
       );
     });
 
-    final now = DateTime.now();
-    unawaited(
-      Future.wait([
-        context.read<DashboardCubit>().loadDashboardStats(),
-        GetIt.I<TasksCubit>().init(),
-        GetIt.I<NotesCubit>().init(),
-        context.read<CalendarCubit>().loadMonth(now.year, now.month),
-        context.read<AiSuggestionsCubit>().loadAiSuggestions(),
-      ]),
+    unawaited(_loadHomeData(forceInsights: false));
+  }
+
+  String? _currentUserKey(AuthState state) {
+    if (state is AuthSuccess) return state.response.user.id;
+    if (state is ProfileUpdateError) return state.response.user.id;
+    return null;
+  }
+
+  Future<void> _loadInsights({bool force = false}) async {
+    final authState = context.read<AuthBloc>().state;
+    final locale = LanguageController.instance.currentLocale.value.languageCode;
+    await context.read<AiSuggestionsCubit>().loadAiSuggestions(
+      force: force,
+      userKey: _currentUserKey(authState),
+      language: locale == 'ar' ? 'ar' : 'en',
     );
   }
 
-  Future<void> _onRefresh() async {
+  Future<void> _loadHomeData({bool forceInsights = false}) async {
     final now = DateTime.now();
     await Future.wait([
-      context.read<DashboardCubit>().refresh(),
+      context.read<DashboardCubit>().loadDashboardStats(),
       GetIt.I<TasksCubit>().init(),
       GetIt.I<NotesCubit>().init(),
       context.read<CalendarCubit>().loadMonth(now.year, now.month),
-      context.read<AiSuggestionsCubit>().loadAiSuggestions(),
+      _loadInsights(force: forceInsights),
     ]);
+  }
+
+  Future<void> _onRefresh() async {
+    await _loadHomeData(forceInsights: true);
   }
 
   @override

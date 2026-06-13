@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/calendar_month_entity.dart';
 import '../../domain/entities/google_calendar_entity.dart';
+import 'package:voclio_app/core/config/oauth_config.dart';
 import '../../domain/usecases/calendar_usecases.dart';
 import '../../data/datasources/calendar_remote_datasource.dart';
 import 'calendar_state.dart';
@@ -9,30 +10,17 @@ class CalendarCubit extends Cubit<CalendarState> {
   final GetCalendarMonthUseCase getCalendarMonthUseCase;
   final CalendarRemoteDataSource? calendarDataSource;
 
-  // Cached Google Calendar status
   GoogleCalendarStatusEntity? _googleStatus;
   List<GoogleCalendarEventEntity> _todayMeetings = [];
-
-  // Cached Webex status
-  WebexStatusEntity? _webexStatus;
-  List<WebexMeetingEntity> _todayWebexMeetings = [];
 
   CalendarCubit({
     required this.getCalendarMonthUseCase,
     this.calendarDataSource,
   }) : super(CalendarInitial());
 
-  /// Get current Google Calendar status
   GoogleCalendarStatusEntity? get googleStatus => _googleStatus;
 
-  /// Get current Webex status
-  WebexStatusEntity? get webexStatus => _webexStatus;
-
-  /// Check if Google Calendar is connected
   bool get isGoogleConnected => _googleStatus?.connected ?? false;
-
-  /// Check if Webex is connected
-  bool get isWebexConnected => _webexStatus?.connected ?? false;
 
   Future<void> loadMonth(int year, int month, {bool force = false}) async {
     if (!force && state is CalendarLoaded) {
@@ -45,8 +33,7 @@ class CalendarCubit extends Cubit<CalendarState> {
 
     emit(CalendarLoading());
 
-    // Load Google Calendar and Webex status in parallel
-    await Future.wait([_loadGoogleStatus(), _loadWebexStatus()]);
+    await _loadGoogleStatus();
 
     final result = await getCalendarMonthUseCase(year, month);
     result.fold(
@@ -55,15 +42,12 @@ class CalendarCubit extends Cubit<CalendarState> {
         CalendarLoaded(
           monthData: monthData,
           googleStatus: _googleStatus,
-          webexStatus: _webexStatus,
           todayMeetings: _todayMeetings,
-          todayWebexMeetings: _todayWebexMeetings,
         ),
       ),
     );
   }
 
-  /// Load Google Calendar connection status
   Future<void> _loadGoogleStatus() async {
     if (calendarDataSource == null) return;
 
@@ -77,7 +61,6 @@ class CalendarCubit extends Cubit<CalendarState> {
     }
   }
 
-  /// Check Google Calendar connection status
   Future<void> checkGoogleCalendarStatus() async {
     if (calendarDataSource == null) return;
 
@@ -90,9 +73,7 @@ class CalendarCubit extends Cubit<CalendarState> {
           CalendarLoaded(
             monthData: currentState.monthData,
             googleStatus: _googleStatus,
-            webexStatus: _webexStatus,
             todayMeetings: _todayMeetings,
-            todayWebexMeetings: _todayWebexMeetings,
           ),
         );
       }
@@ -101,23 +82,19 @@ class CalendarCubit extends Cubit<CalendarState> {
     }
   }
 
-  /// Get Google Calendar OAuth URL for connection
-  Future<GoogleOAuthUrlEntity?> getGoogleConnectUrl({
+  Future<GoogleOAuthUrlEntity> getGoogleConnectUrl({
     bool isMobile = true,
   }) async {
-    if (calendarDataSource == null) return null;
-
-    try {
-      return await calendarDataSource!.getGoogleConnectUrl(
-        isMobile: isMobile,
-        customScheme: 'com.voclio.app',
-      );
-    } catch (e) {
-      return null;
+    if (calendarDataSource == null) {
+      throw StateError('Calendar API is not configured');
     }
+
+    return calendarDataSource!.getGoogleConnectUrl(
+      isMobile: isMobile,
+      customScheme: OAuthConfig.calendarOAuthScheme,
+    );
   }
 
-  /// Disconnect Google Calendar
   Future<void> disconnectGoogleCalendar() async {
     if (calendarDataSource == null) return;
 
@@ -132,7 +109,6 @@ class CalendarCubit extends Cubit<CalendarState> {
 
       emit(GoogleCalendarDisconnected());
 
-      // Reload current month data
       if (state is CalendarLoaded) {
         final currentState = state as CalendarLoaded;
         loadMonth(currentState.monthData.year, currentState.monthData.month);
@@ -142,14 +118,16 @@ class CalendarCubit extends Cubit<CalendarState> {
     }
   }
 
-  /// Handle OAuth callback from mobile
   Future<void> handleOAuthCallback(String code) async {
     if (calendarDataSource == null) return;
 
     emit(GoogleCalendarConnecting());
 
     try {
-      await calendarDataSource!.handleMobileCallback(code, 'com.voclio.app');
+      await calendarDataSource!.handleMobileCallback(
+        code,
+        OAuthConfig.calendarOAuthScheme,
+      );
       _googleStatus = await calendarDataSource!.getGoogleCalendarStatus();
 
       emit(
@@ -158,7 +136,6 @@ class CalendarCubit extends Cubit<CalendarState> {
         ),
       );
 
-      // Reload calendar data
       if (state is CalendarLoaded) {
         final currentState = state as CalendarLoaded;
         loadMonth(currentState.monthData.year, currentState.monthData.month);
@@ -168,7 +145,6 @@ class CalendarCubit extends Cubit<CalendarState> {
     }
   }
 
-  /// Get today's meetings from Google Calendar
   Future<List<GoogleCalendarEventEntity>> getTodayMeetings() async {
     if (calendarDataSource == null || !isGoogleConnected) return [];
 
@@ -180,7 +156,6 @@ class CalendarCubit extends Cubit<CalendarState> {
     }
   }
 
-  /// Get upcoming meetings from Google Calendar
   Future<List<GoogleCalendarEventEntity>> getUpcomingMeetings({
     int days = 7,
   }) async {
@@ -188,103 +163,6 @@ class CalendarCubit extends Cubit<CalendarState> {
 
     try {
       return await calendarDataSource!.getUpcomingMeetings(days: days);
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // ========== Webex Calendar Methods ==========
-
-  /// Load Webex connection status
-  Future<void> _loadWebexStatus() async {
-    if (calendarDataSource == null) return;
-
-    try {
-      _webexStatus = await calendarDataSource!.getWebexStatus();
-      if (_webexStatus?.connected == true) {
-        _todayWebexMeetings = await calendarDataSource!.getWebexTodayMeetings();
-      }
-    } catch (e) {
-      _webexStatus = null;
-    }
-  }
-
-  /// Check Webex connection status
-  Future<void> checkWebexStatus() async {
-    if (calendarDataSource == null) return;
-
-    try {
-      _webexStatus = await calendarDataSource!.getWebexStatus();
-
-      if (state is CalendarLoaded) {
-        final currentState = state as CalendarLoaded;
-        emit(
-          CalendarLoaded(
-            monthData: currentState.monthData,
-            googleStatus: _googleStatus,
-            webexStatus: _webexStatus,
-            todayMeetings: _todayMeetings,
-            todayWebexMeetings: _todayWebexMeetings,
-          ),
-        );
-      }
-    } catch (e) {
-      // Silently fail
-    }
-  }
-
-  /// Get Webex OAuth URL for connection
-  Future<GoogleOAuthUrlEntity?> getWebexConnectUrl() async {
-    if (calendarDataSource == null) return null;
-
-    try {
-      return await calendarDataSource!.getWebexAuthUrl();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Disconnect Webex
-  Future<void> disconnectWebex() async {
-    if (calendarDataSource == null) return;
-
-    try {
-      await calendarDataSource!.disconnectWebex();
-      _webexStatus = const WebexStatusEntity(connected: false);
-      _todayWebexMeetings = [];
-
-      emit(WebexDisconnected());
-
-      // Reload current month data
-      if (state is CalendarLoaded) {
-        final currentState = state as CalendarLoaded;
-        loadMonth(currentState.monthData.year, currentState.monthData.month);
-      }
-    } catch (e) {
-      emit(CalendarError(message: 'Failed to disconnect Webex'));
-    }
-  }
-
-  /// Get today's Webex meetings
-  Future<List<WebexMeetingEntity>> getTodayWebexMeetings() async {
-    if (calendarDataSource == null || !isWebexConnected) return [];
-
-    try {
-      _todayWebexMeetings = await calendarDataSource!.getWebexTodayMeetings();
-      return _todayWebexMeetings;
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /// Get upcoming Webex meetings
-  Future<List<WebexMeetingEntity>> getUpcomingWebexMeetings({
-    int days = 7,
-  }) async {
-    if (calendarDataSource == null || !isWebexConnected) return [];
-
-    try {
-      return await calendarDataSource!.getWebexMeetings(days: days);
     } catch (e) {
       return [];
     }
@@ -335,9 +213,7 @@ class CalendarCubit extends Cubit<CalendarState> {
           CalendarLoaded(
             monthData: updatedMonthData,
             googleStatus: currentState.googleStatus,
-            webexStatus: currentState.webexStatus,
             todayMeetings: currentState.todayMeetings,
-            todayWebexMeetings: currentState.todayWebexMeetings,
           ),
         );
       }

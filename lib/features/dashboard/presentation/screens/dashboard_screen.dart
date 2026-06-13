@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import '../../domain/entities/dashboard_stats_entity.dart';
@@ -69,6 +71,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final overview = stats.overview;
     final productivity = stats.productivity;
     final progress = (overview.overallProgress / 100).clamp(0.0, 1.0);
+    final pendingTasks = stats.upcomingTasks
+        .where((t) => !_isTaskDone(t.status))
+        .toList();
+    final overdueTasks = pendingTasks.where(_isOverdue).toList();
+    final upcomingTasks = pendingTasks.where((t) => !_isOverdue(t)).toList();
+    final hasBottomContent = pendingTasks.isNotEmpty ||
+        stats.recentNotes.isNotEmpty ||
+        stats.upcomingReminders.isNotEmpty ||
+        overview.totalTasks > 0;
 
     return RefreshIndicator(
       color: HomeSystemTokens.purple,
@@ -119,20 +130,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SizedBox(height: 20.h),
             HomeSectionTitle(title: 'Activity'),
             _buildActivityPanel(overview, productivity),
-            if (stats.upcomingTasks.isNotEmpty) ...[
+            if (overdueTasks.isNotEmpty) ...[
               SizedBox(height: 22.h),
               HomeSectionTitle(
-                title: 'Coming up',
-                trailing: '${stats.upcomingTasks.length}',
+                title: 'Needs attention',
+                trailing: '${overdueTasks.length}',
               ),
-              _buildUpcomingCard(stats.upcomingTasks.take(5).toList()),
+              _buildUpcomingCard(overdueTasks.take(5).toList(), highlightOverdue: true),
+            ],
+            if (upcomingTasks.isNotEmpty) ...[
+              SizedBox(height: 22.h),
+              HomeSectionTitle(
+                title: overdueTasks.isNotEmpty ? 'Up next' : 'Your tasks',
+                trailing: '${upcomingTasks.length}',
+              ),
+              _buildUpcomingCard(upcomingTasks.take(5).toList()),
+            ],
+            if (stats.upcomingReminders.isNotEmpty) ...[
+              SizedBox(height: 22.h),
+              HomeSectionTitle(
+                title: 'Reminders',
+                trailing: '${stats.upcomingReminders.length}',
+              ),
+              _buildRemindersCard(stats.upcomingReminders.take(3).toList()),
             ],
             if (stats.recentNotes.isNotEmpty) ...[
               SizedBox(height: 22.h),
               const HomeSectionTitle(title: 'Recent notes'),
               _buildRecentNotesCard(stats.recentNotes.take(4).toList()),
             ],
-            if (stats.upcomingTasks.isEmpty && stats.recentNotes.isEmpty) ...[
+            if (stats.quickActions.isNotEmpty) ...[
+              SizedBox(height: 22.h),
+              const HomeSectionTitle(title: 'Quick actions'),
+              _buildQuickActions(context, stats.quickActions),
+            ],
+            if (!hasBottomContent) ...[
               SizedBox(height: 24.h),
               HomeEmptyState(
                 icon: AppIcons.rocket_launch_outlined,
@@ -140,12 +172,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 message:
                     'Create tasks or notes to see your activity summary here.',
                 accent: HomeSystemTokens.purple,
+                actionLabel: 'Record voice note',
+                onAction: () => context.push(AppRouter.voiceRecorder),
               ),
             ],
           ],
         ),
       ),
     );
+  }
+
+  bool _isTaskDone(String status) {
+    final normalized = status.toLowerCase();
+    return normalized == 'completed' || normalized == 'done';
+  }
+
+  bool _isOverdue(TaskEntity task) {
+    if (task.dueDate == null || _isTaskDone(task.status)) return false;
+    return task.dueDate!.isBefore(DateTime.now());
   }
 
   Widget _buildHeroCard(DashboardOverview overview, double progress) {
@@ -266,12 +310,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     DashboardOverview overview,
     ProductivityStats productivity,
   ) {
+    final focusLabel = productivity.todayFocusMinutes > 0
+        ? '${productivity.todayFocusMinutes}m'
+        : '—';
+
     final items = [
       _ActivityItem(
         icon: AppIcons.mic_rounded,
         label: 'Voice notes',
         value: '${overview.totalRecordings}',
         color: HomeSystemTokens.blue,
+      ),
+      _ActivityItem(
+        icon: AppIcons.timer_outlined,
+        label: 'Focus today',
+        value: focusLabel,
+        color: HomeSystemTokens.green,
       ),
       _ActivityItem(
         icon: AppIcons.emoji_events_outlined,
@@ -343,14 +397,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildUpcomingCard(List<TaskEntity> tasks) {
+  Widget _buildUpcomingCard(
+    List<TaskEntity> tasks, {
+    bool highlightOverdue = false,
+  }) {
     return HomeSectionCard(
       padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
       child: Column(
         children: List.generate(tasks.length, (index) {
           final task = tasks[index];
           final isLast = index == tasks.length - 1;
-          final isDone = task.status.toLowerCase() == 'completed';
+          final isDone = _isTaskDone(task.status);
+          final isOverdue = highlightOverdue || _isOverdue(task);
           final isUrgent = task.dueDate != null &&
               !isDone &&
               task.dueDate!.difference(DateTime.now()).inHours < 24;
@@ -372,7 +430,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     border: Border.all(
                       color: isDone
                           ? HomeSystemTokens.green
-                          : HomeSystemTokens.inkMuted.withValues(alpha: 0.35),
+                          : isOverdue
+                              ? HomeSystemTokens.coral
+                              : HomeSystemTokens.inkMuted
+                                  .withValues(alpha: 0.35),
                       width: 2,
                     ),
                   ),
@@ -406,22 +467,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Icon(
                               AppIcons.schedule_rounded,
                               size: 13.sp,
-                              color: isUrgent
+                              color: isOverdue || isUrgent
                                   ? HomeSystemTokens.coral
                                   : HomeSystemTokens.inkMuted,
                             ),
                             SizedBox(width: 4.w),
                             Text(
-                              DateFormat('MMM d · h:mm a').format(task.dueDate!),
+                              isOverdue
+                                  ? 'Overdue · ${DateFormat('MMM d · h:mm a').format(task.dueDate!)}'
+                                  : DateFormat('MMM d · h:mm a')
+                                      .format(task.dueDate!),
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: isUrgent
+                                color: isOverdue || isUrgent
                                     ? HomeSystemTokens.coral
                                     : HomeSystemTokens.inkMuted,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
+                        ),
+                      ] else ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          'No due date',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: HomeSystemTokens.inkMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ],
@@ -434,6 +508,139 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }),
       ),
     );
+  }
+
+  Widget _buildRemindersCard(List<DashboardReminderEntity> reminders) {
+    return HomeSectionCard(
+      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
+      child: Column(
+        children: List.generate(reminders.length, (index) {
+          final reminder = reminders[index];
+          final isLast = index == reminders.length - 1;
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 14.h),
+            child: Row(
+              children: [
+                Container(
+                  width: 40.r,
+                  height: 40.r,
+                  decoration: BoxDecoration(
+                    color: HomeSystemTokens.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Icon(
+                    AppIcons.notifications_active_outlined,
+                    color: HomeSystemTokens.orange,
+                    size: 20.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        reminder.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: HomeSystemTokens.ink,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        DateFormat('MMM d · h:mm a').format(reminder.remindAt),
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: HomeSystemTokens.inkMuted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(
+    BuildContext context,
+    List<QuickActionEntity> actions,
+  ) {
+    return Wrap(
+      spacing: 10.w,
+      runSpacing: 10.h,
+      children: actions.map((action) {
+        return GestureDetector(
+          onTap: () => _onQuickAction(context, action.id),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+              border: Border.all(
+                color: HomeSystemTokens.inkMuted.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _quickActionIcon(action.icon),
+                  size: 18.sp,
+                  color: HomeSystemTokens.purple,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  action.label,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: HomeSystemTokens.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _onQuickAction(BuildContext context, String id) {
+    switch (id) {
+      case 'record_voice':
+        context.push(AppRouter.voiceRecorder);
+        break;
+      case 'view_calendar':
+        context.push(AppRouter.calendar);
+        break;
+      case 'create_note':
+        context.go(AppRouter.home);
+        break;
+      case 'create_task':
+        context.go(AppRouter.home);
+        break;
+      default:
+        break;
+    }
+  }
+
+  IconData _quickActionIcon(String icon) {
+    return switch (icon) {
+      'microphone' => AppIcons.mic_rounded,
+      'check-circle' => AppIcons.task_alt_rounded,
+      'calendar' => AppIcons.calendar_today_rounded,
+      'file-text' => AppIcons.notes_rounded,
+      _ => AppIcons.bolt_rounded,
+    };
   }
 
   Widget _priorityDot(String priority) {

@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/presentation/screens/task_details_screen.dart';
 import '../../../tasks/presentation/bloc/tasks_cubit.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
 import '../../../../core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
@@ -45,7 +46,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
       case 'completed':
         return events.where((t) => t.isDone).toList();
       case 'overdue':
-        return events.where((t) => !t.isDone && t.date.isBefore(now)).toList();
+        return events.where(
+          (t) => DateTimeUtils.isOverdue(t.date, isCompleted: t.isDone),
+        ).toList();
       default:
         return events;
     }
@@ -377,7 +380,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final pendingCount = events.where((t) => !t.isDone).length;
     final completedCount = events.where((t) => t.isDone).length;
     final overdueCount =
-        events.where((t) => !t.isDone && t.date.isBefore(now)).length;
+        events.where(
+          (t) => DateTimeUtils.isOverdue(t.date, isCompleted: t.isDone),
+        ).length;
 
     return SizedBox(
       height: 32.h,
@@ -484,7 +489,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildEventCard(TaskEntity task, ThemeData theme, bool isDark) {
     final now = DateTime.now();
-    final isOverdue = !task.isDone && task.date.isBefore(now);
+    final isOverdue = DateTimeUtils.isOverdue(task.date, isCompleted: task.isDone);
     final hasSubtasks = task.subtasks.isNotEmpty;
 
     return GestureDetector(
@@ -629,7 +634,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       SizedBox(width: 4.w),
                       Text(
-                        'Due: ${DateFormat('hh:mm a').format(task.date)}',
+                        'Due: ${DateTimeUtils.formatCalendarDue(task.date)}',
                         style: TextStyle(
                           fontSize: 12.sp,
                           color:
@@ -718,7 +723,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final pendingCount = events.where((t) => !t.isDone).length;
     final completedCount = events.where((t) => t.isDone).length;
     final overdueCount =
-        events.where((t) => !t.isDone && t.date.isBefore(now)).length;
+        events.where(
+          (t) => DateTimeUtils.isOverdue(t.date, isCompleted: t.isDone),
+        ).length;
 
     return Container(
       height: 0.75.sh,

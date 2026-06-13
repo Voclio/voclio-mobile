@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
+import 'package:voclio_app/core/config/oauth_config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -80,19 +83,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<AuthResponseModel> googleSignIn() async {
     try {
-      // Initialize Google Sign-In
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
+      final googleSignIn = GoogleSignIn(
+        scopes: const ['email', 'profile'],
+        serverClientId: OAuthConfig.googleWebClientId,
+        clientId: Platform.isIOS ? OAuthConfig.effectiveIosClientId : null,
       );
 
-      // Trigger the authentication flow
+      await googleSignIn.signOut();
+
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
         throw Exception('Google sign in was cancelled');
       }
 
-      // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -102,7 +106,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('Failed to get Google ID token');
       }
 
-      // Send ID token to backend
       final response = await apiClient.post(
         ApiEndpoints.googleAuth,
         data: {'id_token': idToken},

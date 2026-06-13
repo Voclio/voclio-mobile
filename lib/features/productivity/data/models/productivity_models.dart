@@ -59,11 +59,13 @@ class StreakModel {
   final int currentStreak;
   final int longestStreak;
   final DateTime? lastActivityDate;
+  final int totalPoints;
 
   StreakModel({
     required this.currentStreak,
     required this.longestStreak,
     this.lastActivityDate,
+    this.totalPoints = 0,
   });
 
   factory StreakModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +78,7 @@ class StreakModel {
                 json['last_activity_date'] ?? json['streak_date'],
               )
               : null,
+      totalPoints: json['total_points'] ?? 0,
     );
   }
 
@@ -84,6 +87,7 @@ class StreakModel {
       currentStreak: currentStreak,
       longestStreak: longestStreak,
       lastActivityDate: lastActivityDate,
+      totalPoints: totalPoints,
     );
   }
 }
@@ -95,6 +99,8 @@ class AchievementModel {
   final String icon;
   final bool isUnlocked;
   final DateTime? unlockedAt;
+  final int progressCurrent;
+  final int progressTarget;
 
   AchievementModel({
     required this.id,
@@ -103,22 +109,25 @@ class AchievementModel {
     required this.icon,
     required this.isUnlocked,
     this.unlockedAt,
+    this.progressCurrent = 0,
+    this.progressTarget = 1,
   });
 
   factory AchievementModel.fromJson(Map<String, dynamic> json) {
     final type = json['achievement_type']?.toString();
+    final earnedAt = json['unlocked_at'] ?? json['earned_at'];
 
     return AchievementModel(
-      id: (json['achievement_id'] ?? json['id'] ?? '').toString(),
+      id: type ?? (json['achievement_id'] ?? json['id'] ?? '').toString(),
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       icon: json['icon']?.toString() ?? _iconForType(type),
-      isUnlocked: json['is_unlocked'] == true || json['earned_at'] != null,
-      unlockedAt: json['unlocked_at'] != null
-          ? DateTime.tryParse(json['unlocked_at'].toString())
-          : json['earned_at'] != null
-              ? DateTime.tryParse(json['earned_at'].toString())
-              : null,
+      isUnlocked: json['is_unlocked'] == true || earnedAt != null,
+      unlockedAt: earnedAt != null
+          ? DateTime.tryParse(earnedAt.toString())
+          : null,
+      progressCurrent: json['progress_current'] ?? 0,
+      progressTarget: json['progress_target'] ?? 1,
     );
   }
 
@@ -126,10 +135,16 @@ class AchievementModel {
     switch (type) {
       case 'first_focus':
         return '🎯';
-      case 'week_warrior':
+      case 'streak_3':
         return '🔥';
-      case 'note_taker':
-        return '📝';
+      case 'early_bird':
+        return '🌅';
+      case 'focus_master':
+        return '👑';
+      case 'task_warrior':
+        return '⚔️';
+      case 'night_owl':
+        return '🦉';
       default:
         return '🏆';
     }
@@ -143,6 +158,8 @@ class AchievementModel {
       icon: icon,
       isUnlocked: isUnlocked,
       unlockedAt: unlockedAt,
+      progressCurrent: progressCurrent,
+      progressTarget: progressTarget,
     );
   }
 }
