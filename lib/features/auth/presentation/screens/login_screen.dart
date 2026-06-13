@@ -50,26 +50,22 @@ class _LoginScreenState extends State<LoginScreen> {
     final isSmall = size.height < 700;
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
-        if (!isCurrentRoute) {
-          return;
-        }
         if (state is AuthSuccess) {
-          // Check if widget setup should be shown
           final widgetConfigCubit = context.read<WidgetConfigCubit>();
           if (widgetConfigCubit.shouldShowSetupDialog()) {
-            // Show widget setup dialog
             WidgetSetupDialog.show(context, cubit: widgetConfigCubit).then((_) {
-              // Navigate to home after dialog is closed
               if (context.mounted) {
                 context.goRoute(AppRouter.home);
               }
             });
           } else {
-            // Go directly to home
             context.goRoute(AppRouter.home);
           }
         } else if (state is AuthError) {
+          final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
+          if (!isCurrentRoute) {
+            return;
+          }
           // Check if error is due to unverified email
           final message = state.message.toLowerCase();
           final isUnverifiedEmail =

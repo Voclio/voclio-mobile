@@ -2,12 +2,8 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:voclio_app/core/config/oauth_config.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
-import 'package:voclio_app/features/calendar/presentation/bloc/calendar_cubit.dart';
-import 'package:voclio_app/features/calendar/presentation/bloc/calendar_state.dart';
 
 /// Listens for `voclio://oauth/callback?code=...` and completes Google Calendar linking.
 class CalendarOAuthLinkHandler extends StatefulWidget {
@@ -70,35 +66,9 @@ class _CalendarOAuthLinkHandlerState extends State<CalendarOAuthLinkHandler> {
     if (code == null || code.isEmpty) return;
 
     _handlingCallback = true;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    final cubit = context.read<CalendarCubit>();
-
     try {
-      await cubit.handleOAuthCallback(code);
-      if (!mounted) return;
-
-      if (cubit.state is GoogleCalendarConnected ||
-          cubit.state is CalendarLoaded) {
-        messenger?.showSnackBar(
-          const SnackBar(
-            content: Text('Google Calendar connected successfully'),
-          ),
-        );
-      } else if (cubit.state is CalendarError) {
-        messenger?.showSnackBar(
-          SnackBar(
-            content: Text((cubit.state as CalendarError).message),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text('Failed to connect Google Calendar: $e'),
-          backgroundColor: Colors.red,
-        ),
+      AppRouter.router.go(
+        '${AppRouter.calendar}?oauth_code=${Uri.encodeComponent(code)}',
       );
     } finally {
       _handlingCallback = false;

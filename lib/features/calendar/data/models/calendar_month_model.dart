@@ -1,4 +1,5 @@
 import '../../domain/entities/calendar_month_entity.dart';
+import '../../domain/entities/google_calendar_entity.dart';
 import '../../../../core/utils/date_time_utils.dart';
 
 class CalendarMonthModel extends CalendarMonthEntity {
@@ -11,6 +12,8 @@ class CalendarMonthModel extends CalendarMonthEntity {
     required super.totalEvents,
     required super.tasksCount,
     required super.remindersCount,
+    super.googleEventsCount = 0,
+    super.googleSyncEnabled = false,
   });
 
   factory CalendarMonthModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +40,8 @@ class CalendarMonthModel extends CalendarMonthEntity {
       totalEvents: data['total_events'],
       tasksCount: data['tasks_count'],
       remindersCount: data['reminders_count'],
+      googleEventsCount: data['google_events_count'] ?? 0,
+      googleSyncEnabled: data['google_sync_enabled'] ?? false,
     );
   }
 }
@@ -45,10 +50,14 @@ class DayEventsModel extends DayEventsEntity {
   const DayEventsModel({
     required super.tasks,
     required super.reminders,
+    super.googleEvents = const [],
     required super.count,
   });
 
   factory DayEventsModel.fromJson(Map<String, dynamic> json) {
+    final googleEventsRaw =
+        json['google_events'] ?? json['meetings'] as List<dynamic>?;
+
     return DayEventsModel(
       tasks:
           (json['tasks'] as List<dynamic>?)
@@ -65,8 +74,65 @@ class DayEventsModel extends DayEventsEntity {
               )
               .toList() ??
           [],
+      googleEvents:
+          googleEventsRaw
+              ?.map(
+                (e) => GoogleCalendarEventModel.fromJson(
+                  Map<String, dynamic>.from(e as Map),
+                ),
+              )
+              .toList() ??
+          [],
       count: json['count'] ?? 0,
     );
+  }
+}
+
+class GoogleCalendarEventModel extends GoogleCalendarEventEntity {
+  const GoogleCalendarEventModel({
+    required super.id,
+    required super.title,
+    super.description,
+    required super.startTime,
+    required super.endTime,
+    super.location,
+    super.attendees = const [],
+    super.htmlLink,
+    super.meetLink,
+    super.isAllDay = false,
+    super.colorId,
+  });
+
+  factory GoogleCalendarEventModel.fromJson(Map<String, dynamic> json) {
+    return GoogleCalendarEventModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? json['summary'] ?? 'Untitled Event',
+      description: json['description']?.toString(),
+      startTime: _parseDateTime(json['start'] ?? json['startTime']),
+      endTime: _parseDateTime(json['end'] ?? json['endTime']),
+      location: json['location']?.toString(),
+      attendees:
+          (json['attendees'] as List<dynamic>?)
+              ?.map((a) => a is Map ? (a['email']?.toString() ?? '') : a.toString())
+              .where((email) => email.isNotEmpty)
+              .toList() ??
+          [],
+      htmlLink: json['htmlLink']?.toString(),
+      meetLink: json['meet_link']?.toString() ?? json['meetLink']?.toString(),
+      isAllDay: json['isAllDay'] == true || json['is_all_day'] == true,
+      colorId: json['colorId']?.toString(),
+    );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.parse(value);
+    if (value is Map) {
+      final dateTimeStr = value['dateTime'] ?? value['date'];
+      if (dateTimeStr != null) return DateTime.parse(dateTimeStr);
+    }
+    return DateTime.now();
   }
 }
 

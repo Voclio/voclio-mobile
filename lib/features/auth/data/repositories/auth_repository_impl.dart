@@ -256,7 +256,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, AuthResponse>> googleSignIn() async {
     try {
       final response = await _remoteDataSource.googleSignIn().timeout(
-        const Duration(seconds: 12),
+        const Duration(seconds: 90),
         onTimeout: () {
           throw ServerException(408, 'Google sign in timed out.');
         },

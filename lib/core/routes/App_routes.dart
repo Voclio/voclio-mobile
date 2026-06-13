@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:voclio_app/features/voice/presentation/bloc/voice_bloc.dart';
@@ -57,16 +58,67 @@ class AppRouter {
     final uri = state.uri;
     if (uri.scheme != 'voclio') return null;
 
+    if (uri.host == 'oauth' &&
+        (uri.path == '/callback' || uri.path.isEmpty)) {
+      final code = uri.queryParameters['code'];
+      if (code != null && code.isNotEmpty) {
+        return '$calendar?oauth_code=${Uri.encodeComponent(code)}';
+      }
+      return calendar;
+    }
+
     if (uri.host == 'home' || uri.path == '/home') {
       return home;
     }
 
+    return home;
+  }
+
+  static String? _redirectUnknownDeepLink(GoRouterState state) {
+    final location = state.uri.toString();
+    if (location.startsWith('voclio://oauth/callback')) {
+      final uri = Uri.parse(location);
+      final code = uri.queryParameters['code'];
+      if (code != null && code.isNotEmpty) {
+        return '$calendar?oauth_code=${Uri.encodeComponent(code)}';
+      }
+      return calendar;
+    }
     return null;
   }
 
   static final GoRouter router = GoRouter(
     initialLocation: splash,
-    redirect: (context, state) => _redirectDeepLink(state),
+    redirect: (context, state) =>
+        _redirectDeepLink(state) ?? _redirectUnknownDeepLink(state),
+    errorBuilder: (context, state) {
+      final redirect = _redirectUnknownDeepLink(state);
+      if (redirect != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            context.go(redirect);
+          }
+        });
+        return const SizedBox.shrink();
+      }
+
+      return Scaffold(
+        appBar: AppBar(title: const Text('Page Not Found')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(state.error.toString()),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.go(home),
+                child: const Text('Home'),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
     routes: [
       GoRoute(
         path: splash,

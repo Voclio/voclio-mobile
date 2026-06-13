@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:voclio_app/core/api/api_client.dart';
 import 'package:voclio_app/core/api/api_endpoints.dart';
-import 'package:voclio_app/core/config/oauth_config.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:voclio_app/core/services/google_sign_in_service.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../models/auth_request_model.dart';
@@ -83,27 +80,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<AuthResponseModel> googleSignIn() async {
     try {
-      final googleSignIn = GoogleSignIn(
-        scopes: const ['email', 'profile'],
-        serverClientId: OAuthConfig.googleWebClientId,
-        clientId: Platform.isIOS ? OAuthConfig.effectiveIosClientId : null,
-      );
-
-      await googleSignIn.signOut();
-
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      final googleUser = await GoogleSignInService.instance.signInInteractive();
 
       if (googleUser == null) {
         throw Exception('Google sign in was cancelled');
       }
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final String? idToken = googleAuth.idToken;
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        throw Exception('Failed to get Google ID token');
+        // iOS occasionally returns null on first attempt; retry once.
+        final retryAuth = await googleUser.authentication;
+        if (retryAuth.idToken == null) {
+          throw Exception('Failed to get Google ID token');
+        }
+        final response = await apiClient.post(
+          ApiEndpoints.googleAuth,
+          data: {'id_token': retryAuth.idToken},
+        );
+        return AuthResponseModel.fromJson(response.data);
       }
 
       final response = await apiClient.post(
@@ -112,6 +108,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
       return AuthResponseModel.fromJson(response.data);
     } catch (e) {
+      final details = e.toString();
+      if (details.contains('ApiException: 10') ||
+          details.contains('sign_in_failed')) {
+        throw Exception(
+          'Google Sign-In Android setup is incomplete. In Google Cloud Console, create an Android OAuth client for package com.example.voclio_app and add your app SHA-1 fingerprint.',
+        );
+      }
       throw Exception('Google sign in failed: $e');
     }
   }

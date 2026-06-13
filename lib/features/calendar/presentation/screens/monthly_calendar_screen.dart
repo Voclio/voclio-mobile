@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -48,6 +49,8 @@ class _MonthlyCalendarView extends StatefulWidget {
 }
 
 class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
+  static final Set<String> _processedOAuthCodes = {};
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -61,6 +64,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     MonthlyCalendarScreen.pendingJumpDate.addListener(_handlePendingJump);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _applyPendingJump();
+      _completeOAuthIfNeeded();
       final cubit = context.read<CalendarCubit>();
       if (cubit.state is! CalendarLoaded) {
         final now = DateTime.now();
@@ -93,6 +97,48 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       force: true,
     );
     MonthlyCalendarScreen.pendingJumpDate.value = null;
+  }
+
+  Future<void> _completeOAuthIfNeeded() async {
+    final oauthCode =
+        GoRouterState.of(context).uri.queryParameters['oauth_code'];
+    if (oauthCode == null || oauthCode.isEmpty || !mounted) return;
+    if (_processedOAuthCodes.contains(oauthCode)) return;
+    _processedOAuthCodes.add(oauthCode);
+
+    final cubit = context.read<CalendarCubit>();
+    try {
+      await cubit.handleOAuthCallback(oauthCode);
+      if (!mounted) return;
+
+      if (cubit.state is GoogleCalendarConnected ||
+          cubit.state is CalendarLoaded) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Google Calendar connected successfully'),
+          ),
+        );
+      } else if (cubit.state is CalendarError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text((cubit.state as CalendarError).message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to connect Google Calendar: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        context.go('/calendar');
+      }
+    }
   }
 
   void _showAddTaskSheet(BuildContext context) {
@@ -759,16 +805,9 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
                   SizedBox(height: 20.h),
 
-                  // Selected day tasks header + filter chips
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: _buildDayTasksHeader(
-                      effectiveSelection,
-                      selectedDayEvents?.tasks ?? [],
-                    ),
-                  ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
-
-                  SizedBox(height: 12.h),
+                  if (state.googleStatus == null ||
+                      !state.googleStatus!.isConnected)
+                    _buildGoogleCalendarBanner(context, theme, isDark),
 
                   // Today's meetings section (if connected and it's today)
                   if (isSameDay(effectiveSelection, DateTime.now()) &&
@@ -780,15 +819,16 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       isDark,
                     ),
 
-                  // Calendar integrations banner (if Google not connected)
-                  if (state.googleStatus == null ||
-                      !state.googleStatus!.isConnected)
-                    _buildCalendarIntegrationsBanner(
-                      context,
-                      theme,
-                      isDark,
-                      state,
+                  // Selected day tasks header + filter chips
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: _buildDayTasksHeader(
+                      effectiveSelection,
+                      selectedDayEvents?.tasks ?? [],
                     ),
+                  ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+
+                  SizedBox(height: 12.h),
 
                   // Events List
                   _buildEventsList(selectedDayEvents, theme, isDark, context),
@@ -1129,7 +1169,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  'Google Calendar',
+                  'Google Calendar & Meet',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
@@ -1692,7 +1732,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ),
                 SizedBox(height: 2.h),
                 Text(
-                  'Sync your meetings and events',
+                  'Sync Google Calendar meetings and Meet links',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: theme.colorScheme.secondary,

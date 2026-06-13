@@ -272,6 +272,7 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
                 .toList() ??
             [],
         htmlLink: event['htmlLink'],
+        meetLink: event['meet_link']?.toString() ?? event['meetLink']?.toString(),
         isAllDay: event['is_all_day'] ?? event['isAllDay'] ?? false,
         colorId: event['colorId'],
       );
