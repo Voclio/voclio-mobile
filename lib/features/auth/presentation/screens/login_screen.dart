@@ -5,8 +5,6 @@ import 'package:voclio_app/core/extentions/context_extentions.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/routes/App_routes.dart';
 import 'package:voclio_app/core/common/dialogs/voclio_dialog.dart';
-import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
-import 'package:voclio_app/features/widget_config/presentation/widgets/widget_setup_dialog.dart';
 
 import '../../../../core/common/inputs/text_app.dart';
 import '../../../../core/language/lang_keys.dart';
@@ -51,16 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
-          final widgetConfigCubit = context.read<WidgetConfigCubit>();
-          if (widgetConfigCubit.shouldShowSetupDialog()) {
-            WidgetSetupDialog.show(context, cubit: widgetConfigCubit).then((_) {
-              if (context.mounted) {
-                context.goRoute(AppRouter.home);
-              }
-            });
-          } else {
-            context.goRoute(AppRouter.home);
-          }
+          context.goRoute(AppRouter.home);
         } else if (state is AuthError) {
           final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? false;
           if (!isCurrentRoute) {

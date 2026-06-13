@@ -5,6 +5,7 @@ import 'package:voclio_app/core/di/injection_container.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/core/widgets/home_system/home_system_widgets.dart';
 import 'package:voclio_app/features/settings/presentation/cubit/settings_cubit.dart';
+import 'package:voclio_app/features/settings/presentation/widgets/google_calendar_settings_tile.dart';
 import 'package:voclio_app/features/settings/presentation/widgets/timezone_picker_sheet.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_cubit.dart';
 import 'package:voclio_app/features/widget_config/presentation/bloc/widget_config_state.dart';
@@ -62,6 +63,13 @@ class SettingsScreen extends StatelessWidget {
                                 );
                               },
                             ),
+                          ],
+                        ),
+                        SizedBox(height: 24.h),
+                        HomeSettingsGroup(
+                          title: 'Integrations',
+                          children: const [
+                            GoogleCalendarSettingsTile(),
                           ],
                         ),
                         SizedBox(height: 24.h),

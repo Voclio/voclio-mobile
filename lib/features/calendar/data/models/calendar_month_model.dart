@@ -59,30 +59,23 @@ class DayEventsModel extends DayEventsEntity {
         json['google_events'] ?? json['meetings'] as List<dynamic>?;
 
     return DayEventsModel(
-      tasks:
-          (json['tasks'] as List<dynamic>?)
-              ?.map(
-                (e) => CalendarTaskModel.fromJson(e as Map<String, dynamic>),
-              )
-              .toList() ??
-          [],
-      reminders:
-          (json['reminders'] as List<dynamic>?)
-              ?.map(
-                (e) =>
-                    CalendarReminderModel.fromJson(e as Map<String, dynamic>),
-              )
-              .toList() ??
-          [],
-      googleEvents:
-          googleEventsRaw
-              ?.map(
-                (e) => GoogleCalendarEventModel.fromJson(
-                  Map<String, dynamic>.from(e as Map),
-                ),
-              )
-              .toList() ??
-          [],
+      tasks: List<CalendarTaskEntity>.from(
+        (json['tasks'] as List<dynamic>? ?? const []).map(
+          (e) => CalendarTaskModel.fromJson(e as Map<String, dynamic>),
+        ),
+      ),
+      reminders: List<CalendarReminderEntity>.from(
+        (json['reminders'] as List<dynamic>? ?? const []).map(
+          (e) => CalendarReminderModel.fromJson(e as Map<String, dynamic>),
+        ),
+      ),
+      googleEvents: List<GoogleCalendarEventEntity>.from(
+        (googleEventsRaw as List<dynamic>? ?? const []).map(
+          (e) => GoogleCalendarEventModel.fromJson(
+            Map<String, dynamic>.from(e as Map),
+          ),
+        ),
+      ),
       count: json['count'] ?? 0,
     );
   }

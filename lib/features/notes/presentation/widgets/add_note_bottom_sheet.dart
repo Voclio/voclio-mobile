@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get_it/get_it.dart';
 import '../../domain/entities/note_entity.dart';
 import '../bloc/notes_cubit.dart';
-import '../bloc/note_state.dart';
+import 'tag_selection_sheet.dart';
+import 'package:voclio_app/features/tags/presentation/bloc/tags_cubit.dart';
 import 'package:voclio_app/core/icons/app_icons.dart';
 
 class AddNoteBottomSheet extends StatefulWidget {
@@ -20,6 +22,12 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
 
   // Selected tag names (strings)
   List<String> _selectedTags = [];
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<NotesCubit>().fetchTags();
+  }
 
   @override
   void dispose() {
@@ -64,6 +72,23 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
     });
   }
 
+  Future<void> _openTagSelector() async {
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BlocProvider(
+        create: (_) => GetIt.I<TagsCubit>(),
+        child: TagSelectionSheet(selectedTags: _selectedTags),
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() => _selectedTags = result);
+      context.read<NotesCubit>().fetchTags();
+    }
+  }
+
   void _toggleTag(String tagName) {
     setState(() {
       if (_selectedTags.contains(tagName)) {
@@ -72,16 +97,6 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
         _selectedTags.add(tagName);
       }
     });
-  }
-
-  // Parse hex color string to Color
-  Color _parseColor(String hexColor) {
-    try {
-      final hex = hexColor.replaceAll('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return Theme.of(context).colorScheme.primary; // Fallback color
-    }
   }
 
   @override
@@ -193,60 +208,65 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  BlocBuilder<NotesCubit, NotesState>(
-                    builder: (context, state) {
-                      return Wrap(
-                        spacing: 8.w,
-                        runSpacing: 8.h,
-                        children:
-                            state.availableTags.map((tagEntity) {
-                              final isSelected = _selectedTags.contains(
-                                tagEntity.name,
-                              );
-                              return GestureDetector(
-                                onTap: () => _toggleTag(tagEntity.name),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12.w,
-                                    vertical: 6.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isSelected
-                                            ? _parseColor(tagEntity.color)
-                                            : (isDark
-                                                ? Colors.white.withOpacity(0.05)
-                                                : Colors.transparent),
-                                    borderRadius: BorderRadius.circular(20.r),
-                                    border: Border.all(
-                                      color:
-                                          isSelected
-                                              ? _parseColor(tagEntity.color)
-                                              : theme.colorScheme.secondary
-                                                  .withOpacity(0.3),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    tagEntity.name,
-                                    style: TextStyle(
-                                      color:
-                                          isSelected
-                                              ? Colors.white
-                                              : theme.colorScheme.onSurface,
-                                      fontSize: 12.sp,
-                                      fontWeight:
-                                          isSelected
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                    ),
-                                  ),
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: [
+                      ..._selectedTags.map(
+                        (tag) => _buildSelectedTagChip(context, tag),
+                      ),
+                      GestureDetector(
+                        onTap: _openTagSelector,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 14.w,
+                            vertical: 8.h,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withOpacity(0.35),
+                            ),
+                            borderRadius: BorderRadius.circular(20.r),
+                            color: theme.colorScheme.primary.withOpacity(0.06),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _selectedTags.isEmpty
+                                    ? AppIcons.add
+                                    : AppIcons.edit,
+                                size: 14.sp,
+                                color: theme.colorScheme.primary,
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                _selectedTags.isEmpty
+                                    ? 'Add tags'
+                                    : 'Manage tags',
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              );
-                            }).toList(),
-                      );
-                    },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  if (_selectedTags.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(top: 8.h),
+                      child: Text(
+                        'No tags yet. Tap "Add tags" to create or select categories.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.secondary,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
 
                   SizedBox(height: 24.h),
 
@@ -319,6 +339,36 @@ class _AddNoteBottomSheetState extends State<AddNoteBottomSheet> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedTagChip(BuildContext context, String tagName) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: () => _toggleTag(tagName),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              tagName,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(AppIcons.close, size: 12.sp, color: Colors.white),
+          ],
         ),
       ),
     );

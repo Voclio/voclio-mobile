@@ -13,10 +13,12 @@ import '../../../tasks/presentation/widgets/add_task_buttom_sheet.dart';
 import '../../../tasks/presentation/screens/task_details_screen.dart';
 import '../../../tasks/presentation/bloc/tasks_cubit.dart';
 import '../../../tasks/domain/entities/task_entity.dart';
+import '../../../tasks/domain/usecases/create_task_use_case.dart';
+import '../../../reminders/domain/entities/reminder_entity.dart';
+import '../../../reminders/domain/usecases/create_reminder_usecase.dart';
 import '../../../../core/enums/enums.dart';
 import '../../domain/entities/calendar_month_entity.dart';
 import '../../domain/entities/google_calendar_entity.dart';
-import '../../../../core/common/dialogs/voclio_dialog.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import '../../../../core/widgets/home_system/home_system_tokens.dart';
 import '../../../../core/widgets/home_system/home_system_widgets.dart';
@@ -205,164 +207,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     }
   }
 
-  Future<void> _connectGoogleCalendar(BuildContext context) async {
-    final cubit = context.read<CalendarCubit>();
-    try {
-      final urlEntity = await cubit.getGoogleConnectUrl();
-
-      if (urlEntity.authUrl.isNotEmpty) {
-        final uri = Uri.parse(urlEntity.authUrl);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open Google sign-in')),
-          );
-        }
-      } else if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not start Google Calendar connection'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google Calendar connect failed: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _disconnectGoogleCalendar(BuildContext context) async {
-    final confirmed = await VoclioDialog.showConfirm(
-      context: context,
-      title: 'Disconnect Google Calendar?',
-      message:
-          'This will remove the Google Calendar sync. Your Google events will no longer appear in the calendar.',
-      confirmText: 'Disconnect',
-      cancelText: 'Cancel',
-    );
-
-    if (confirmed == true && context.mounted) {
-      await context.read<CalendarCubit>().disconnectGoogleCalendar();
-    }
-  }
-
-  void _showGoogleCalendarMenu(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: theme.scaffoldBackgroundColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder:
-          (ctx) => Padding(
-            padding: EdgeInsets.all(20.r),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(10.r),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        AppIcons.event_available,
-                        color: Colors.green,
-                        size: 24.sp,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Google Calendar Connected',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Your events are syncing',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: theme.colorScheme.secondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 20.h),
-                // Toggle show Google events
-                ListTile(
-                  leading: Icon(
-                    _showGoogleEvents ? AppIcons.visibility : AppIcons.visibility_off,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: Text(
-                    _showGoogleEvents
-                        ? 'Hide Google Events'
-                        : 'Show Google Events',
-                  ),
-                  onTap: () {
-                    setState(() {
-                      _showGoogleEvents = !_showGoogleEvents;
-                    });
-                    Navigator.pop(ctx);
-                  },
-                ),
-                // Refresh events
-                ListTile(
-                  leading: Icon(
-                    AppIcons.refresh,
-                    color: theme.colorScheme.primary,
-                  ),
-                  title: const Text('Refresh Events'),
-                  onTap: () {
-                    context.read<CalendarCubit>().loadMonth(
-                      _focusedDay.year,
-                      _focusedDay.month,
-                    );
-                    Navigator.pop(ctx);
-                  },
-                ),
-                // Disconnect
-                ListTile(
-                  leading: Icon(AppIcons.link_off, color: Colors.red),
-                  title: const Text(
-                    'Disconnect Google Calendar',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _disconnectGoogleCalendar(context);
-                  },
-                ),
-                SizedBox(height: 10.h),
-              ],
-            ),
-          ),
-    );
-  }
-
   Widget _buildCalendarDayCell(
     DateTime day,
     CalendarMonthEntity monthData,
@@ -370,11 +214,14 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     required BoxDecoration? decoration,
     required TextStyle textStyle,
     required bool isSelected,
+    bool showGoogleMarkers = false,
   }) {
     if (day.month != monthData.month) return const SizedBox.shrink();
 
-    final hasEvents =
-        monthData.eventsByDay[day.day]?.tasks.isNotEmpty ?? false;
+    final dayEvents = monthData.eventsByDay[day.day];
+    final hasTasks = dayEvents?.tasks.isNotEmpty ?? false;
+    final hasGoogleEvents =
+        showGoogleMarkers && (dayEvents?.googleEvents.isNotEmpty ?? false);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -388,18 +235,34 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           child: Text('${day.day}', style: textStyle),
         ),
         SizedBox(height: 2.h),
-        Container(
-          width: 5.r,
-          height: 5.r,
-          decoration: BoxDecoration(
-            color:
-                hasEvents
-                    ? (isSelected
-                        ? Colors.white
-                        : theme.colorScheme.primary)
-                    : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (hasTasks)
+              Container(
+                width: 5.r,
+                height: 5.r,
+                decoration: BoxDecoration(
+                  color:
+                      isSelected
+                          ? Colors.white
+                          : theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            if (hasGoogleEvents) ...[
+              if (hasTasks) SizedBox(width: 3.w),
+              Container(
+                width: 5.r,
+                height: 5.r,
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+            if (!hasTasks && !hasGoogleEvents) SizedBox(width: 5.r, height: 5.r),
+          ],
         ),
       ],
     );
@@ -457,53 +320,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
         elevation: 0,
         centerTitle: false,
         actions: [
-          // Google Calendar toggle
-          BlocBuilder<CalendarCubit, CalendarState>(
-            buildWhen:
-                (prev, curr) =>
-                    curr is GoogleCalendarConnected ||
-                    curr is GoogleCalendarDisconnected ||
-                    curr is CalendarLoaded,
-            builder: (context, state) {
-              bool isConnected = false;
-              if (state is CalendarLoaded) {
-                isConnected = state.googleStatus?.isConnected ?? false;
-              } else if (state is GoogleCalendarConnected) {
-                isConnected = true;
-              }
-
-              return Container(
-                margin: EdgeInsets.only(right: 4.w),
-                decoration: BoxDecoration(
-                  color:
-                      isConnected
-                          ? Colors.green.withOpacity(0.15)
-                          : isDark
-                          ? Colors.white10
-                          : Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    isConnected ? AppIcons.event_available : AppIcons.event_busy,
-                    color:
-                        isConnected
-                            ? Colors.green
-                            : theme.colorScheme.secondary,
-                    size: 18.sp,
-                  ),
-                  onPressed: () {
-                    if (isConnected) {
-                      _showGoogleCalendarMenu(context, theme, isDark);
-                    } else {
-                      _connectGoogleCalendar(context);
-                    }
-                  },
-                  tooltip: isConnected ? 'Google Calendar' : 'Connect Google',
-                ),
-              );
-            },
-          ),
           // Calendar view toggle
           Container(
             margin: EdgeInsets.only(right: 4.w),
@@ -627,6 +443,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
           if (state is CalendarLoaded) {
             final monthData = state.monthData;
+            final isGoogleConnected = state.googleStatus?.isConnected ?? false;
+            final showGoogleMarkers = isGoogleConnected && _showGoogleEvents;
 
             // Ensure _selectedDay is within the loaded month if we just switched pages
             final currentSelection = _selectedDay ?? _focusedDay;
@@ -754,6 +572,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                                     fontSize: 14.sp,
                                   ),
                                   isSelected: false,
+                                  showGoogleMarkers: showGoogleMarkers,
                                 ),
                             todayBuilder: (context, day, focusedDay) =>
                                 _buildCalendarDayCell(
@@ -772,6 +591,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                                     fontSize: 14.sp,
                                   ),
                                   isSelected: false,
+                                  showGoogleMarkers: showGoogleMarkers,
                                 ),
                             selectedBuilder: (context, day, focusedDay) =>
                                 _buildCalendarDayCell(
@@ -787,6 +607,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                   isSelected: true,
+                                  showGoogleMarkers: showGoogleMarkers,
                                 ),
                           ),
                           headerStyle: const HeaderStyle(
@@ -804,10 +625,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                       .scale(begin: const Offset(0.98, 0.98)),
 
                   SizedBox(height: 20.h),
-
-                  if (state.googleStatus == null ||
-                      !state.googleStatus!.isConnected)
-                    _buildGoogleCalendarBanner(context, theme, isDark),
 
                   // Today's meetings section (if connected and it's today)
                   if (isSameDay(effectiveSelection, DateTime.now()) &&
@@ -831,7 +648,13 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   SizedBox(height: 12.h),
 
                   // Events List
-                  _buildEventsList(selectedDayEvents, theme, isDark, context),
+                  _buildEventsList(
+                    selectedDayEvents,
+                    theme,
+                    isDark,
+                    context,
+                    isGoogleConnected: isGoogleConnected,
+                  ),
 
                   SizedBox(height: 100.h), // Space for bottom nav
                 ],
@@ -952,6 +775,220 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             ),
         ],
       ),
+    );
+  }
+
+  Future<void> _reloadCurrentMonth() async {
+    if (!mounted) return;
+    await context.read<CalendarCubit>().loadMonth(
+      _focusedDay.year,
+      _focusedDay.month,
+      force: true,
+    );
+  }
+
+  Future<void> _createReminder({
+    required BuildContext context,
+    required String title,
+    required DateTime remindAt,
+    required int taskId,
+  }) async {
+    if (remindAt.isBefore(DateTime.now())) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reminder time must be in the future'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    final useCase = GetIt.I<CreateReminderUseCase>();
+    final result = await useCase(
+      ReminderEntity(
+        id: '',
+        title: title,
+        remindAt: remindAt,
+        taskId: taskId,
+        reminderType: 'one_time',
+        isActive: true,
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    if (!context.mounted) return;
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to set reminder: $failure'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+      (_) async {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Reminder set for ${DateFormat('MMM d, hh:mm a').format(remindAt)}',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await _reloadCurrentMonth();
+      },
+    );
+  }
+
+  Future<int?> _ensureTaskForGoogleEvent(
+    GoogleCalendarEventEntity event,
+  ) async {
+    final createTask = GetIt.I<CreateTaskUseCase>();
+    final result = await createTask(
+      TaskEntity(
+        id: 'google-${event.id}',
+        title: event.title,
+        date: event.startTime,
+        createdAt: DateTime.now(),
+        description: event.description,
+        tags: const ['google-calendar'],
+      ),
+    );
+
+    return result.fold((_) => null, (task) => int.tryParse(task.id));
+  }
+
+  Future<void> _showReminderOptionsSheet({
+    required BuildContext context,
+    required String title,
+    required DateTime referenceTime,
+    required Future<void> Function(DateTime remindAt) onSelect,
+  }) async {
+    final options = <({String label, DateTime time})>[
+      (
+        label: 'At event time',
+        time: referenceTime,
+      ),
+      (
+        label: '15 minutes before',
+        time: referenceTime.subtract(const Duration(minutes: 15)),
+      ),
+      (
+        label: '1 hour before',
+        time: referenceTime.subtract(const Duration(hours: 1)),
+      ),
+      (
+        label: '1 day before',
+        time: referenceTime.subtract(const Duration(days: 1)),
+      ),
+    ];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Set Reminder',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: Theme.of(ctx).colorScheme.secondary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 12.h),
+                ...options.map(
+                  (option) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      AppIcons.notifications_active_outlined,
+                      color: HomeSystemTokens.purple,
+                    ),
+                    title: Text(option.label),
+                    subtitle: Text(
+                      DateFormat('MMM d, hh:mm a').format(option.time),
+                    ),
+                    enabled: option.time.isAfter(DateTime.now()),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await onSelect(option.time);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _setReminderForTask(
+    BuildContext context,
+    CalendarTaskEntity task,
+  ) async {
+    await _showReminderOptionsSheet(
+      context: context,
+      title: task.title,
+      referenceTime: task.dueDate,
+      onSelect: (remindAt) => _createReminder(
+        context: context,
+        title: task.title,
+        remindAt: remindAt,
+        taskId: task.id,
+      ),
+    );
+  }
+
+  Future<void> _setReminderForGoogleEvent(
+    BuildContext context,
+    GoogleCalendarEventEntity event,
+  ) async {
+    await _showReminderOptionsSheet(
+      context: context,
+      title: event.title,
+      referenceTime: event.startTime,
+      onSelect: (remindAt) async {
+        final taskId = await _ensureTaskForGoogleEvent(event);
+        if (taskId == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not create task for this event'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        await _createReminder(
+          context: context,
+          title: event.title,
+          remindAt: remindAt,
+          taskId: taskId,
+        );
+      },
     );
   }
 
@@ -1079,19 +1116,25 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                                 : theme.colorScheme.secondary,
                       ),
                       SizedBox(width: 4.w),
-                      Text(
-                        'Due: ${DateTimeUtils.formatCalendarDue(task.dueDate)}',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color:
-                              isOverdue
-                                  ? Colors.red
-                                  : theme.colorScheme.secondary,
-                          fontWeight:
-                              isOverdue ? FontWeight.w500 : FontWeight.normal,
+                      Expanded(
+                        child: Text(
+                          'Due: ${DateTimeUtils.formatCalendarDue(task.dueDate)}',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color:
+                                isOverdue
+                                    ? Colors.red
+                                    : theme.colorScheme.secondary,
+                            fontWeight:
+                                isOverdue
+                                    ? FontWeight.w500
+                                    : FontWeight.normal,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      SizedBox(width: 10.w),
+                      SizedBox(width: 6.w),
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 6.w,
@@ -1108,6 +1151,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                             color: priorityColor,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1115,12 +1160,23 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 ],
               ),
             ),
-            SizedBox(width: 8.w),
-            // Navigation arrow
+            SizedBox(width: 2.w),
+            IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              icon: Icon(
+                AppIcons.notifications_active_outlined,
+                color: HomeSystemTokens.purple,
+                size: 18.sp,
+              ),
+              tooltip: 'Set reminder',
+              onPressed: () => _setReminderForTask(context, task),
+            ),
             Icon(
               AppIcons.chevron_right_rounded,
               color: theme.colorScheme.secondary.withOpacity(0.4),
-              size: 22.sp,
+              size: 20.sp,
             ),
           ],
         ),
@@ -1132,19 +1188,21 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     DayEventsEntity? selectedDayEvents,
     ThemeData theme,
     bool isDark,
-    BuildContext context,
-  ) {
+    BuildContext context, {
+    required bool isGoogleConnected,
+  }) {
     final tasks = selectedDayEvents?.tasks ?? [];
     final reminders = selectedDayEvents?.reminders ?? [];
     final googleEvents = selectedDayEvents?.googleEvents ?? [];
 
     final filteredTasks = _getFilteredTasks(tasks);
+    final showGoogleSection = isGoogleConnected && _showGoogleEvents;
     final hasAnyEvents =
         filteredTasks.isNotEmpty ||
         reminders.isNotEmpty ||
-        (_showGoogleEvents && googleEvents.isNotEmpty);
+        (showGoogleSection && googleEvents.isNotEmpty);
 
-    if (!hasAnyEvents) {
+    if (!hasAnyEvents && !showGoogleSection) {
       return _buildEmptyState(
         theme,
         isDark,
@@ -1156,31 +1214,30 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       children: [
-        // Google Calendar Events (if showing)
-        if (_showGoogleEvents && googleEvents.isNotEmpty) ...[
+        if (showGoogleSection) ...[
           Padding(
             padding: EdgeInsets.only(bottom: 8.h, top: 4.h),
             child: Row(
               children: [
                 Icon(
-                  AppIcons.calendar_month_rounded,
+                  AppIcons.videocam_rounded,
                   size: 14.sp,
-                  color: Colors.blue,
+                  color: Colors.green.shade700,
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  'Google Calendar & Meet',
+                  'Google Calendar Events',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.blue,
+                    color: Colors.green.shade700,
                   ),
                 ),
                 SizedBox(width: 6.w),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -1188,22 +1245,30 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                     style: TextStyle(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: Colors.green.shade700,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          ...googleEvents.asMap().entries.map(
-            (entry) => _buildGoogleEventCard(entry.value, theme, isDark)
-                .animate(delay: (entry.key * 80).ms)
-                .fadeIn(duration: 300.ms)
-                .slideX(begin: 0.1, end: 0),
-          ),
+          if (googleEvents.isEmpty)
+            _buildGoogleEventsEmptyCard(theme, isDark)
+          else
+            ...googleEvents.asMap().entries.map(
+              (entry) => _buildGoogleEventCard(
+                entry.value,
+                theme,
+                isDark,
+                context,
+              )
+                  .animate(delay: (entry.key * 80).ms)
+                  .fadeIn(duration: 300.ms)
+                  .slideX(begin: 0.1, end: 0),
+            ),
           if (filteredTasks.isNotEmpty || reminders.isNotEmpty)
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
               child: Divider(color: theme.dividerColor.withOpacity(0.3)),
             ),
         ],
@@ -1391,20 +1456,46 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     );
   }
 
+  Widget _buildGoogleEventsEmptyCard(ThemeData theme, bool isDark) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.green.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            AppIcons.event_busy,
+            color: theme.colorScheme.secondary,
+            size: 20.sp,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              'No Google Calendar events on this day',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: theme.colorScheme.secondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildGoogleEventCard(
     GoogleCalendarEventEntity event,
     ThemeData theme,
     bool isDark,
+    BuildContext context,
   ) {
-    final startTime =
-        event.startTime != null
-            ? DateFormat('hh:mm a').format(event.startTime!)
-            : 'All day';
-    final endTime =
-        event.endTime != null
-            ? DateFormat('hh:mm a').format(event.endTime!)
-            : '';
-    final timeText = endTime.isNotEmpty ? '$startTime - $endTime' : startTime;
+    final startTime = DateFormat('hh:mm a').format(event.startTime);
+    final endTime = DateFormat('hh:mm a').format(event.endTime);
+    final timeText = '$startTime - $endTime';
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -1532,6 +1623,17 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               ],
             ),
           ),
+          IconButton(
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            icon: Icon(
+              AppIcons.notifications_active_outlined,
+              color: HomeSystemTokens.purple,
+              size: 20.sp,
+            ),
+            tooltip: 'Set reminder',
+            onPressed: () => _setReminderForGoogleEvent(context, event),
+          ),
           if (event.meetLink != null) ...[
             SizedBox(width: 8.w),
             GestureDetector(
@@ -1558,207 +1660,6 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
         ],
       ),
     );
-  }
-
-  Widget _buildCalendarIntegrationsBanner(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-    CalendarLoaded state,
-  ) {
-    final isGoogleConnected = state.googleStatus?.isConnected ?? false;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: theme.dividerColor.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Calendar Integrations',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          _buildIntegrationCard(
-            context: context,
-            theme: theme,
-            isDark: isDark,
-            title: 'Google Calendar',
-            icon: AppIcons.calendar_month_rounded,
-            color: Colors.green,
-            isConnected: isGoogleConnected,
-            onConnect: () => _connectGoogleCalendar(context),
-            onTap: () => _showGoogleCalendarMenu(context, theme, isDark),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildIntegrationCard({
-    required BuildContext context,
-    required ThemeData theme,
-    required bool isDark,
-    required String title,
-    required IconData icon,
-    required Color color,
-    required bool isConnected,
-    required VoidCallback onConnect,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: isConnected ? onTap : onConnect,
-      child: Container(
-        padding: EdgeInsets.all(12.r),
-        decoration: BoxDecoration(
-          color:
-              isConnected
-                  ? color.withOpacity(0.1)
-                  : isDark
-                  ? Colors.white.withOpacity(0.03)
-                  : Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color:
-                isConnected
-                    ? color.withOpacity(0.3)
-                    : theme.dividerColor.withOpacity(0.2),
-          ),
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(
-                  icon,
-                  color: isConnected ? color : theme.colorScheme.secondary,
-                  size: 20.sp,
-                ),
-                if (isConnected)
-                  Icon(AppIcons.check_circle, color: color, size: 16.sp)
-                else
-                  Icon(
-                    AppIcons.add_circle_outline,
-                    color: theme.colorScheme.secondary,
-                    size: 16.sp,
-                  ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Row(
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: isConnected ? color : theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            Row(
-              children: [
-                Text(
-                  isConnected ? 'Connected' : 'Tap to connect',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: theme.colorScheme.secondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGoogleCalendarBanner(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.blue.withOpacity(0.1),
-            Colors.green.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(10.r),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              AppIcons.calendar_month_rounded,
-              color: Colors.blue,
-              size: 24.sp,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Connect Google Calendar',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  'Sync Google Calendar meetings and Meet links',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: theme.colorScheme.secondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => _connectGoogleCalendar(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            ),
-            child: Text(
-              'Connect',
-              style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildTodayMeetingsSection(

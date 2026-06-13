@@ -257,9 +257,10 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
       eventsList = rawData;
     }
 
-    return eventsList.map((e) {
-      final event = Map<String, dynamic>.from(e);
-      return GoogleCalendarEventEntity(
+    return List<GoogleCalendarEventEntity>.from(
+      eventsList.map((e) {
+        final event = Map<String, dynamic>.from(e);
+        return GoogleCalendarEventEntity(
         id: event['id']?.toString() ?? '',
         title: event['title'] ?? event['summary'] ?? 'Untitled Event',
         description: event['description'],
@@ -275,8 +276,9 @@ class CalendarRemoteDataSourceImpl implements CalendarRemoteDataSource {
         meetLink: event['meet_link']?.toString() ?? event['meetLink']?.toString(),
         isAllDay: event['is_all_day'] ?? event['isAllDay'] ?? false,
         colorId: event['colorId'],
-      );
-    }).toList();
+        );
+      }),
+    );
   }
 
   DateTime _parseDateTime(dynamic dateTime) {
