@@ -41,8 +41,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
       body: BlocBuilder<DashboardCubit, DashboardState>(
         builder: (context, state) {
-          if (state is DashboardLoading) {
+          if (state is DashboardLoading || state is DashboardInitial) {
             return _buildLoadingSkeleton();
+          }
+
+          if (state is DashboardStatsLoaded) {
+            return _buildContent(context, state.stats);
           }
 
           if (state is DashboardError) {
@@ -57,11 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
           }
 
-          if (state is DashboardStatsLoaded) {
-            return _buildContent(context, state.stats);
-          }
-
-          return const SizedBox.shrink();
+          return _buildLoadingSkeleton();
         },
       ),
     );

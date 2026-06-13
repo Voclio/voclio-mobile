@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:voclio_app/core/widgets/home_system/home_system_tokens.dart';
 import 'package:voclio_app/features/voice/presentation/bloc/voice_bloc.dart';
 import 'package:voclio_app/features/reminders/presentation/cubit/reminders_cubit.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -99,7 +100,10 @@ class AppRouter {
             context.go(redirect);
           }
         });
-        return const SizedBox.shrink();
+        return Scaffold(
+          backgroundColor: HomeSystemTokens.canvas,
+          body: const Center(child: CircularProgressIndicator()),
+        );
       }
 
       return Scaffold(

@@ -127,11 +127,11 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
       title: 'Notes',
       subtitle: '${state.notes.length} notes · ${_formatNumber(totalWords)} words',
       icon: AppIcons.note_alt_rounded,
-      accent: HomeSystemTokens.blue,
+      accent: HomeSystemTokens.purple,
       actions: [
         HomeIconButton(
           icon: AppIcons.add_rounded,
-          color: HomeSystemTokens.blue,
+          color: HomeSystemTokens.purple,
           onTap: () => _showAddNoteSheet(context),
         ),
         SizedBox(width: 8.w),
@@ -160,7 +160,7 @@ class _NotesDashboardViewState extends State<_NotesDashboardView> {
         Expanded(
           child: HomeStatTile(
             icon: AppIcons.folder_open_rounded,
-            color: HomeSystemTokens.blue,
+            color: HomeSystemTokens.purple,
             label: 'Notes',
             value: state.notes.length.toString(),
             subtitle: 'Total saved',

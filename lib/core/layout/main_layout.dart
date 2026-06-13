@@ -44,8 +44,6 @@ class _MainLayoutState extends State<MainLayout>
   late AnimationController _fabAnimationController;
   late PageController _pageController;
 
-  final Set<int> _mountedTabs = {0};
-
   final iconLabels = <String>['Home', 'Tasks', 'Calendar', 'Notes'];
 
   Widget _screenFor(int index) {
@@ -59,7 +57,7 @@ class _MainLayoutState extends State<MainLayout>
       case 3:
         return const NotesScreen();
       default:
-        return const SizedBox.shrink();
+        return const ColoredBox(color: Color(0xFFF5F6FA));
     }
   }
 
@@ -76,10 +74,7 @@ class _MainLayoutState extends State<MainLayout>
   }
 
   void changeTab(int index) {
-    setState(() {
-      _mountedTabs.add(index);
-      _currentIndex = index;
-    });
+    setState(() => _currentIndex = index);
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -105,17 +100,11 @@ class _MainLayoutState extends State<MainLayout>
       body: PageView(
         controller: _pageController,
         onPageChanged: (index) {
-          setState(() {
-            _mountedTabs.add(index);
-            _currentIndex = index;
-          });
+          setState(() => _currentIndex = index);
         },
         children: List.generate(
           iconLabels.length,
-          (index) =>
-              _mountedTabs.contains(index)
-                  ? _screenFor(index)
-                  : const SizedBox.shrink(),
+          (index) => _screenFor(index),
         ),
       ),
       floatingActionButton: Container(
@@ -239,13 +228,7 @@ class _MainLayoutState extends State<MainLayout>
           gapLocation: GapLocation.center,
           leftCornerRadius: 28.r,
           rightCornerRadius: 28.r,
-          onTap: (index) {
-            _pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          },
+          onTap: changeTab,
           shadow: const BoxShadow(color: Colors.transparent, blurRadius: 0),
           height: 65.h,
           elevation: 0,

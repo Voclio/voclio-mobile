@@ -18,9 +18,6 @@ class NoteCard extends StatelessWidget {
 
   static const _accents = [
     HomeSystemTokens.purple,
-    HomeSystemTokens.blue,
-    HomeSystemTokens.orange,
-    HomeSystemTokens.green,
   ];
 
   @override
@@ -210,7 +207,7 @@ class NoteCard extends StatelessWidget {
       margin: EdgeInsets.only(left: 6.w),
       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
       decoration: BoxDecoration(
-        color: HomeSystemTokens.green.withValues(alpha: 0.12),
+        color: HomeSystemTokens.purple.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
@@ -218,7 +215,7 @@ class NoteCard extends StatelessWidget {
         style: TextStyle(
           fontSize: 8.sp,
           fontWeight: FontWeight.w800,
-          color: HomeSystemTokens.green,
+          color: HomeSystemTokens.purple,
           letterSpacing: 0.4,
         ),
       ),

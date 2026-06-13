@@ -144,21 +144,20 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
   }
 
   void _showAddTaskSheet(BuildContext context) {
+    final tasksCubit = context.read<TasksCubit>();
+    final calendarCubit = context.read<CalendarCubit>();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder:
-          (context) => BlocProvider.value(
-            value: context.read<TasksCubit>(),
-            child: const AddTaskBottomSheet(),
-          ),
+      builder: (_) => BlocProvider.value(
+        value: tasksCubit,
+        child: const AddTaskBottomSheet(),
+      ),
     ).then((_) {
-      // Refresh calendar after adding task
-      context.read<CalendarCubit>().loadMonth(
-        _focusedDay.year,
-        _focusedDay.month,
-      );
+      if (!mounted) return;
+      calendarCubit.loadMonth(_focusedDay.year, _focusedDay.month);
     });
   }
 
@@ -255,8 +254,8 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               Container(
                 width: 5.r,
                 height: 5.r,
-                decoration: const BoxDecoration(
-                  color: Colors.green,
+                decoration: BoxDecoration(
+                  color: HomeSystemTokens.purple,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -298,6 +297,81 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     }
   }
 
+  void _toggleCalendarFormat() {
+    setState(() {
+      if (_calendarFormat == CalendarFormat.month) {
+        _calendarFormat = CalendarFormat.twoWeeks;
+      } else if (_calendarFormat == CalendarFormat.twoWeeks) {
+        _calendarFormat = CalendarFormat.week;
+      } else {
+        _calendarFormat = CalendarFormat.month;
+      }
+    });
+  }
+
+  void _goToToday() {
+    final today = DateTime.now();
+    setState(() {
+      _focusedDay = today;
+      _selectedDay = today;
+    });
+    context.read<CalendarCubit>().loadMonth(today.year, today.month);
+  }
+
+  IconData _calendarFormatIcon() {
+    if (_calendarFormat == CalendarFormat.month) {
+      return AppIcons.calendar_view_week;
+    }
+    if (_calendarFormat == CalendarFormat.twoWeeks) {
+      return AppIcons.calendar_view_day;
+    }
+    return AppIcons.calendar_month;
+  }
+
+  String _headerSubtitle(CalendarState state) {
+    if (state is CalendarLoaded) {
+      final monthData = state.monthData;
+      final selected = _selectedDay ?? _focusedDay;
+      final dayEvents = monthData.eventsByDay[selected.day];
+      final dayTaskCount = dayEvents?.tasks.length ?? 0;
+
+      if (isSameDay(selected, DateTime.now())) {
+        return '$dayTaskCount tasks today';
+      }
+      return '${monthData.tasksCount} tasks this month';
+    }
+
+    return 'Plan tasks and events';
+  }
+
+  Widget _buildScreenHeader(BuildContext context, CalendarState state) {
+    return HomeScreenHeader(
+      title: 'Calendar',
+      subtitle: _headerSubtitle(state),
+      icon: AppIcons.calendar_today_rounded,
+      accent: HomeSystemTokens.purple,
+      actions: [
+        HomeIconButton(
+          icon: _calendarFormatIcon(),
+          color: HomeSystemTokens.inkSoft,
+          onTap: _toggleCalendarFormat,
+        ),
+        SizedBox(width: 8.w),
+        HomeIconButton(
+          icon: AppIcons.today,
+          color: HomeSystemTokens.inkSoft,
+          onTap: _goToToday,
+        ),
+        SizedBox(width: 8.w),
+        HomeIconButton(
+          icon: AppIcons.add_rounded,
+          color: HomeSystemTokens.purple,
+          onTap: () => _showAddTaskSheet(context),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -306,80 +380,21 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
     return Scaffold(
       primary: false,
       backgroundColor: HomeSystemTokens.canvas,
-      appBar: AppBar(
-        title: Text(
-          'Calendar',
-          style: TextStyle(
-            fontSize: 22.sp,
-            fontWeight: FontWeight.w800,
-            color: HomeSystemTokens.ink,
-            letterSpacing: -0.3,
-          ),
-        ),
-        backgroundColor: HomeSystemTokens.canvas,
-        elevation: 0,
-        centerTitle: false,
-        actions: [
-          // Calendar view toggle
-          Container(
-            margin: EdgeInsets.only(right: 4.w),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white10 : Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: IconButton(
-              icon: Icon(
-                _calendarFormat == CalendarFormat.month
-                    ? AppIcons.calendar_view_week
-                    : _calendarFormat == CalendarFormat.twoWeeks
-                    ? AppIcons.calendar_view_day
-                    : AppIcons.calendar_month,
-                color: theme.colorScheme.onSurface,
-                size: 18.sp,
-              ),
-              onPressed: () {
-                setState(() {
-                  if (_calendarFormat == CalendarFormat.month) {
-                    _calendarFormat = CalendarFormat.twoWeeks;
-                  } else if (_calendarFormat == CalendarFormat.twoWeeks) {
-                    _calendarFormat = CalendarFormat.week;
-                  } else {
-                    _calendarFormat = CalendarFormat.month;
-                  }
-                });
-              },
-              tooltip: 'Change view',
-            ),
-          ),
-          // Go to today button
-          Container(
-            margin: EdgeInsets.only(right: 16.w),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white10 : Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: IconButton(
-              icon: Icon(
-                AppIcons.today,
-                color: theme.colorScheme.onSurface,
-                size: 20.sp,
-              ),
-              onPressed: () {
-                setState(() {
-                  _focusedDay = DateTime.now();
-                  _selectedDay = DateTime.now();
-                });
-                context.read<CalendarCubit>().loadMonth(
-                  DateTime.now().year,
-                  DateTime.now().month,
-                );
-              },
-              tooltip: 'Go to today',
-            ),
-          ),
-        ],
-      ),
-      body: BlocConsumer<CalendarCubit, CalendarState>(
+      body: HomeCanvas(
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 8.h),
+                BlocBuilder<CalendarCubit, CalendarState>(
+                  builder: (context, state) => _buildScreenHeader(context, state),
+                ),
+                SizedBox(height: 18.h),
+                Expanded(
+                  child: BlocConsumer<CalendarCubit, CalendarState>(
         listener: (context, state) {
           if (state is CalendarLoaded) {
             final monthData = state.monthData;
@@ -461,32 +476,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  // Month/Year Display
-                  Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 20.w,
-                          vertical: 10.h,
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              DateFormat('MMMM yyyy').format(_focusedDay),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                      .animate()
-                      .fadeIn(duration: 400.ms)
-                      .slideX(begin: -0.1, end: 0),
-
-                  // Calendar Container
                   Container(
-                        margin: EdgeInsets.symmetric(horizontal: 16.w),
                         padding: EdgeInsets.all(12.r),
                         decoration: BoxDecoration(
                           color:
@@ -637,12 +627,9 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                     ),
 
                   // Selected day tasks header + filter chips
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: _buildDayTasksHeader(
-                      effectiveSelection,
-                      selectedDayEvents?.tasks ?? [],
-                    ),
+                  _buildDayTasksHeader(
+                    effectiveSelection,
+                    selectedDayEvents?.tasks ?? [],
                   ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
 
                   SizedBox(height: 12.h),
@@ -664,6 +651,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
 
           return const SizedBox();
         },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -835,7 +828,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
             content: Text(
               'Reminder set for ${DateFormat('MMM d, hh:mm a').format(remindAt)}',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: HomeSystemTokens.purple,
           ),
         );
         await _reloadCurrentMonth();
@@ -1222,7 +1215,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                 Icon(
                   AppIcons.videocam_rounded,
                   size: 14.sp,
-                  color: Colors.green.shade700,
+                  color: HomeSystemTokens.purple,
                 ),
                 SizedBox(width: 6.w),
                 Text(
@@ -1230,14 +1223,14 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.green.shade700,
+                    color: HomeSystemTokens.purple,
                   ),
                 ),
                 SizedBox(width: 6.w),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: HomeSystemTokens.purple.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -1245,7 +1238,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                     style: TextStyle(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green.shade700,
+                      color: HomeSystemTokens.purple,
                     ),
                   ),
                 ),
@@ -1381,9 +1374,9 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       case 'medium':
         return Colors.orange;
       case 'low':
-        return Colors.green;
+        return HomeSystemTokens.purple;
       default:
-        return Colors.blue;
+        return HomeSystemTokens.purple;
     }
   }
 
@@ -1463,7 +1456,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.green.withOpacity(0.2)),
+        border: Border.all(color: HomeSystemTokens.purple.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -1503,13 +1496,13 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.blue.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: HomeSystemTokens.purple.withOpacity(0.3), width: 1.5),
         boxShadow:
             isDark
                 ? []
                 : [
                   BoxShadow(
-                    color: Colors.blue.withOpacity(0.08),
+                    color: HomeSystemTokens.purple.withOpacity(0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -1521,12 +1514,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           Container(
             padding: EdgeInsets.all(10.r),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: HomeSystemTokens.purple.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               AppIcons.event_note_rounded,
-              color: Colors.blue,
+              color: HomeSystemTokens.purple,
               size: 20.sp,
             ),
           ),
@@ -1556,7 +1549,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                         vertical: 2.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: HomeSystemTokens.purple.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Row(
@@ -1565,14 +1558,14 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                           Icon(
                             AppIcons.calendar_month_rounded,
                             size: 10.sp,
-                            color: Colors.blue,
+                            color: HomeSystemTokens.purple,
                           ),
                           SizedBox(width: 3.w),
                           Text(
                             'Google',
                             style: TextStyle(
                               fontSize: 9.sp,
-                              color: Colors.blue,
+                              color: HomeSystemTokens.purple,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -1646,12 +1639,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               child: Container(
                 padding: EdgeInsets.all(8.r),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: HomeSystemTokens.purple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Icon(
                   AppIcons.videocam_rounded,
-                  color: Colors.green,
+                  color: HomeSystemTokens.purple,
                   size: 18.sp,
                 ),
               ),
@@ -1676,7 +1669,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Row(
             children: [
-              Icon(AppIcons.videocam_rounded, color: Colors.green, size: 18.sp),
+              Icon(AppIcons.videocam_rounded, color: HomeSystemTokens.purple, size: 18.sp),
               SizedBox(width: 8.w),
               Text(
                 "Today's Meetings",
@@ -1690,7 +1683,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: HomeSystemTokens.purple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Text(
@@ -1698,7 +1691,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                    color: HomeSystemTokens.purple,
                   ),
                 ),
               ),
@@ -1722,12 +1715,12 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.green.withOpacity(0.1),
-                          Colors.blue.withOpacity(0.05),
+                          HomeSystemTokens.purple.withOpacity(0.1),
+                          HomeSystemTokens.purple.withOpacity(0.05),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(16.r),
-                      border: Border.all(color: Colors.green.withOpacity(0.2)),
+                      border: Border.all(color: HomeSystemTokens.purple.withOpacity(0.2)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1768,7 +1761,7 @@ class _MonthlyCalendarViewState extends State<_MonthlyCalendarView> {
                               Icon(
                                 AppIcons.videocam_rounded,
                                 size: 14.sp,
-                                color: Colors.green,
+                                color: HomeSystemTokens.purple,
                               ),
                             ],
                           ],
